@@ -4,23 +4,50 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام إدارة المشتريات - تكافل عمان للتأمين</title>
+    <!-- تسريع الاتصال بمصادر المكتبات -->
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <!-- أيقونات Font Awesome (المستخدمة فعلياً في الواجهة) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/tabler/tabler-icons@latest/tabler-icons.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+    <!-- المكتبات الأساسية: غير حاجبة للعرض (defer) حتى تظهر الصفحة فوراً -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/motion@10.18.0/dist/motion.min.js"></script>
+    <!-- محمِّل كسول للمكتبات الثقيلة (XLSX ~1MB، ExcelJS ~1MB، html2pdf) — تُحمَّل عند الحاجة فقط لتسريع فتح الصفحة -->
     <script>
-    // مصدر احتياطي لمكتبة XLSX في حال فشل تحميل المصدر الأساسي
-    if (typeof XLSX === 'undefined') {
-        document.write('<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"><\/script>');
-    }
+    (function(){
+        var LIB_SRC = {
+            xlsx:     'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js',
+            exceljs:  'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js',
+            html2pdf: 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'
+        };
+        var LIB_READY = {
+            xlsx:     function(){ return typeof XLSX !== 'undefined'; },
+            exceljs:  function(){ return typeof ExcelJS !== 'undefined'; },
+            html2pdf: function(){ return typeof html2pdf !== 'undefined'; }
+        };
+        var cache = {};
+        // يُحمِّل المكتبة مرة واحدة ويُعيد Promise يُحلّ بنجاح/فشل التحميل
+        window.ensureLib = function(name){
+            if (LIB_READY[name] && LIB_READY[name]()) return Promise.resolve(true);
+            if (cache[name]) return cache[name];
+            cache[name] = new Promise(function(resolve){
+                var s = document.createElement('script');
+                s.src = LIB_SRC[name]; s.async = true;
+                s.onload = function(){ resolve(true); };
+                s.onerror = function(){ cache[name] = null; resolve(false); };
+                document.head.appendChild(s);
+            });
+            return cache[name];
+        };
+        // تحميل مُسبق هادئ بعد ظهور الصفحة (أثناء خمول المتصفح) ليكون جاهزاً عند أول تصدير/طباعة
+        function preloadHeavy(){ ['xlsx','exceljs','html2pdf'].forEach(function(n){ try { window.ensureLib(n); } catch(e){} }); }
+        window.addEventListener('load', function(){
+            if ('requestIdleCallback' in window) requestIdleCallback(preloadHeavy, { timeout: 4000 });
+            else setTimeout(preloadHeavy, 2500);
+        });
+    })();
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/motion@10.18.0/dist/motion.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; }
@@ -2777,6 +2804,28 @@ async function saveDraft() {
     loadDrafts();
 }
 
+// علامة لمنع تكرار التنبيه الخاص بغياب عمود lpo_ref
+let _lpoRefColWarned = false;
+// حفظ الأمر بمرونة: إن كان عمود lpo_ref غير موجود في قاعدة البيانات بعد،
+// يُعاد الحفظ تلقائياً بدون هذا الحقل حتى لا يتعطّل حفظ الأمر، مع تنبيه لطيف بتشغيل ملف SQL.
+async function saveOrderResilient(mode, rowData, orderId) {
+    const run = async (r) => (mode === 'update')
+        ? sb.from('purchase_orders').update(r).eq('id', orderId)
+        : sb.from('purchase_orders').insert(r);
+    let res = await run(rowData);
+    if (res.error && /lpo_ref/i.test(res.error.message || '')) {
+        // إزالة الحقل غير الموجود وإعادة المحاولة
+        const clone = Object.assign({}, rowData);
+        delete clone.lpo_ref;
+        res = await run(clone);
+        if (!res.error && !_lpoRefColWarned) {
+            _lpoRefColWarned = true;
+            alert(msg('تم حفظ الأمر، لكن حقل "L.P.O Ref" لم يُحفظ لأن عموده غير موجود في قاعدة البيانات بعد. لتفعيله شغّل ملف SQL: تحديث_قاعدة_البيانات_9_رقم_المرجع.sql في Supabase.'));
+        }
+    }
+    return { error: res.error };
+}
+
 async function saveLPO(event) {
     event.preventDefault();
     if (isGuest) { alert(msg('الزائر لا يملك صلاحية الحفظ')); return; }
@@ -2810,9 +2859,9 @@ async function saveLPO(event) {
             department: row.department, lpo_ref: row.lpo_ref, items: row.items, subtotal: row.subtotal, tax: row.tax,
             total: row.total, notes: row.notes
         };
-        ({ error } = await sb.from('purchase_orders').update(updRow).eq('id', prevOrderId));
+        ({ error } = await saveOrderResilient('update', updRow, prevOrderId));
     } else {
-        ({ error } = await sb.from('purchase_orders').insert(row));
+        ({ error } = await saveOrderResilient('insert', row, null));
     }
     if (error) { alert(msg(prevOrderId ? 'تعذّر تحديث الأمر: ' : 'تعذّر حفظ الأمر: ') + error.message); return; }
     // تحويل مسودة إلى أمر: تُحذف المسودة الأصلية بعد نجاح الإصدار فقط
@@ -3748,8 +3797,8 @@ document.addEventListener('click', function(e) {
     }
 });
 
-function exportLPOList() {
-    if (typeof XLSX === 'undefined') { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
+async function exportLPOList() {
+    if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
     const list = getFilteredLPOs();
     if (list.length === 0) { alert(msg('لا توجد بيانات للتصدير')); return; }
     try {
@@ -3892,7 +3941,7 @@ async function buildProWorkbook(opts) {
 
 // تصدير كافة أوامر الشراء إلى Excel منسّق
 async function downloadOrdersExcel() {
-    if (!excelReady()) return;
+    if (!(await ensureLib('exceljs')) || !excelReady()) return;
     if (!lpoDrafts.length) { alert(currentLanguage === 'en' ? 'No purchase orders to export.' : 'لا توجد أوامر شراء للتصدير.'); return; }
     try {
         const columns = [
@@ -3990,7 +4039,7 @@ async function downloadOrdersExcel() {
 
 // تصدير كافة الموردين إلى Excel منسّق
 async function downloadSuppliersExcel() {
-    if (!excelReady()) return;
+    if (!(await ensureLib('exceljs')) || !excelReady()) return;
     if (!suppliers.length) { alert(currentLanguage === 'en' ? 'No suppliers to export.' : 'لا يوجد موردون للتصدير.'); return; }
     try {
         const en = currentLanguage === 'en';
@@ -4642,9 +4691,10 @@ function renderDepartmentStats(list) {
 }
 
 // تصدير التقرير بالكامل (جداول ورسوم) إلى PDF
-function exportReportPDF() {
+async function exportReportPDF() {
     const el = document.getElementById('reportPrintArea');
     if (!el) { alert(msg('لا يوجد محتوى للطباعة')); return; }
+    if (!(await ensureLib('html2pdf'))) { alert(msg('تعذّر تحميل مكتبة الطباعة. تأكد من اتصالك بالإنترنت وأعد المحاولة.')); return; }
     const en = currentLanguage === 'en';
 
     // ===== بناء ترويسة احترافية تُضاف مؤقتاً أعلى منطقة الطباعة =====
@@ -4771,8 +4821,8 @@ function clearReportFilters() {
     generateReport();
 }
 
-function exportReportExcel() {
-    if (typeof XLSX === 'undefined') { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
+async function exportReportExcel() {
+    if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
     const list = getReportFiltered();
     if (list.length === 0) { alert(msg('لا توجد بيانات للتصدير')); return; }
     try {
@@ -4785,8 +4835,8 @@ function exportReportExcel() {
     }
 }
 
-function downloadAllData() {
-    if (typeof XLSX === 'undefined') { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
+async function downloadAllData() {
+    if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
     if (lpoDrafts.length === 0) { alert(msg('لا توجد بيانات')); return; }
     try {
         const rows = lpoDrafts.map(l => ({ 'رقم الأمر': l.number, 'المورد': l.supplierName, 'التاريخ': l.date, 'الإجمالي الجزئي': l.subtotal||0, 'الضريبة': l.tax||0, 'المبلغ الكلي': l.total, 'الحالة': l.status, 'الموظف': l.staff, 'ملاحظات': l.notes||'' }));
@@ -4857,8 +4907,8 @@ function downloadFullBackup() {
 }
 
 // تنزيل قالب إكسل جاهز لإدخال بيانات الموردين
-function downloadSupplierTemplate() {
-    if (typeof XLSX === 'undefined') { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
+async function downloadSupplierTemplate() {
+    if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
     try {
         const headers = ['اسم المورد', 'نوع الخدمة', 'التصنيف', 'الهاتف', 'البريد', 'المدينة', 'الرقم الضريبي', 'السجل التجاري'];
         const example = [
@@ -4879,7 +4929,7 @@ async function importSuppliersFromExcel() {
     const statusEl = document.getElementById('supplierImportStatus');
     const show = (html, color) => { if (statusEl) { statusEl.style.display = 'block'; statusEl.style.color = color || '#666'; statusEl.innerHTML = html; } };
     if (isGuest) { alert(msg('الزائر لا يملك صلاحية الإضافة')); return; }
-    if (typeof XLSX === 'undefined') { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
+    if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
     const input = document.getElementById('supplierImportFile');
     if (!input || !input.files || !input.files.length) { alert(msg('يرجى اختيار ملف إكسل أولاً')); return; }
     show('<i class="fas fa-spinner fa-spin"></i> ' + msg('جارٍ قراءة الملف...'), '#0093c4');
@@ -5360,7 +5410,7 @@ function buildLPOHtml(data, isDraft) {
             <div style="flex:1; text-align:center; padding-top:2px;">
                 <div style="font-family:Arial,'Segoe UI',Tahoma,sans-serif; font-size:30px; font-weight:700; color:#111; direction:rtl; line-height:1.15; white-space:nowrap;">أمر<span style="display:inline-block; width:8px;"></span>شراء<span style="display:inline-block; width:8px;"></span>محلي</div>
                 <div style="width:82%; height:2px; background:linear-gradient(90deg, rgba(0,147,196,0) 0%, #0093c4 50%, rgba(0,147,196,0) 100%); margin:5px auto;"></div>
-                <div style="font-size:20px; font-weight:700; color:#444; letter-spacing:2.5px; line-height:1.1; white-space:nowrap;">LOCAL PURCHASE ORDER</div>
+                <div style="font-family:Arial,'Segoe UI',Tahoma,sans-serif; font-size:20px; font-weight:700; color:#444; letter-spacing:0.5px; line-height:1.1; white-space:nowrap;">LOCAL PURCHASE ORDER</div>
             </div>
             <div style="flex:1.05; font-size:13px; text-align:right; padding-top:4px;">
                 <div style="margin-bottom:3px;"><span style="color:#666;">L.P.O Date:</span> <strong style="color:#111;">${(()=>{const d=new Date(data.date);const m=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];return String(d.getDate()).padStart(2,'0')+'/'+m[d.getMonth()]+'/'+d.getFullYear();})()}</strong></div>
@@ -5420,7 +5470,7 @@ function buildLPOHtml(data, isDraft) {
         <!-- المبلغ بالكلمات -->
         <div style="display:flex; justify-content:space-between; border:1px solid #c5ced6; border-top:none; padding:7px 14px; font-size:10.5px;">
             <span><strong>TOTAL IN WORDS OMR:</strong> ${numToWordsEn(totalRial)} Rials${totalBaiza>0 ? ' and '+String(totalBaiza).padStart(3,'0')+'/1000 Baisas':''} Only</span>
-            <span style="direction:rtl; color:#555;">المبلغ بالحروف</span>
+            <span style="direction:rtl; color:#555; word-spacing:4px;">المبلغ بالحروف</span>
         </div>
 
         <!-- عبارة تعليمات الدفع أسفل الجدول -->
@@ -5439,9 +5489,9 @@ function buildLPOHtml(data, isDraft) {
             <!-- التواقيع (مع ختم الشركة وصندوق الاعتماد تحت التوقيع المعتمد عند الاعتماد) -->
             <div style="display:flex; justify-content:space-between; font-size:10px; gap:60px;">
                 <div style="flex:1; position:relative; text-align:center;">
-                    <div style="font-weight:700; font-size:12px; padding-top:40px; margin-bottom:${data.approvalStatus === 'approved' ? '181px' : '160px'}; position:relative; z-index:7;">AUTHORIZED SIGNATURE &nbsp;<span style="direction:rtl; color:#555;">المخول بالتوقيع</span></div>
-                    ${data.approvalStatus === 'approved' ? `<img src="${STAMP_DATA}" alt="ختم الشركة" style="position:absolute; top:58px; left:58%; transform:translateX(-50%); height:138px; width:auto; opacity:1; z-index:5; pointer-events:none;">` : ''}
-                    ${data.approvalStatus === 'approved' ? `<div style="position:absolute; top:112px; left:10%; z-index:6; text-align:left;">
+                    <div style="font-weight:700; font-size:12px; padding-top:40px; margin-bottom:${data.approvalStatus === 'approved' ? '181px' : '160px'}; position:relative; z-index:7;">AUTHORIZED SIGNATURE &nbsp;<span style="direction:rtl; color:#555; word-spacing:4px;">المخول بالتوقيع</span></div>
+                    ${data.approvalStatus === 'approved' ? `<img src="${STAMP_DATA}" alt="ختم الشركة" style="position:absolute; top:58px; left:64%; transform:translateX(-50%); height:138px; width:auto; opacity:1; z-index:5; pointer-events:none;">` : ''}
+                    ${data.approvalStatus === 'approved' ? `<div style="position:absolute; top:120px; left:1%; z-index:6; text-align:left;">
                         <div style="display:inline-block; border:2px solid #2e7d32; color:#2e7d32; border-radius:6px; padding:3px 8px; font-weight:800; font-size:11px; direction:${currentLanguage === 'en' ? 'ltr' : 'rtl'};">
                             <i class="fas fa-check-circle"></i> ${currentLanguage === 'en' ? 'APPROVED' : 'معتمد'}
                             <div style="font-size:7.5px; font-weight:500; color:#8aa894; margin-top:1px; white-space:nowrap;">${currentLanguage === 'en' ? 'Date: ' : 'تاريخ الاعتماد: '}${data.approvedAt ? new Date(data.approvedAt).toLocaleDateString('en-GB') : '—'}</div>
@@ -5476,11 +5526,15 @@ function buildLPOHtml(data, isDraft) {
 
 function previewLPO() {
     if (!document.getElementById('supplierId').value) { alert(msg('يرجى اختيار مورد أولاً')); return; }
+    const refV = (document.getElementById('lpoRef').value || '').trim();
     previewLPOData = {
         number: document.getElementById('lpoNumber').value,
         date: document.getElementById('lpoDate').value,
         supplierName: document.getElementById('supplierName').value,
+        lpoRef: refV ? ('Ref-' + refV) : '',
         items: collectItems(),
+        subtotal: parseFloat(document.getElementById('totalSubtotal').textContent) || undefined,
+        tax: parseFloat(document.getElementById('totalTax').textContent) || 0,
         total: parseFloat(document.getElementById('totalFinal').textContent),
         notes: document.getElementById('generalNotes').value,
         staff: currentUser.username
@@ -5867,9 +5921,10 @@ function printPDF() {
     setTimeout(downloadPreviewPDF, 300);
 }
 
-function downloadPreviewPDF() {
+async function downloadPreviewPDF() {
     const el = document.getElementById('lpoPrintArea');
     if (!el) { alert(msg('لا يوجد محتوى للطباعة')); return; }
+    if (!(await ensureLib('html2pdf'))) { alert(msg('تعذّر تحميل مكتبة الطباعة. تأكد من اتصالك بالإنترنت وأعد المحاولة.')); return; }
     const num = (previewLPOData && previewLPOData.number) ? previewLPOData.number : 'LPO';
     html2pdf().set({
         margin: 4,
@@ -5881,23 +5936,38 @@ function downloadPreviewPDF() {
 }
 
 // طباعة/تحميل PDF مباشرة من صف القائمة (دون فتح نافذة المعاينة)
-function quickPrintLPO(id) {
+let _quickPrintBusy = false;
+async function quickPrintLPO(id) {
     const l = lpoDrafts.find(x => x.id === id || String(x.id) === String(id));
     if (!l) return;
-    // بناء منطقة الطباعة في عنصر مخفي مؤقت
-    const tmp = document.createElement('div');
-    tmp.style.cssText = 'position:fixed; top:-9999px; left:-9999px; width:794px;';
-    tmp.innerHTML = buildLPOHtml(l, false);
-    document.body.appendChild(tmp);
-    const el = tmp.querySelector('#lpoPrintArea');
-    if (!el) { document.body.removeChild(tmp); return; }
-    html2pdf().set({
-        margin: 4,
-        filename: (l.number || 'LPO') + '.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    }).from(el).save().then(() => { document.body.removeChild(tmp); });
+    if (_quickPrintBusy) return;   // منع النقر المزدوج الذي قد يُعلّق المتصفح
+    if (!(await ensureLib('html2pdf'))) { alert(msg('تعذّر تحميل مكتبة الطباعة. تأكد من اتصالك بالإنترنت وأعد المحاولة.')); return; }
+    _quickPrintBusy = true;
+    // بناء منطقة الطباعة في حاوية ضمن الصفحة (إحداثيات موجبة) خلف المحتوى —
+    // استخدام top/left سالبة كبيرة (‎-9999px) كان يُربك html2canvas ويُسبّب تعليق المتصفح.
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:fixed; left:0; top:0; width:794px; background:#ffffff; z-index:-1; pointer-events:none;';
+    holder.setAttribute('aria-hidden', 'true');
+    holder.innerHTML = buildLPOHtml(l, false);
+    document.body.appendChild(holder);
+    const el = holder.querySelector('#lpoPrintArea');
+    try {
+        if (!el) return;
+        // مهلة بسيطة لاكتمال تخطيط العناصر وفك ترميز الصور قبل الالتقاط
+        await new Promise(r => setTimeout(r, 80));
+        await html2pdf().set({
+            margin: 4,
+            filename: (l.number || 'LPO') + '.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        }).from(el).save();
+    } catch (e) {
+        alert(msg('تعذّر إنشاء ملف الطباعة: ') + (e && e.message ? e.message : ''));
+    } finally {
+        if (holder.parentNode) holder.parentNode.removeChild(holder);
+        _quickPrintBusy = false;
+    }
 }
 
 // ===================== INIT =====================
