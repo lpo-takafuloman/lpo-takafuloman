@@ -141,6 +141,26 @@
         html[dir="ltr"] #page-suppliers .card-header { flex-direction: row-reverse; }
         /* نافذة إضافة المورد تظهر فوق نافذة أمر الشراء عند فتحها من داخلها */
         #supplierModal { z-index: 1100; }
+        /* عند اختيار الإنجليزية (LTR): محاذاة رؤوس أعمدة جدولي أوامر الشراء والموردين لليسار ليتناسق الجدول مع خلاياه */
+        html[dir="ltr"] #lpoListTable th, html[dir="ltr"] #suppliersTable th { text-align: left; }
+        /* سحب/إزاحة الأعمدة من صف العنوان */
+        #lpoListTable thead th, #suppliersTable thead th { -webkit-user-select: none; user-select: none; position: relative; }
+        #lpoListTable thead th.col-dragging, #suppliersTable thead th.col-dragging { opacity: 0.4; }
+        #lpoListTable thead th.col-drag-over, #suppliersTable thead th.col-drag-over { background: #dff1fb; box-shadow: inset 3px 0 0 #0093c4, inset -3px 0 0 #0093c4; }
+        /* مقبض تمديد/تحجيم عرض العمود عند الحافة */
+        .col-resize-handle { position: absolute; inset-inline-end: 0; top: 0; height: 100%; width: 8px; cursor: col-resize; z-index: 4; }
+        .col-resize-handle:hover { background: rgba(0,147,196,0.3); }
+        body.col-resizing, body.col-resizing * { cursor: col-resize !important; user-select: none !important; }
+        /* صف المورد قابل للنقر لاستعراض البيانات */
+        #suppliersTable tbody tr { cursor: pointer; }
+        /* نافذة استعراض بيانات المورد */
+        .sup-view-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; }
+        .sup-view-item { background: #f8fafc; border: 1px solid #e8eef5; border-radius: 8px; padding: 9px 12px; }
+        .sup-view-item .k { font-size: 11px; color: #7a8b99; font-weight: 600; margin-bottom: 3px; }
+        .sup-view-item .v { font-size: 14px; color: #223; font-weight: 600; word-break: break-word; }
+        .sup-view-files a { display: inline-flex; align-items: center; gap: 7px; background: #eaf7ee; border: 1px solid #bfe3c9; color: #1f7a37; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; text-decoration: none; margin: 4px 6px 0 0; }
+        .sup-view-files a:hover { background: #d9f0e0; }
+        @media (max-width: 640px) { .sup-view-grid { grid-template-columns: 1fr; } }
 
         .form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 1.5rem; }
         .form-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
@@ -739,7 +759,7 @@
         </div>
         <div class="table-responsive">
             <table id="suppliersTable">
-                <thead><tr><th>الاسم</th><th>التقييم</th><th>نوع الخدمة</th><th>التصنيف</th><th>الهاتف</th><th>VAT</th><th>C.R</th><th>الملفات</th><th></th></tr></thead>
+                <thead><tr><th>الاسم</th><th>التقييم</th><th>نوع الخدمة</th><th>التصنيف</th><th>الهاتف</th><th>VAT</th><th>C.R</th><th>الملفات</th><th>الإجراءات</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -1110,7 +1130,7 @@
 <div id="supplierModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2><i class="fas fa-plus"></i> إضافة مورد جديد</h2>
+            <h2 id="supplierModalTitle"><i class="fas fa-plus"></i> إضافة مورد جديد</h2>
             <button class="modal-close" onclick="closeSupplierModal()">×</button>
         </div>
         <div class="modal-body">
@@ -1144,12 +1164,30 @@
                         <div class="form-group-item"><label>مرفقات أخرى (Other)</label><input type="file" id="newSupplierOther" accept="image/*,.pdf"></div>
                     </div>
                     <div id="uploadProgress" style="font-size:12px; color:#0093c4; margin-top:8px; display:none;"><i class="fas fa-spinner fa-spin"></i> جارٍ رفع الملفات...</div>
+                    <div id="supplierEditFilesNote" style="font-size:11.5px; color:#e67e22; margin-top:8px; display:none;"><i class="fas fa-info-circle"></i> في وضع التعديل: اترك حقول الملفات فارغة للإبقاء على الملفات الحالية</div>
                 </div>
                 <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:1.5rem;">
                     <button type="button" onclick="closeSupplierModal()" class="btn">إلغاء</button>
-                    <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> حفظ</button>
+                    <button type="submit" id="supplierModalSubmitBtn" class="btn btn-success"><i class="fas fa-save"></i> حفظ</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- ============ SUPPLIER VIEW MODAL (استعراض بيانات المورد) ============ -->
+<div id="supplierViewModal" class="modal">
+    <div class="modal-content" style="max-width:720px;">
+        <div class="modal-header">
+            <h2><i class="fas fa-address-card"></i> <span data-i18n="استعراض بيانات المورد">استعراض بيانات المورد</span></h2>
+            <button class="modal-close" onclick="closeSupplierViewModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div id="supplierViewBody"></div>
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:1.5rem;">
+                <button type="button" onclick="closeSupplierViewModal()" class="btn"><span data-i18n="إغلاق">إغلاق</span></button>
+                <button type="button" id="supplierViewEditBtn" class="btn" style="background:#f0ad4e; color:#fff;"><i class="fas fa-edit"></i> <span data-i18n="تعديل بيانات المورد">تعديل بيانات المورد</span></button>
+            </div>
         </div>
     </div>
 </div>
@@ -1657,6 +1695,17 @@ const I18N = {
     'المورد غير موجود؟ أضِف مورداً جديداً': 'Supplier not listed? Add a new one',
     'المورد غير موجود في القائمة؟ أضِفه الآن وسيظهر مباشرةً للاختيار': 'Not in the list? Add it now and it will appear instantly for selection',
     'تم إضافة المورد ويمكنك الآن اختياره في أمر الشراء': 'Supplier added — you can now select it in the purchase order',
+    'الإجراءات': 'Actions',
+    'استعراض بيانات المورد': 'Supplier Details',
+    'تعديل بيانات المورد': 'Edit Supplier',
+    'حفظ التعديلات': 'Save Changes',
+    'إغلاق': 'Close',
+    'لا توجد ملفات مرفقة': 'No attached files',
+    'التصنيف': 'Classification',
+    'البريد الإلكتروني': 'Email',
+    'التقييم': 'Rating',
+    'المرفقات': 'Attachments',
+    'في وضع التعديل: اترك حقول الملفات فارغة للإبقاء على الملفات الحالية': 'Edit mode: leave file fields empty to keep current files',
     'نوع الخدمة *': 'Service Type *',
     'إلغاء': 'Cancel',
     'حفظ': 'Save',
@@ -1838,6 +1887,10 @@ const MSG_I18N = {
     'تعذّر رفع أحد الملفات. تأكد من إعداد Storage في Supabase. سيتم حفظ المورد بدون الملفات.': 'Could not upload one of the files. Check the Storage setup in Supabase. The supplier will be saved without the files.',
     'تم إضافة المورد بنجاح في السحابة': 'Supplier added successfully to the cloud',
     'تم إضافة المورد ويمكنك الآن اختياره في أمر الشراء': 'Supplier added — you can now select it in the purchase order',
+    'تم تحديث بيانات المورد بنجاح': 'Supplier details updated successfully',
+    'تعذّر تحديث المورد: ': 'Could not update supplier: ',
+    'تعذّر حذف الأمر: ': 'Could not delete the order: ',
+    'تم حذف الأمر بنجاح.': 'Order deleted successfully.',
     'تم تغيير كلمة السر بنجاح ✅\nاستخدم كلمة السر الجديدة في المرة القادمة.': 'Password changed successfully ✅\nUse the new password next time.',
     'تم حفظ أمر الشراء بنجاح في السحابة: ': 'Purchase order saved successfully to the cloud: ',
     'تم حفظ المسودة بنجاح في السحابة': 'Draft saved successfully to the cloud',
@@ -3101,7 +3154,17 @@ async function confirmRejectOrder() {
         approved_at: new Date().toISOString(),
         rejection_reason: reason
     }).eq('id', id);
-    if (error) { alert(msg('تعذّر الرفض: ') + error.message); return; }
+    if (error) {
+        // حالة شائعة: عمود rejection_reason غير مُضاف بعد في قاعدة البيانات
+        if (/rejection_reason/i.test(error.message || '')) {
+            alert(currentLanguage === 'en'
+                ? "The 'rejection_reason' column is missing in the database.\nRun the SQL file \"تحديث_قاعدة_البيانات_8_سبب_الرفض.sql\" in Supabase (SQL Editor), then reload the page and try again."
+                : "عمود سبب الرفض (rejection_reason) غير موجود في قاعدة البيانات.\nشغّل الملف \"تحديث_قاعدة_البيانات_8_سبب_الرفض.sql\" في Supabase (SQL Editor)، ثم أعد تحميل الصفحة وجرّب مرة أخرى.");
+            return;
+        }
+        alert(msg('تعذّر الرفض: ') + error.message);
+        return;
+    }
     closeRejectModal();
     await loadAllFromCloud();
     recordAction('رفض أمر ' + l.number);
@@ -3110,8 +3173,189 @@ async function confirmRejectOrder() {
     loadDashboard();
 }
 
+// حذف أمر شراء — متاح لمن يملك صلاحية orders:delete (يشمل الأوامر المعتمدة)
+async function deleteLPO(id) {
+    if (!can('orders', 'delete')) { alert(msg('غير مصرّح')); return; }
+    const l = lpoDrafts.find(x => String(x.id) === String(id));
+    if (!l) return;
+    const en = currentLanguage === 'en';
+    let q = en
+        ? `Delete order ${l.number}?\nThis action is permanent and cannot be undone.`
+        : `حذف الأمر ${l.number}؟\nهذا الإجراء نهائي ولا يمكن التراجع عنه.`;
+    if (l.approvalStatus === 'approved') {
+        q = en
+            ? `⚠ Order ${l.number} is APPROVED.\nAre you sure you want to permanently delete this approved order?\nThis cannot be undone.`
+            : `⚠ الأمر ${l.number} معتمد.\nهل أنت متأكد من حذف هذا الأمر المعتمد نهائياً؟\nلا يمكن التراجع عن هذا الإجراء.`;
+    }
+    if (!confirm(q)) return;
+    const { error } = await sb.from('purchase_orders').delete().eq('id', id);
+    if (error) { alert(msg('تعذّر حذف الأمر: ') + error.message); return; }
+    await loadAllFromCloud();
+    recordAction('حذف أمر ' + l.number);
+    alert(msg('تم حذف الأمر بنجاح.'));
+    renderLPOList();
+    loadDashboard();
+}
+
+// ===================== سحب/إزاحة أعمدة الجداول (Draggable / Reorderable Columns) =====================
+const COL_ORDER = {};      // tableId -> مصفوفة معرّفات الأعمدة الأصلية بالترتيب المرئي الحالي
+let _colDragId = null;     // معرّف العمود الجاري سحبه
+let _colDragTable = null;  // الجدول الجاري السحب داخله
+
+function _loadColOrder(tableId, colCount) {
+    if (COL_ORDER[tableId] && COL_ORDER[tableId].length === colCount) return COL_ORDER[tableId];
+    let order = null;
+    try { const raw = localStorage.getItem('colorder_' + tableId); if (raw) order = JSON.parse(raw); } catch(_) {}
+    const valid = Array.isArray(order) && order.length === colCount &&
+                  order.slice().sort((a,b)=>a-b).every((v,i)=>v===i);
+    if (!valid) order = Array.from({length: colCount}, (_, i) => i);   // ترتيب الهوية 0..n
+    COL_ORDER[tableId] = order;
+    return order;
+}
+function _saveColOrder(tableId) {
+    try { localStorage.setItem('colorder_' + tableId, JSON.stringify(COL_ORDER[tableId])); } catch(_) {}
+}
+function _moveColOrder(arr, fromId, toId) {
+    const a = arr.slice();
+    const fromPos = a.indexOf(fromId);
+    if (fromPos < 0) return a;
+    a.splice(fromPos, 1);
+    const toPos = a.indexOf(toId);
+    a.splice(toPos < 0 ? fromPos : toPos, 0, fromId);   // يُدرَج العمود المسحوب مكان العمود الهدف
+    return a;
+}
+
+// ---- تمديد/تحجيم عرض الأعمدة (Column Resize) ----
+const COL_WIDTHS = {};     // tableId -> { colid: px }
+let _colResize = null;     // { tableId, th, colid, fixedEdge, rtl, w }
+function _loadColWidths(tableId) {
+    if (COL_WIDTHS[tableId]) return COL_WIDTHS[tableId];
+    let w = null;
+    try { const raw = localStorage.getItem('colwidths_' + tableId); if (raw) w = JSON.parse(raw); } catch(_) {}
+    COL_WIDTHS[tableId] = (w && typeof w === 'object') ? w : {};
+    return COL_WIDTHS[tableId];
+}
+function _saveColWidths(tableId) {
+    try { localStorage.setItem('colwidths_' + tableId, JSON.stringify(COL_WIDTHS[tableId])); } catch(_) {}
+}
+// تطبيق عروض الأعمدة المحفوظة على رؤوس الجدول (تبقى على عنصر th عبر إعادة الرسم)
+function applyColumnWidths(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table || !table.tHead) return;
+    const widths = _loadColWidths(tableId);
+    Array.from(table.tHead.rows[0].cells).forEach(th => {
+        const w = widths[th.getAttribute('data-colid')];
+        if (w) { th.style.width = w + 'px'; th.style.minWidth = w + 'px'; th.style.maxWidth = w + 'px'; }
+    });
+}
+// مستمعو حركة/إفلات الماوس للتحجيم (تُسجَّل مرة واحدة)
+let _colResizeGlobalInit = false;
+function _initColResizeGlobal() {
+    if (_colResizeGlobalInit) return;
+    _colResizeGlobalInit = true;
+    document.addEventListener('mousemove', function(e) {
+        if (!_colResize) return;
+        e.preventDefault();
+        let w = _colResize.rtl ? (_colResize.fixedEdge - e.clientX) : (e.clientX - _colResize.fixedEdge);
+        w = Math.max(50, Math.min(900, Math.round(w)));
+        const th = _colResize.th;
+        th.style.width = w + 'px'; th.style.minWidth = w + 'px'; th.style.maxWidth = w + 'px';
+        _colResize.w = w;
+    });
+    document.addEventListener('mouseup', function() {
+        if (!_colResize) return;
+        const cr = _colResize;
+        if (cr.w) { _loadColWidths(cr.tableId)[cr.colid] = cr.w; _saveColWidths(cr.tableId); }
+        const th = cr.th;
+        setTimeout(function(){ th.setAttribute('draggable', 'true'); }, 0);  // إعادة تفعيل الإزاحة بعد التحجيم
+        document.body.classList.remove('col-resizing');
+        _colResize = null;
+    });
+}
+// تطبيق الترتيب الحالي للأعمدة على الجدول (يُستدعى بعد كل إعادة رسم لجسم الجدول)
+function applyColumnOrder(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table || !table.tHead || !table.tBodies[0]) return;
+    const headRow = table.tHead.rows[0];
+    const colCount = headRow.cells.length;
+    const order = _loadColOrder(tableId, colCount);
+    // صف الرأس: إعادة ترتيب حسب data-colid (آمن مهما كان الوضع الحالي)
+    const byId = {};
+    Array.from(headRow.cells).forEach(th => { byId[th.getAttribute('data-colid')] = th; });
+    order.forEach(cid => { if (byId[cid]) headRow.appendChild(byId[cid]); });
+    // صفوف الجسم (مرسومة بالترتيب الأصلي): إعادة الترتيب حسب order
+    Array.from(table.tBodies[0].rows).forEach(row => {
+        if (row.cells.length !== colCount) return;   // تجاهل صف "لا نتائج" (colspan)
+        const cells = Array.from(row.cells);
+        order.forEach(origIdx => { if (cells[origIdx]) row.appendChild(cells[origIdx]); });
+    });
+    applyColumnWidths(tableId);   // الحفاظ على عروض الأعمدة المخصّصة
+}
+// تهيئة السحب على رؤوس أعمدة جدول (مرة واحدة لكل جدول)
+function initColumnDrag(tableId, rerenderFn) {
+    const table = document.getElementById(tableId);
+    if (!table || !table.tHead || table._colDragInit) return;
+    table._colDragInit = true;
+    _initColResizeGlobal();
+    const headRow = table.tHead.rows[0];
+    Array.from(headRow.cells).forEach((th, i) => {
+        if (!th.hasAttribute('data-colid')) th.setAttribute('data-colid', String(i));
+        th.setAttribute('draggable', 'true');
+        th.style.cursor = 'grab';
+        th.title = (th.title ? th.title + ' — ' : '') + (currentLanguage === 'en' ? 'Drag to reorder · drag the edge to resize' : 'اسحب لإعادة الترتيب · اسحب الحافة لتغيير العرض');
+        th.addEventListener('dragstart', function(e) {
+            _colDragId = th.getAttribute('data-colid'); _colDragTable = tableId;
+            th.classList.add('col-dragging');
+            try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', _colDragId); } catch(_) {}
+        });
+        th.addEventListener('dragend', function() {
+            th.classList.remove('col-dragging');
+            Array.from(headRow.cells).forEach(c => c.classList.remove('col-drag-over'));
+        });
+        th.addEventListener('dragover', function(e) {
+            if (_colDragTable !== tableId) return;
+            e.preventDefault();
+            try { e.dataTransfer.dropEffect = 'move'; } catch(_) {}
+            th.classList.add('col-drag-over');
+        });
+        th.addEventListener('dragleave', function() { th.classList.remove('col-drag-over'); });
+        th.addEventListener('drop', function(e) {
+            e.preventDefault();
+            th.classList.remove('col-drag-over');
+            if (_colDragTable !== tableId) return;
+            const fromId = _colDragId != null ? +_colDragId : +(e.dataTransfer.getData('text/plain'));
+            const toId = +th.getAttribute('data-colid');
+            _colDragId = null; _colDragTable = null;
+            if (isNaN(fromId) || isNaN(toId) || fromId === toId) return;
+            const order = _loadColOrder(tableId, headRow.cells.length);
+            COL_ORDER[tableId] = _moveColOrder(order, fromId, toId);
+            _saveColOrder(tableId);
+            if (typeof rerenderFn === 'function') rerenderFn(); else applyColumnOrder(tableId);
+        });
+        // مقبض تمديد/تحجيم عرض العمود عند الحافة (لا يُفعّل الإزاحة ولا الفرز)
+        const handle = document.createElement('div');
+        handle.className = 'col-resize-handle';
+        handle.setAttribute('draggable', 'false');
+        handle.addEventListener('click', function(ev) { ev.stopPropagation(); });
+        handle.addEventListener('dragstart', function(ev) { ev.preventDefault(); ev.stopPropagation(); });
+        handle.addEventListener('mousedown', function(ev) {
+            ev.stopPropagation();
+            ev.preventDefault();
+            const rtl = (document.documentElement.dir === 'rtl');
+            const rect = th.getBoundingClientRect();
+            _colResize = { tableId: tableId, th: th, colid: th.getAttribute('data-colid'),
+                           fixedEdge: rtl ? rect.right : rect.left, rtl: rtl, w: 0 };
+            th.setAttribute('draggable', 'false');   // تعطيل الإزاحة أثناء التحجيم
+            document.body.classList.add('col-resizing');
+        });
+        th.appendChild(handle);
+    });
+    applyColumnWidths(tableId);   // استعادة العروض المحفوظة عند التهيئة
+}
+
 function loadLPOList() {
     populateAllFilters();
+    initColumnDrag('lpoListTable', renderLPOList);
     filterLPOs();
 }
 
@@ -3279,16 +3523,20 @@ function renderLPOList() {
             const editBtn = can('orders', 'edit')
                 ? `<button class="btn btn-small" style="background:#f0ad4e; color:#fff;" onclick="editLPO('${l.id}')" title="${currentLanguage === 'en' ? 'Edit order' : 'تعديل الأمر'}"><i class="fas fa-edit"></i></button>`
                 : '';
+            const delBtn = can('orders', 'delete')
+                ? `<button class="btn btn-small" style="background:#c0392b; color:#fff;" onclick="deleteLPO('${l.id}')" title="${currentLanguage === 'en' ? 'Delete order' : 'حذف الأمر'}"><i class="fas fa-trash"></i></button>`
+                : '';
             const reasonLine = (l.approvalStatus === 'rejected' && l.rejectionReason)
                 ? `<div style="font-size:10px; color:#c0392b; margin-top:3px; max-width:230px; white-space:normal;" title="${escapeHtml(l.rejectionReason)}"><i class="fas fa-comment-dots"></i> ${escapeHtml(l.rejectionReason)}</div>`
                 : '';
             tbody.insertRow().innerHTML = `<td>${l.number}</td><td>${l.supplierName}</td><td>${escapeHtml(orderServiceType(l)) || '<span style="color:#bbb;">—</span>'}</td><td>${l.date}</td><td>${fmt(l.total)}</td>
             <td>${approvalBadge(l)}${reasonLine}</td><td>${l.staff}</td>
-            <td style="white-space:nowrap;"><button class="btn btn-small" onclick="viewLPO('${l.id}')" title="${currentLanguage === 'en' ? 'Preview' : 'معاينة'}"><i class="fas fa-eye"></i></button> ${editBtn} ${approveBtn} ${rejectBtn}</td>`;
+            <td style="white-space:nowrap;"><button class="btn btn-small" onclick="viewLPO('${l.id}')" title="${currentLanguage === 'en' ? 'Preview' : 'معاينة'}"><i class="fas fa-eye"></i></button> ${editBtn} ${approveBtn} ${rejectBtn} ${delBtn}</td>`;
         });
     }
     updateSortArrows();
     animateTableRows('#lpoListTable');
+    applyColumnOrder('lpoListTable');
 }
 
 // تحديث أسهم الاتجاه في رؤوس الأعمدة
@@ -3668,6 +3916,7 @@ async function downloadSuppliersExcel() {
 // ===================== SUPPLIERS =====================
 function loadSuppliersList() {
     populateAllFilters();
+    initColumnDrag('suppliersTable', filterSuppliers);
     filterSuppliers();
 }
 
@@ -3686,18 +3935,25 @@ function filterSuppliers() {
         tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#999;">لا يوجد موردون مطابقون</td></tr>';
     } else {
         list.forEach(s => {
-            const evalBtn = can('suppliers','edit') ? `<button class="btn btn-small" onclick="openEvalModal('${s.id}','${(s.name||'').replace(/'/g,'')}','')" title="تقييم" style="color:#f39c12;"><i class="fas fa-star"></i></button>` : '';
-            const delBtn = can('suppliers','delete') ? `<button class="btn btn-small" onclick="deleteSupplier('${s.id}')" title="حذف" style="color:#e74c3c;"><i class="fas fa-trash"></i></button>` : '';
+            const sid = String(s.id).replace(/'/g, "\\'");
+            const en = currentLanguage === 'en';
+            const viewBtn = `<button class="btn btn-small" onclick="viewSupplierDetails('${sid}')" title="${en?'View details':'استعراض البيانات'}"><i class="fas fa-eye"></i></button>`;
+            const editBtn = can('suppliers','edit') ? `<button class="btn btn-small" style="background:#f0ad4e; color:#fff;" onclick="editSupplier('${sid}')" title="${en?'Edit':'تعديل'}"><i class="fas fa-edit"></i></button>` : '';
+            const evalBtn = can('suppliers','edit') ? `<button class="btn btn-small" onclick="openEvalModal('${sid}','${(s.name||'').replace(/'/g,'')}','')" title="${en?'Rate':'تقييم'}" style="color:#f39c12;"><i class="fas fa-star"></i></button>` : '';
+            const delBtn = can('suppliers','delete') ? `<button class="btn btn-small" onclick="deleteSupplier('${sid}')" title="${en?'Delete':'حذف'}" style="color:#e74c3c;"><i class="fas fa-trash"></i></button>` : '';
             // روابط الملفات
             const files = [];
             if (s.taxCardUrl) files.push(`<a href="${s.taxCardUrl}" target="_blank" title="البطاقة الضريبية" style="color:#0093c4;"><i class="fas fa-file-invoice"></i></a>`);
             if (s.crCertUrl) files.push(`<a href="${s.crCertUrl}" target="_blank" title="السجل التجاري" style="color:#7cb342;"><i class="fas fa-file-contract"></i></a>`);
             if (s.otherFilesUrl) files.push(`<a href="${s.otherFilesUrl}" target="_blank" title="مرفقات أخرى" style="color:#888;"><i class="fas fa-paperclip"></i></a>`);
             const filesHtml = files.length ? files.join(' ') : '<span style="color:#ccc;">-</span>';
-            tbody.insertRow().innerHTML = `<td>${s.name}</td><td>${supplierRatingLabel(s.id)}</td><td>${s.serviceType||'-'}</td><td>${s.supplierType||'-'}</td><td>${s.phone||'-'}</td><td>${s.vatNo||'-'}</td><td>${s.crNo||'-'}</td><td style="font-size:16px;">${filesHtml}</td><td>${evalBtn} ${delBtn}</td>`;
+            const row = tbody.insertRow();
+            row.setAttribute('onclick', `viewSupplierDetails('${sid}')`);
+            row.innerHTML = `<td>${s.name}</td><td>${supplierRatingLabel(s.id)}</td><td>${s.serviceType||'-'}</td><td>${s.supplierType||'-'}</td><td>${s.phone||'-'}</td><td>${s.vatNo||'-'}</td><td>${s.crNo||'-'}</td><td style="font-size:16px;" onclick="event.stopPropagation();">${filesHtml}</td><td style="white-space:nowrap;" onclick="event.stopPropagation();">${viewBtn} ${editBtn} ${evalBtn} ${delBtn}</td>`;
         });
     }
     animateTableRows('#suppliersTable');
+    applyColumnOrder('suppliersTable');
 }
 
 function clearSupplierFilters() {
@@ -3709,8 +3965,30 @@ function clearSupplierFilters() {
 
 // علامة: هل فُتحت نافذة المورد من داخل نافذة أمر الشراء؟ (للعودة إليها وتحديث قائمة الموردين)
 let supplierModalFromLPO = false;
+// معرّف المورد قيد التعديل (null = وضع إضافة مورد جديد)
+let editingSupplierId = null;
+
+// ضبط عنوان نافذة المورد وزر الحفظ حسب الوضع: 'add' إضافة | 'edit' تعديل
+function setSupplierModalMode(mode) {
+    const title = document.getElementById('supplierModalTitle');
+    const btn = document.getElementById('supplierModalSubmitBtn');
+    const note = document.getElementById('supplierEditFilesNote');
+    const en = currentLanguage === 'en';
+    if (mode === 'edit') {
+        if (title) title.innerHTML = `<i class="fas fa-edit"></i> ${en ? 'Edit Supplier' : 'تعديل بيانات المورد'}`;
+        if (btn) btn.innerHTML = `<i class="fas fa-save"></i> ${en ? 'Save Changes' : 'حفظ التعديلات'}`;
+        if (note) note.style.display = 'block';
+    } else {
+        if (title) title.innerHTML = `<i class="fas fa-plus"></i> ${en ? 'Add New Supplier' : 'إضافة مورد جديد'}`;
+        if (btn) btn.innerHTML = `<i class="fas fa-save"></i> ${en ? 'Save' : 'حفظ'}`;
+        if (note) note.style.display = 'none';
+    }
+}
+
 function openSupplierModal(fromLPO) {
     supplierModalFromLPO = !!fromLPO;
+    editingSupplierId = null;          // الوضع الافتراضي: إضافة
+    setSupplierModalMode('add');
     // تعبئة قائمة نوع الخدمة المقيدة من جدول أنواع الخدمات
     const sel = document.getElementById('newSupplierServiceType');
     if (sel) sel.innerHTML = '<option value="">-- اختر نوع الخدمة --</option>' + serviceTypes.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
@@ -3718,6 +3996,7 @@ function openSupplierModal(fromLPO) {
 }
 function closeSupplierModal() {
     supplierModalFromLPO = false;
+    editingSupplierId = null;
     document.getElementById('supplierModal').classList.remove('active');
     ['newSupplierName','newSupplierServiceType','newSupplierPhone','newSupplierEmail','newSupplierVat','newSupplierCr'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     document.getElementById('newSupplierCity').value = 'مسقط';
@@ -3725,6 +4004,66 @@ function closeSupplierModal() {
     // تفريغ حقول الملفات
     ['newSupplierTaxCard','newSupplierCrCert','newSupplierOther'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     document.getElementById('uploadProgress').style.display = 'none';
+    setSupplierModalMode('add');
+}
+
+// فتح نافذة المورد في وضع التعديل معبّأة ببيانات المورد المختار
+function editSupplier(id) {
+    if (!can('suppliers','edit')) { alert(msg('غير مصرّح')); return; }
+    const s = suppliers.find(x => String(x.id) === String(id));
+    if (!s) return;
+    openSupplierModal(false);          // يفتح النافذة ويملأ أنواع الخدمة ويضبط وضع الإضافة مبدئياً
+    editingSupplierId = id;            // ثم نحوّلها لوضع التعديل
+    document.getElementById('newSupplierName').value = s.name || '';
+    document.getElementById('newSupplierServiceType').value = s.serviceType || '';
+    document.getElementById('newSupplierType').value = s.supplierType || 'Local Supplier';
+    document.getElementById('newSupplierPhone').value = s.phone || '';
+    document.getElementById('newSupplierEmail').value = s.email || '';
+    document.getElementById('newSupplierCity').value = s.city || 'مسقط';
+    document.getElementById('newSupplierVat').value = s.vatNo || '';
+    document.getElementById('newSupplierCr').value = s.crNo || '';
+    setSupplierModalMode('edit');
+}
+
+// استعراض كل بيانات وملفات المورد في نافذة عرض
+function viewSupplierDetails(id) {
+    const s = suppliers.find(x => String(x.id) === String(id));
+    if (!s) return;
+    const en = currentLanguage === 'en';
+    const esc = (t) => escapeHtml(t == null ? '' : String(t));
+    const item = (k, v) => `<div class="sup-view-item"><div class="k">${k}</div><div class="v">${v || '<span style="color:#bbb;">—</span>'}</div></div>`;
+    const files = [];
+    if (s.taxCardUrl) files.push(`<a href="${s.taxCardUrl}" target="_blank"><i class="fas fa-file-invoice"></i> ${en?'Tax Card':'البطاقة الضريبية'}</a>`);
+    if (s.crCertUrl) files.push(`<a href="${s.crCertUrl}" target="_blank"><i class="fas fa-file-contract"></i> ${en?'C.R Certificate':'شهادة السجل التجاري'}</a>`);
+    if (s.otherFilesUrl) files.push(`<a href="${s.otherFilesUrl}" target="_blank"><i class="fas fa-paperclip"></i> ${en?'Other':'مرفقات أخرى'}</a>`);
+    const filesHtml = files.length ? `<div class="sup-view-files">${files.join('')}</div>` : `<div style="color:#bbb; font-size:13px;">${en?'No attached files':'لا توجد ملفات مرفقة'}</div>`;
+    document.getElementById('supplierViewBody').innerHTML = `
+        <div style="font-size:18px; font-weight:800; color:#0093c4; margin-bottom:4px;">${esc(s.name)}</div>
+        <div style="margin-bottom:14px;">${supplierRatingLabel(s.id)}</div>
+        <div class="sup-view-grid">
+            ${item(en?'Service Type':'نوع الخدمة', esc(s.serviceType))}
+            ${item(en?'Classification':'التصنيف', esc(s.supplierType))}
+            ${item(en?'Phone':'الهاتف', esc(s.phone))}
+            ${item(en?'Email':'البريد الإلكتروني', esc(s.email))}
+            ${item(en?'City':'المدينة', esc(s.city))}
+            ${item('VAT No', esc(s.vatNo))}
+            ${item('C.R No', esc(s.crNo))}
+        </div>
+        <div style="font-size:12px; font-weight:700; color:#0093c4; margin:16px 0 6px;"><i class="fas fa-paperclip"></i> ${en?'Attachments':'المرفقات'}</div>
+        ${filesHtml}`;
+    const editBtn = document.getElementById('supplierViewEditBtn');
+    if (editBtn) {
+        if (can('suppliers','edit')) {
+            editBtn.style.display = '';
+            editBtn.onclick = function(){ closeSupplierViewModal(); editSupplier(id); };
+        } else {
+            editBtn.style.display = 'none';
+        }
+    }
+    document.getElementById('supplierViewModal').classList.add('active');
+}
+function closeSupplierViewModal() {
+    document.getElementById('supplierViewModal').classList.remove('active');
 }
 
 // رفع ملف واحد إلى Supabase Storage وإرجاع رابطه العام (أو '' إن لم يوجد ملف)
@@ -3776,6 +4115,25 @@ async function addSupplier(event) {
         cr_cert_url: crUrl || null,
         other_files_url: otherUrl || null
     };
+    // وضع التعديل: تحديث بيانات مورد قائم بدل إضافة مورد جديد
+    if (editingSupplierId) {
+        const upd = { name: row.name, service_type: row.service_type, supplier_type: row.supplier_type,
+                      phone: row.phone, email: row.email, city: row.city, vat_no: row.vat_no, cr_no: row.cr_no };
+        // الملفات: تُستبدل فقط إذا رُفع ملف جديد، وإلا تبقى الملفات الحالية كما هي
+        if (taxUrl) upd.tax_card_url = taxUrl;
+        if (crUrl) upd.cr_cert_url = crUrl;
+        if (otherUrl) upd.other_files_url = otherUrl;
+        const { error: updErr } = await sb.from('suppliers').update(upd).eq('id', editingSupplierId);
+        if (updErr) { alert(msg('تعذّر تحديث المورد: ') + updErr.message); return; }
+        await loadAllFromCloud();
+        recordAction('تعديل مورد ' + row.name);
+        closeSupplierModal();
+        populateAllFilters();
+        loadSuppliersList();
+        populateSupplierSelect();
+        alert(msg('تم تحديث بيانات المورد بنجاح'));
+        return;
+    }
     const { data: insData, error } = await sb.from('suppliers').insert(row).select();
     if (error) { alert(msg('تعذّر إضافة المورد: ') + error.message); return; }
     await loadAllFromCloud();
@@ -4643,7 +5001,7 @@ function buildLPOHtml(data, isDraft) {
         </div>` : '';
 
     return `
-    <div id="lpoPrintArea" style="position:relative; font-family:'Tajawal','Segoe UI',Tahoma,Arial,sans-serif; color:#1a1a1a; padding:18px 22px; background:white; overflow:hidden; font-size:12px; line-height:1.3; box-sizing:border-box; display:flex; flex-direction:column; aspect-ratio:202/286;">
+    <div id="lpoPrintArea" style="position:relative; font-family:Arial,'Segoe UI',Tahoma,sans-serif; color:#1a1a1a; padding:18px 22px; background:white; overflow:hidden; font-size:12px; line-height:1.3; box-sizing:border-box; display:flex; flex-direction:column; aspect-ratio:202/286;">
         ${watermark}
         <div style="position:relative; z-index:1; display:flex; flex-direction:column; flex:1;">
 
