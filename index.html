@@ -142,15 +142,19 @@
         /* نافذة إضافة المورد تظهر فوق نافذة أمر الشراء عند فتحها من داخلها */
         #supplierModal { z-index: 1100; }
         /* عند اختيار الإنجليزية (LTR): محاذاة رؤوس أعمدة جدولي أوامر الشراء والموردين لليسار ليتناسق الجدول مع خلاياه */
-        html[dir="ltr"] #lpoListTable th, html[dir="ltr"] #suppliersTable th { text-align: left; }
+        html[dir="ltr"] #lpoListTable th, html[dir="ltr"] #suppliersTable th, html[dir="ltr"] #draftsTable th { text-align: left; }
         /* سحب/إزاحة الأعمدة من صف العنوان */
-        #lpoListTable thead th, #suppliersTable thead th { -webkit-user-select: none; user-select: none; position: relative; }
-        #lpoListTable thead th.col-dragging, #suppliersTable thead th.col-dragging { opacity: 0.4; }
-        #lpoListTable thead th.col-drag-over, #suppliersTable thead th.col-drag-over { background: #dff1fb; box-shadow: inset 3px 0 0 #0093c4, inset -3px 0 0 #0093c4; }
+        #lpoListTable thead th, #suppliersTable thead th, #draftsTable thead th { -webkit-user-select: none; user-select: none; position: relative; }
+        #lpoListTable thead th.col-dragging, #suppliersTable thead th.col-dragging, #draftsTable thead th.col-dragging { opacity: 0.4; }
+        #lpoListTable thead th.col-drag-over, #suppliersTable thead th.col-drag-over, #draftsTable thead th.col-drag-over { background: #dff1fb; box-shadow: inset 3px 0 0 #0093c4, inset -3px 0 0 #0093c4; }
         /* مقبض تمديد/تحجيم عرض العمود عند الحافة */
         .col-resize-handle { position: absolute; inset-inline-end: 0; top: 0; height: 100%; width: 8px; cursor: col-resize; z-index: 4; }
         .col-resize-handle:hover { background: rgba(0,147,196,0.3); }
         body.col-resizing, body.col-resizing * { cursor: col-resize !important; user-select: none !important; }
+        /* أثناء تصدير تقرير PDF: منع انقسام البطاقات والجداول بين الصفحات */
+        #reportPrintArea.pdf-exporting .card, #reportPrintArea.pdf-exporting .stat-card,
+        #reportPrintArea.pdf-exporting table, #reportPrintArea.pdf-exporting canvas { page-break-inside: avoid; break-inside: avoid; }
+        #reportPrintArea.pdf-exporting .card { box-shadow: none; }
         /* صف المورد قابل للنقر لاستعراض البيانات */
         #suppliersTable tbody tr { cursor: pointer; }
         /* نافذة استعراض بيانات المورد */
@@ -486,6 +490,12 @@
         <div class="chart-container"><canvas id="dashSupplierSpendChart"></canvas></div>
     </div>
 
+    <!-- تصنيف مبالغ أوامر الشراء حسب القسم المعني -->
+    <div class="card">
+        <div class="card-header"><div class="card-title"><i class="fas fa-sitemap"></i> مبالغ أوامر الشراء حسب القسم المعني (ر.ع)</div></div>
+        <div class="chart-container"><canvas id="dashDeptChart"></canvas></div>
+    </div>
+
     <!-- خريطة حرارية: استخدام النظام عبر الفترات الزمنية (اليوم × الساعة) -->
     <div class="card">
         <div class="card-header"><div class="card-title"><i class="fas fa-fire"></i> خريطة استخدام النظام (اليوم × الساعة)</div></div>
@@ -530,6 +540,16 @@
                     <label><i class="fas fa-calendar"></i> التاريخ *</label>
                     <input type="date" id="lpoDate" required>
                 </div>
+            </div>
+            <div class="form-grid cols-2">
+                <div class="form-group-item">
+                    <label><i class="fas fa-hashtag"></i> L.P.O Ref</label>
+                    <div style="display:flex; align-items:center; gap:0;">
+                        <span style="background:#f0f2f5; border:1px solid #ddd; border-right:none; padding:9px 10px; border-radius:6px 0 0 6px; font-size:13px; color:#666; white-space:nowrap; font-weight:600;">Ref-</span>
+                        <input type="text" id="lpoRef" placeholder="أدخل الرقم المرجعي..." style="border-radius:0 6px 6px 0; border-left:none;">
+                    </div>
+                </div>
+                <div class="form-group-item" style="visibility:hidden;"></div>
             </div>
             <div class="form-grid">
                 <div class="form-group-item">
@@ -647,7 +667,7 @@
         </div>
         <div class="table-responsive">
             <table id="draftsTable">
-                <thead><tr><th>رقم المسودة</th><th>المورد</th><th>التاريخ</th><th>الإجمالي (ر.ع)</th><th>الموظف</th><th></th></tr></thead>
+                <thead><tr><th>رقم المسودة</th><th>المورد</th><th>التاريخ</th><th>الإجمالي (ر.ع)</th><th>الموظف</th><th>الإجراءات</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -709,6 +729,10 @@
             </div>
             <div class="filter-grid">
                 <input type="date" id="filterToDate" onchange="filterLPOs()" title="إلى تاريخ">
+                <div class="ms-wrap" data-ms="msDepartment">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الأقسام --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
             </div>
             <div class="filter-actions">
                 <button type="button" class="btn btn-danger btn-small" onclick="clearLPOFilters()"><i class="fas fa-eraser"></i> مسح التصفية</button>
@@ -722,6 +746,7 @@
                         <th class="sortable" data-col="0" onclick="sortLPOTable(0)">الرقم <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="1" onclick="sortLPOTable(1)">المورد <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="2" onclick="sortLPOTable(2)">نوع الخدمة <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-col="7" onclick="sortLPOTable(7)">القسم / الغرض <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="3" onclick="sortLPOTable(3)">التاريخ <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="4" onclick="sortLPOTable(4)">المبلغ (ر.ع) <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="5" onclick="sortLPOTable(5)">الحالة <span class="sort-arrow">⇅</span></th>
@@ -750,7 +775,10 @@
             <div class="filter-title"><i class="fas fa-filter"></i> فلاتر البحث</div>
             <div class="filter-grid">
                 <input type="text" id="filterSupName" placeholder="اسم المورد..." oninput="filterSuppliers()">
-                <select id="filterSupService" onchange="filterSuppliers()"><option value="">-- كل أنواع الخدمات --</option></select>
+                <div class="ms-wrap" data-ms="msSupSvc">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل أنواع الخدمات --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
                 <select id="filterSupCity" onchange="filterSuppliers()"><option value="">-- كل المدن --</option></select>
             </div>
             <div class="filter-actions">
@@ -869,6 +897,7 @@
     <div class="card" style="margin-top:1.5rem;">
         <div class="card-header"><div class="card-title"><i class="fas fa-sitemap"></i> إحصائيات حسب القسم المعني</div></div>
         <div id="deptStatsCards" class="stats-grid" style="margin-bottom:1rem;"></div>
+        <div class="chart-container" style="margin-bottom:1rem;"><canvas id="reportDeptChart"></canvas></div>
         <div class="table-responsive">
             <table id="deptStatsTable">
                 <thead><tr><th>القسم / الغرض</th><th>عدد الأوامر</th><th>إجمالي المبلغ (ر.ع)</th></tr></thead>
@@ -1014,6 +1043,34 @@
         </div>
     </div>
 
+    <!-- ============ إدارة قواعد البيانات ============ -->
+    <div class="card">
+        <div class="card-header"><div class="card-title"><i class="fas fa-database"></i> إدارة قواعد البيانات</div></div>
+
+        <!-- 1) النسخ الاحتياطي -->
+        <div style="border:1px solid #e8eef5; border-radius:10px; padding:1rem; margin-bottom:1.2rem; background:#f8fafc;">
+            <div style="font-size:14px; font-weight:700; color:#0093c4; margin-bottom:6px;"><i class="fas fa-shield-alt"></i> النسخ الاحتياطي لبيانات النظام</div>
+            <p style="font-size:12.5px; color:#666; line-height:1.7; margin-bottom:12px;">تنزيل نسخة احتياطية كاملة من جميع بيانات النظام (أوامر الشراء، المسودات، الموردون، المستخدمون، أنواع الخدمات، الأقسام، التقييمات) في ملف واحد يُحفظ لديك كأرشيف آمن.</p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <button type="button" class="btn btn-success" onclick="downloadFullBackup()"><i class="fas fa-download"></i> تنزيل نسخة احتياطية كاملة</button>
+                <button type="button" class="btn btn-small" onclick="downloadAllData()"><i class="fas fa-file-excel"></i> نسخة Excel (أوامر + موردون)</button>
+            </div>
+            <div id="lastBackupInfo" style="font-size:12px; color:#7a8b99; margin-top:10px;"><i class="fas fa-clock"></i> <span>لم يتم إجراء أي نسخة احتياطية بعد من هذا المتصفح.</span></div>
+        </div>
+
+        <!-- 2) تغذية الموردين من ملف إكسل -->
+        <div style="border:1px solid #e8eef5; border-radius:10px; padding:1rem; background:#f8fafc;">
+            <div style="font-size:14px; font-weight:700; color:#0093c4; margin-bottom:6px;"><i class="fas fa-file-import"></i> تغذية بيانات الموردين من ملف إكسل</div>
+            <p style="font-size:12.5px; color:#666; line-height:1.7; margin-bottom:12px;">نزّل القالب الجاهز، أدخل بيانات الموردين فيه، ثم ارفعه ليُضيف النظام جميع الموردين دفعةً واحدة. الأعمدة: <strong>اسم المورد</strong> (إلزامي)، نوع الخدمة (يمكن فصل أكثر من نوع بفاصلة)، التصنيف، الهاتف، البريد، المدينة، الرقم الضريبي، السجل التجاري.</p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <button type="button" class="btn btn-primary" onclick="downloadSupplierTemplate()"><i class="fas fa-file-download"></i> تنزيل قالب إكسل</button>
+                <input type="file" id="supplierImportFile" accept=".xlsx,.xls" style="font-size:12px;">
+                <button type="button" class="btn btn-success" onclick="importSuppliersFromExcel()"><i class="fas fa-upload"></i> تحميل ملف بيانات الموردين</button>
+            </div>
+            <div id="supplierImportStatus" style="font-size:12.5px; margin-top:10px; display:none;"></div>
+        </div>
+    </div>
+
 </div>
 
 <!-- ============ ABOUT ============ -->
@@ -1052,6 +1109,11 @@
                 <button onclick="closePreview()" class="btn">إغلاق</button>
                 <button class="modal-close" onclick="closePreview()">×</button>
             </div>
+        </div>
+        <!-- أزرار الإجراءات تحت زر التحميل (تظهر فقط للأوامر المحفوظة وبحسب الصلاحيات) -->
+        <div id="previewActionBar" style="display:none; padding:10px 20px; background:#f8fafc; border-bottom:1px solid #e8eef5; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <span style="font-size:12px; color:#7a8b99; font-weight:600;"><i class="fas fa-tools"></i> إجراءات الأمر:</span>
+            <div id="previewActionBtns" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
         </div>
         <div class="modal-body">
             <div id="previewContent"></div>
@@ -1137,10 +1199,11 @@
             <form onsubmit="addSupplier(event)">
                 <div class="form-grid cols-2">
                     <div class="form-group-item"><label>اسم المورد *</label><input type="text" id="newSupplierName" required></div>
-                    <div class="form-group-item"><label>نوع الخدمة *</label>
-                        <select id="newSupplierServiceType" required>
-                            <option value="">-- اختر نوع الخدمة --</option>
-                        </select>
+                    <div class="form-group-item"><label>نوع الخدمة * <span style="font-weight:400; color:#999; font-size:11px;">(يمكن اختيار أكثر من نوع)</span></label>
+                        <div class="ms-wrap" data-ms="msNewSupplierSvc">
+                            <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- اختر نوع الخدمة --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                            <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                        </div>
                     </div>
                     <div class="form-group-item"><label>تصنيف المورد *</label>
                         <select id="newSupplierType" required>
@@ -1422,7 +1485,7 @@ function rowToOrder(r) {
     return { id: r.id, number: r.number, date: r.order_date, supplierId: r.supplier_id,
              supplierName: r.supplier_name, items: r.items || [], subtotal: +r.subtotal,
              tax: +r.tax, total: +r.total, notes: r.notes, staff: r.staff, status: r.status,
-             department: r.department || '', createdAt: r.created_at,
+             department: r.department || '', lpoRef: r.lpo_ref || '', createdAt: r.created_at,
              approvalStatus: r.approval_status, approvedBy: r.approved_by, approvedAt: r.approved_at,
              rejectionReason: r.rejection_reason };
 }
@@ -1724,6 +1787,7 @@ const I18N = {
     '-- كل الموردين --': '-- All Suppliers --',
     '-- كل الحالات --': '-- All Statuses --',
     '-- كل أنواع الخدمات --': '-- All Service Types --',
+    '-- كل الأقسام --': '-- All Departments --',
     '-- كل الموظفين --': '-- All Employees --',
     '-- كل المستخدمين --': '-- All Users --',
     'بحث...': 'Search...',
@@ -2719,12 +2783,14 @@ async function saveLPO(event) {
     if (!document.getElementById('supplierId').value) { alert(msg('يرجى اختيار مورد من القائمة')); return; }
     if (!document.getElementById('lpoDepartment').value) { alert(msg('يرجى اختيار القسم المعني / غرض الطلب')); return; }
     const supId = document.getElementById('supplierId').value;
+    const lpoRefVal = (document.getElementById('lpoRef').value || '').trim();
     const row = {
         number: document.getElementById('lpoNumber').value,
         order_date: document.getElementById('lpoDate').value,
         supplier_id: isUuid(supId) ? supId : null,
         supplier_name: document.getElementById('supplierName').value,
         department: document.getElementById('lpoDepartment').value || '',
+        lpo_ref: lpoRefVal ? ('Ref-' + lpoRefVal) : '',
         items: collectItems(),
         subtotal: parseFloat(document.getElementById('totalSubtotal').textContent),
         tax: parseFloat(document.getElementById('totalTax').textContent),
@@ -2741,7 +2807,7 @@ async function saveLPO(event) {
         // تعديل أمر قائم: تحديث الحقول القابلة للتعديل مع الحفاظ على الرقم والحالة والاعتماد
         const updRow = {
             order_date: row.order_date, supplier_id: row.supplier_id, supplier_name: row.supplier_name,
-            department: row.department, items: row.items, subtotal: row.subtotal, tax: row.tax,
+            department: row.department, lpo_ref: row.lpo_ref, items: row.items, subtotal: row.subtotal, tax: row.tax,
             total: row.total, notes: row.notes
         };
         ({ error } = await sb.from('purchase_orders').update(updRow).eq('id', prevOrderId));
@@ -2794,6 +2860,8 @@ function resetForm() {
     if (tp) tp.value = '';
     if (ss) ss.value = '';
     if (dp) dp.value = '';
+    const refEl = document.getElementById('lpoRef');
+    if (refEl) refEl.value = '';
     document.getElementById('itemsBody').innerHTML = '';
     addItemRow();
     generateLPONumber();
@@ -2839,7 +2907,28 @@ function loadDashboard() {
     drawMonthlyChart();
     drawStatusChart();
     drawDashSupplierSpend();
+    drawDashDeptChart();
     drawUsageHeatmap();
+}
+
+// رسم "مبالغ أوامر الشراء حسب القسم المعني" في لوحة التحكم
+function drawDashDeptChart() {
+    const el = document.getElementById('dashDeptChart');
+    if (!el) return;
+    const en = currentLanguage === 'en';
+    const byDept = {};
+    lpoDrafts.forEach(l => {
+        const d = l.department || (en ? 'Unspecified' : 'غير محدد');
+        byDept[d] = (byDept[d] || 0) + l.total;
+    });
+    const depts = Object.keys(byDept).sort((a, b) => byDept[b] - byDept[a]);
+    const palette = ['#0093c4','#7cb342','#f39c12','#e74c3c','#9b59b6','#1abc9c','#34495e','#e67e22','#16a085','#2980b9'];
+    destroyChart('dashDept');
+    chartInstances.dashDept = new Chart(el.getContext('2d'), {
+        type: 'bar',
+        data: { labels: depts, datasets: [{ label: en ? 'Amount (OMR)' : 'المبلغ (ر.ع)', data: depts.map(d => +byDept[d].toFixed(3)), backgroundColor: depts.map((_, i) => palette[i % palette.length]), borderRadius: 6, maxBarThickness: 48 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
 }
 
 function destroyChart(key) { if (chartInstances[key]) { chartInstances[key].destroy(); delete chartInstances[key]; } }
@@ -2936,8 +3025,10 @@ function drawServiceTypeChart() {
     const svc = {};
     lpoDrafts.forEach(l => {
         const sup = suppliers.find(s => s.id === l.supplierId);
-        const type = sup ? sup.serviceType : 'غير محدد';
-        svc[type] = (svc[type] || 0) + l.total;
+        const types = sup ? splitSvc(sup.serviceType) : [];
+        if (!types.length) types.push('غير محدد');
+        const share = l.total / types.length;   // توزيع المبلغ بالتساوي على أنواع خدمة المورد
+        types.forEach(t => { svc[t] = (svc[t] || 0) + share; });
     });
     destroyChart('serviceType');
     chartInstances.serviceType = new Chart(ctx, {
@@ -2985,17 +3076,24 @@ function drawStatusChart() {
 
 // ===================== DRAFTS =====================
 function loadDrafts() {
+    initColumnDrag('draftsTable', loadDrafts);
     const numF = (document.getElementById('filterDraftNumber').value || '').toLowerCase();
     const supF = document.getElementById('filterDraftSupplier').value;
     const dateF = document.getElementById('filterDraftDate').value;
 
     const tbody = document.querySelector('#draftsTable tbody');
     tbody.innerHTML = '';
-    const filtered = draftSaves.filter(d =>
+    let filtered = draftSaves.filter(d =>
         (!numF || d.draftNumber.toLowerCase().includes(numF)) &&
         (!supF || d.supplierId === supF) &&
         (!dateF || d.date === dateF)
     );
+    // الأحدث أولاً (تنازلي حسب تاريخ الإنشاء / التاريخ)
+    filtered = filtered.slice().sort((a, b) => {
+        const ca = a.createdAt || a.date || '';
+        const cb = b.createdAt || b.date || '';
+        return cb < ca ? -1 : cb > ca ? 1 : 0;
+    });
     if (filtered.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#999;">لا توجد مسودات</td></tr>';
     } else {
@@ -3006,6 +3104,7 @@ function loadDrafts() {
             <td><button class="btn btn-small" onclick="previewDraft('${d.id}')" title="معاينة"><i class="fas fa-eye"></i></button>${dEdit}${dDel}</td>`;
         });
     }
+    applyColumnOrder('draftsTable');
 }
 
 async function editDraft(id) {
@@ -3047,6 +3146,8 @@ async function editLPO(id) {
     document.body.style.overflow = 'hidden';
     document.getElementById('lpoNumber').value = l.number; // الحفاظ على رقم الأمر
     document.getElementById('lpoDate').value = l.date;
+    const refEl2 = document.getElementById('lpoRef');
+    if (refEl2) refEl2.value = (l.lpoRef || '').replace(/^Ref-/i, '');
     selectSupplier(suppliers.find(s => s.id === l.supplierId) || { id: l.supplierId, name: l.supplierName, serviceType: '' });
     document.getElementById('generalNotes').value = l.notes || '';
     const deptEl = document.getElementById('lpoDepartment');
@@ -3432,6 +3533,25 @@ function msRenderList(key) {
 
 function msGet(key) { const m = MS[key]; return m ? [...m.selected] : []; }
 function msClear(key) { const m = MS[key]; if (m) { m.selected.clear(); msRenderTags(key); if (m.el.classList.contains('open')) msRenderList(key); } }
+// تحديد مجموعة قيم مسبقاً (يُستخدم في وضع تعديل المورد لتعبئة أنواع الخدمة المختارة)
+function msSetSelected(key, values) {
+    const m = MS[key]; if (!m) return;
+    m.selected = new Set((values || []).filter(v => v != null && v !== ''));
+    msRenderTags(key); if (m.el.classList.contains('open')) msRenderList(key);
+}
+
+// تقسيم نص أنواع الخدمة (المخزّنة مفصولة بفواصل) إلى مصفوفة عناصر نظيفة
+function splitSvc(str) {
+    if (!str) return [];
+    return String(str).split(/[,،]/).map(s => s.trim()).filter(Boolean);
+}
+// مجموعة كل أنواع الخدمات الفريدة (من جدول الأنواع + ما هو مسجّل فعلاً لدى الموردين، بعد التقسيم)
+function allServiceTypesSet() {
+    const arr = [];
+    (serviceTypes || []).forEach(s => { if (s && s.name) arr.push(s.name); });
+    (suppliers || []).forEach(s => splitSvc(s.serviceType).forEach(t => arr.push(t)));
+    return [...new Set(arr.filter(Boolean))];
+}
 
 document.addEventListener('click', function(e) {
     if (e.target.closest('[data-ms]')) return;
@@ -3452,6 +3572,7 @@ function getFilteredLPOs() {
     const svcF = msGet('msService');        // مصفوفة أنواع خدمات
     const fromF = document.getElementById('filterFromDate').value;
     const toF = document.getElementById('filterToDate').value;
+    const deptF = msGet('msDepartment');    // مصفوفة أقسام
     return lpoDrafts.filter(l =>
         (!numF || l.number.toLowerCase().includes(numF)) &&
         (!supF.length || supF.includes(l.supplierId)) &&
@@ -3460,7 +3581,8 @@ function getFilteredLPOs() {
                      : statusF === '__rejected' ? l.approvalStatus === 'rejected'
                      : l.status === statusF)) &&
         (!staffF.length || staffF.includes(l.staff)) &&
-        (!svcF.length || svcF.includes(orderServiceType(l))) &&
+        (!svcF.length || splitSvc(orderServiceType(l)).some(t => svcF.includes(t))) &&
+        (!deptF.length || deptF.includes(l.department)) &&
         (!fromF || l.date >= fromF) &&
         (!toF || l.date <= toF)
     );
@@ -3485,8 +3607,9 @@ function getSortedLPOs() {
         });
         return list;
     }
-    const keys = ['number', 'supplierName', 'serviceType', 'date', 'total', 'status', 'staff'];
+    const keys = ['number', 'supplierName', 'serviceType', 'date', 'total', 'status', 'staff', null, 'department'];
     const key = keys[lpoSortCol];
+    if (!key) return list;
     list.sort((a, b) => {
         let av = (key === 'serviceType') ? orderServiceType(a) : a[key];
         let bv = (key === 'serviceType') ? orderServiceType(b) : b[key];
@@ -3510,7 +3633,7 @@ function renderLPOList() {
     const tbody = document.querySelector('#lpoListTable tbody');
     tbody.innerHTML = '';
     if (list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#999;">لا توجد أوامر مطابقة</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#999;">لا توجد أوامر مطابقة</td></tr>';
     } else {
         list.forEach(l => {
             const canApprove = (l.approvalStatus === 'pending') && can('orders', 'approve');
@@ -3529,9 +3652,11 @@ function renderLPOList() {
             const reasonLine = (l.approvalStatus === 'rejected' && l.rejectionReason)
                 ? `<div style="font-size:10px; color:#c0392b; margin-top:3px; max-width:230px; white-space:normal;" title="${escapeHtml(l.rejectionReason)}"><i class="fas fa-comment-dots"></i> ${escapeHtml(l.rejectionReason)}</div>`
                 : '';
-            tbody.insertRow().innerHTML = `<td>${l.number}</td><td>${l.supplierName}</td><td>${escapeHtml(orderServiceType(l)) || '<span style="color:#bbb;">—</span>'}</td><td>${l.date}</td><td>${fmt(l.total)}</td>
+            const deptLabel = escapeHtml(l.department || '') || '<span style="color:#bbb;">—</span>';
+            const printBtn = `<button class="btn btn-small" style="background:#6c757d; color:#fff;" onclick="quickPrintLPO('${l.id}')" title="${currentLanguage === 'en' ? 'Download PDF' : 'تحميل PDF'}"><i class="fas fa-print"></i></button>`;
+            tbody.insertRow().innerHTML = `<td>${l.number}</td><td>${l.supplierName}</td><td>${escapeHtml(orderServiceType(l)) || '<span style="color:#bbb;">—</span>'}</td><td>${deptLabel}</td><td>${l.date}</td><td>${fmt(l.total)}</td>
             <td>${approvalBadge(l)}${reasonLine}</td><td>${l.staff}</td>
-            <td style="white-space:nowrap;"><button class="btn btn-small" onclick="viewLPO('${l.id}')" title="${currentLanguage === 'en' ? 'Preview' : 'معاينة'}"><i class="fas fa-eye"></i></button> ${editBtn} ${approveBtn} ${rejectBtn} ${delBtn}</td>`;
+            <td style="white-space:nowrap;"><button class="btn btn-small" onclick="viewLPO('${l.id}')" title="${currentLanguage === 'en' ? 'Preview' : 'معاينة'}"><i class="fas fa-eye"></i></button> ${printBtn} ${editBtn} ${approveBtn} ${rejectBtn} ${delBtn}</td>`;
         });
     }
     updateSortArrows();
@@ -3567,7 +3692,7 @@ function sortLPOTable(col) {
 
 function clearLPOFilters() {
     ['filterOrderNumber','filterStatus','filterFromDate','filterToDate'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
-    msClear('msSupplier'); msClear('msUser'); msClear('msService');
+    msClear('msSupplier'); msClear('msUser'); msClear('msService'); msClear('msDepartment');
     document.getElementById('orderNumberDropdown').classList.remove('active');
     filterLPOs();
 }
@@ -3922,13 +4047,13 @@ function loadSuppliersList() {
 
 function filterSuppliers() {
     const nameF = (document.getElementById('filterSupName').value || '').toLowerCase();
-    const svcF = document.getElementById('filterSupService').value;
+    const svcF = msGet('msSupSvc');          // مصفوفة أنواع خدمات
     const cityF = document.getElementById('filterSupCity').value;
     const tbody = document.querySelector('#suppliersTable tbody');
     tbody.innerHTML = '';
     const list = suppliers.filter(s =>
         (!nameF || s.name.toLowerCase().includes(nameF)) &&
-        (!svcF || s.serviceType === svcF) &&
+        (!svcF.length || splitSvc(s.serviceType).some(t => svcF.includes(t))) &&
         (!cityF || s.city === cityF)
     );
     if (list.length === 0) {
@@ -3958,7 +4083,7 @@ function filterSuppliers() {
 
 function clearSupplierFilters() {
     document.getElementById('filterSupName').value = '';
-    document.getElementById('filterSupService').value = '';
+    msClear('msSupSvc');
     document.getElementById('filterSupCity').value = '';
     filterSuppliers();
 }
@@ -3989,16 +4114,18 @@ function openSupplierModal(fromLPO) {
     supplierModalFromLPO = !!fromLPO;
     editingSupplierId = null;          // الوضع الافتراضي: إضافة
     setSupplierModalMode('add');
-    // تعبئة قائمة نوع الخدمة المقيدة من جدول أنواع الخدمات
-    const sel = document.getElementById('newSupplierServiceType');
-    if (sel) sel.innerHTML = '<option value="">-- اختر نوع الخدمة --</option>' + serviceTypes.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+    // تهيئة قائمة نوع الخدمة متعددة الاختيار (أنواع الجدول + ما هو مسجّل فعلاً لدى الموردين)
+    msSetup('msNewSupplierSvc', '-- اختر نوع الخدمة --', null);
+    msSetOptions('msNewSupplierSvc', allServiceTypesSet().map(t => ({ value: t, label: t })));
+    msSetSelected('msNewSupplierSvc', []);
     document.getElementById('supplierModal').classList.add('active');
 }
 function closeSupplierModal() {
     supplierModalFromLPO = false;
     editingSupplierId = null;
     document.getElementById('supplierModal').classList.remove('active');
-    ['newSupplierName','newSupplierServiceType','newSupplierPhone','newSupplierEmail','newSupplierVat','newSupplierCr'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    ['newSupplierName','newSupplierPhone','newSupplierEmail','newSupplierVat','newSupplierCr'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    msClear('msNewSupplierSvc');
     document.getElementById('newSupplierCity').value = 'مسقط';
     document.getElementById('newSupplierType').value = 'Local Supplier';
     // تفريغ حقول الملفات
@@ -4015,7 +4142,7 @@ function editSupplier(id) {
     openSupplierModal(false);          // يفتح النافذة ويملأ أنواع الخدمة ويضبط وضع الإضافة مبدئياً
     editingSupplierId = id;            // ثم نحوّلها لوضع التعديل
     document.getElementById('newSupplierName').value = s.name || '';
-    document.getElementById('newSupplierServiceType').value = s.serviceType || '';
+    msSetSelected('msNewSupplierSvc', splitSvc(s.serviceType));
     document.getElementById('newSupplierType').value = s.supplierType || 'Local Supplier';
     document.getElementById('newSupplierPhone').value = s.phone || '';
     document.getElementById('newSupplierEmail').value = s.email || '';
@@ -4082,7 +4209,8 @@ async function uploadSupplierFile(fileInputId, prefix) {
 async function addSupplier(event) {
     event.preventDefault();
     if (isGuest) { alert(msg('الزائر لا يملك صلاحية الإضافة')); return; }
-    if (!document.getElementById('newSupplierServiceType').value) { alert(msg('يرجى اختيار نوع الخدمة')); return; }
+    const selectedSvc = msGet('msNewSupplierSvc');
+    if (!selectedSvc.length) { alert(msg('يرجى اختيار نوع الخدمة')); return; }
 
     // رفع الملفات أولاً (إن وُجدت) — كلها اختيارية
     let taxUrl = '', crUrl = '', otherUrl = '';
@@ -4104,7 +4232,7 @@ async function addSupplier(event) {
 
     const row = {
         name: document.getElementById('newSupplierName').value,
-        service_type: document.getElementById('newSupplierServiceType').value,
+        service_type: selectedSvc.join('، '),
         supplier_type: document.getElementById('newSupplierType').value || 'Local Supplier',
         phone: document.getElementById('newSupplierPhone').value,
         email: document.getElementById('newSupplierEmail').value,
@@ -4290,14 +4418,19 @@ function populateAllFilters() {
     // فلتر المستخدم (قائمة متعددة الاختيارات)
     msSetOptions('msUser', staffSet.map(s => ({ value: s, label: s })));
 
-    // أنواع الخدمات للفلاتر: من جدول أنواع الخدمات + ما هو موجود فعلاً لدى الموردين
-    const svcSet = [...new Set([...serviceTypes.map(s => s.name), ...suppliers.map(s => s.serviceType)].filter(Boolean))];
+    // أنواع الخدمات للفلاتر: من جدول أنواع الخدمات + ما هو موجود فعلاً لدى الموردين (مع تقسيم المتعدد)
+    const svcSet = allServiceTypesSet();
     const svcOptions = '<option value="">-- كل أنواع الخدمات --</option>' + svcSet.map(s => `<option value="${s}">${s}</option>`).join('');
-    ['filterSupService','reportServiceType'].forEach(id => {
+    ['reportServiceType'].forEach(id => {
         const el = document.getElementById(id); if (el) { const v = el.value; el.innerHTML = svcOptions; el.value = v; }
     });
-    // فلتر نوع الخدمة (قائمة متعددة الاختيارات في صفحة أوامر الشراء)
+    // فلتر نوع الخدمة (قوائم متعددة الاختيارات): صفحة أوامر الشراء + صفحة الموردين
     msSetOptions('msService', svcSet.map(s => ({ value: s, label: s })));
+    msSetOptions('msSupSvc', svcSet.map(s => ({ value: s, label: s })));
+
+    // فلتر القسم / الغرض في صفحة أوامر الشراء (قائمة متعددة الاختيار)
+    const deptSet = [...new Set([...departments.map(d => d.name), ...lpoDrafts.map(l => l.department)].filter(Boolean))];
+    msSetOptions('msDepartment', deptSet.map(d => ({ value: d, label: d })));
 
     const citySet = [...new Set(suppliers.map(s => s.city).filter(Boolean))];
     const cityEl = document.getElementById('filterSupCity');
@@ -4320,12 +4453,9 @@ function populateAllFilters() {
         deptEl.value = v;
     }
 
-    // قائمة نوع الخدمة المقيدة في نافذة إضافة مورد
-    const supSvcEl = document.getElementById('newSupplierServiceType');
-    if (supSvcEl && supSvcEl.tagName === 'SELECT') {
-        const v = supSvcEl.value;
-        supSvcEl.innerHTML = '<option value="">-- اختر نوع الخدمة --</option>' + serviceTypes.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
-        supSvcEl.value = v;
+    // قائمة نوع الخدمة متعددة الاختيار في نافذة إضافة مورد (تُحدَّث عناصرها)
+    if (MS['msNewSupplierSvc']) {
+        msSetOptions('msNewSupplierSvc', allServiceTypesSet().map(t => ({ value: t, label: t })));
     }
 
     // إعادة تطبيق الترجمة على القوائم التي أُعيد بناؤها (placeholders الخيارات)
@@ -4412,8 +4542,10 @@ function renderServiceTypeChart(list) {
     const byService = {};
     list.forEach(l => {
         const sup = suppliers.find(s => s.id === l.supplierId);
-        const svc = (sup && sup.serviceType) ? sup.serviceType : (currentLanguage === 'en' ? 'Unspecified' : 'غير محدد');
-        byService[svc] = (byService[svc] || 0) + l.total;
+        const types = sup ? splitSvc(sup.serviceType) : [];
+        if (!types.length) types.push(currentLanguage === 'en' ? 'Unspecified' : 'غير محدد');
+        const share = l.total / types.length;
+        types.forEach(t => { byService[t] = (byService[t] || 0) + share; });
     });
     const labels = Object.keys(byService);
     destroyChart('reportService');
@@ -4471,6 +4603,18 @@ function renderDepartmentStats(list) {
     });
     const depts = Object.keys(byDept).sort((a, b) => byDept[b].total - byDept[a].total);
 
+    // رسم بياني: تصنيف مبالغ أوامر الشراء حسب القسم المعني
+    const deptChartEl = document.getElementById('reportDeptChart');
+    if (deptChartEl) {
+        const palette = ['#0093c4','#7cb342','#f39c12','#e74c3c','#9b59b6','#1abc9c','#34495e','#e67e22','#16a085','#2980b9'];
+        destroyChart('reportDept');
+        chartInstances.reportDept = new Chart(deptChartEl.getContext('2d'), {
+            type: 'bar',
+            data: { labels: depts, datasets: [{ label: currentLanguage === 'en' ? 'Amount (OMR)' : 'المبلغ (ر.ع)', data: depts.map(d => +byDept[d].total.toFixed(3)), backgroundColor: depts.map((_, i) => palette[i % palette.length]), borderRadius: 6, maxBarThickness: 48 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+    }
+
     // البطاقات
     const cardsEl = document.getElementById('deptStatsCards');
     if (cardsEl) {
@@ -4501,16 +4645,78 @@ function renderDepartmentStats(list) {
 function exportReportPDF() {
     const el = document.getElementById('reportPrintArea');
     if (!el) { alert(msg('لا يوجد محتوى للطباعة')); return; }
+    const en = currentLanguage === 'en';
+
+    // ===== بناء ترويسة احترافية تُضاف مؤقتاً أعلى منطقة الطباعة =====
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString(en ? 'en-GB' : 'ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+    // ملخّص الفلاتر المطبّقة
+    const g = (id) => { const e = document.getElementById(id); return e ? e.value : ''; };
+    const monthSel = document.getElementById('reportMonth');
+    const monthTxt = monthSel && monthSel.selectedIndex > 0 ? monthSel.options[monthSel.selectedIndex].text : '';
+    const parts = [];
+    if (monthTxt) parts.push((en ? 'Month: ' : 'الشهر: ') + monthTxt);
+    if (g('reportYear')) parts.push((en ? 'Year: ' : 'السنة: ') + g('reportYear'));
+    if (g('reportSupplier')) { const sup = suppliers.find(s => String(s.id) === g('reportSupplier')); parts.push((en ? 'Supplier: ' : 'المورد: ') + (sup ? sup.name : '')); }
+    if (g('reportStatus')) parts.push((en ? 'Status: ' : 'الحالة: ') + g('reportStatus'));
+    if (g('reportServiceType')) parts.push((en ? 'Service: ' : 'الخدمة: ') + g('reportServiceType'));
+    if (g('reportStaff')) parts.push((en ? 'Employee: ' : 'الموظف: ') + g('reportStaff'));
+    const filterSummary = parts.length ? parts.join('  •  ') : (en ? 'All data (no filters applied)' : 'كل البيانات (بدون تصفية)');
+
+    // الأرقام المهمة
+    const sCount = (document.getElementById('repStatCount') || {}).textContent || '0';
+    const sTotal = (document.getElementById('repStatTotal') || {}).textContent || '0';
+    const sTax = (document.getElementById('repStatTax') || {}).textContent || '0';
+    const sAvg = (document.getElementById('repStatAvg') || {}).textContent || '0';
+
+    const header = document.createElement('div');
+    header.id = '__reportPdfHeader';
+    header.style.cssText = 'font-family:Arial,\'Segoe UI\',Tahoma,sans-serif; padding:0 0 12px; margin-bottom:14px; border-bottom:3px solid #0093c4;';
+    header.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:14px;">
+            <div style="width:92px;">${typeof LOGO_DATA !== 'undefined' ? `<img src="${LOGO_DATA}" style="width:100%;">` : ''}</div>
+            <div style="text-align:center; flex:1;">
+                <div style="font-size:22px; font-weight:800; color:#0093c4;">${en ? 'Purchase Orders Report' : 'تقرير أوامر الشراء المحلية'}</div>
+                <div style="font-size:13px; color:#555; margin-top:2px;">${en ? 'Takaful Oman Insurance' : 'تكافل عمان للتأمين'}</div>
+            </div>
+            <div style="width:150px; text-align:${en ? 'right' : 'left'}; font-size:11px; color:#555; line-height:1.6;">
+                <div><strong>${en ? 'Issued:' : 'تاريخ الإصدار:'}</strong></div>
+                <div>${dateStr}</div>
+            </div>
+        </div>
+        <div style="margin-top:8px; font-size:11.5px; color:#444; background:#eef7fb; border:1px solid #cfe7f3; border-radius:6px; padding:6px 10px;">
+            <i class="fas fa-filter" style="color:#0093c4;"></i> ${escapeHtml(filterSummary)}
+        </div>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <div style="flex:1; text-align:center; background:#f8fafc; border:1px solid #e8eef5; border-radius:8px; padding:8px;"><div style="font-size:11px; color:#7a8b99;">${en ? 'Total Orders' : 'إجمالي الأوامر'}</div><div style="font-size:18px; font-weight:800; color:#0093c4;">${sCount}</div></div>
+            <div style="flex:1; text-align:center; background:#f8fafc; border:1px solid #e8eef5; border-radius:8px; padding:8px;"><div style="font-size:11px; color:#7a8b99;">${en ? 'Total Spend (OMR)' : 'إجمالي الإنفاق (ر.ع)'}</div><div style="font-size:18px; font-weight:800; color:#7cb342;">${sTotal}</div></div>
+            <div style="flex:1; text-align:center; background:#f8fafc; border:1px solid #e8eef5; border-radius:8px; padding:8px;"><div style="font-size:11px; color:#7a8b99;">${en ? 'Total Tax (OMR)' : 'إجمالي الضرائب (ر.ع)'}</div><div style="font-size:18px; font-weight:800; color:#f39c12;">${sTax}</div></div>
+            <div style="flex:1; text-align:center; background:#f8fafc; border:1px solid #e8eef5; border-radius:8px; padding:8px;"><div style="font-size:11px; color:#7a8b99;">${en ? 'Avg Order (OMR)' : 'متوسط الأمر (ر.ع)'}</div><div style="font-size:18px; font-weight:800; color:#0093c4;">${sAvg}</div></div>
+        </div>`;
+
+    // تمييز البطاقات لمنع انقسامها بين الصفحات أثناء الطباعة
+    el.classList.add('pdf-exporting');
+    el.insertBefore(header, el.firstChild);
+
     const opt = {
-        margin: 6,
-        filename: 'Report-' + new Date().toISOString().split('T')[0] + '.pdf',
-        image: { type: 'jpeg', quality: 0.95 },
+        margin: [8, 8, 10, 8],
+        filename: (en ? 'LPO-Report-' : 'تقرير-أوامر-الشراء-') + now.toISOString().split('T')[0] + '.pdf',
+        image: { type: 'jpeg', quality: 0.96 },
         html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'], avoid: ['.card', 'table', '.stat-card', 'canvas'] }
     };
     // مهلة قصيرة لضمان اكتمال رسم الرسوم البيانية قبل الالتقاط
-    const btnNote = currentLanguage === 'en' ? 'Generating PDF...' : 'جارٍ إنشاء PDF...';
-    html2pdf().set(opt).from(el).save();
+    setTimeout(() => {
+        html2pdf().set(opt).from(el).save().then(cleanup).catch(cleanup);
+    }, 350);
+
+    function cleanup() {
+        const h = document.getElementById('__reportPdfHeader');
+        if (h && h.parentNode) h.parentNode.removeChild(h);
+        el.classList.remove('pdf-exporting');
+    }
 }
 
 // ملء جدول مؤشر أداء الموردين
@@ -4591,6 +4797,133 @@ function downloadAllData() {
         XLSX.writeFile(wb, `جميع_البيانات_${new Date().toISOString().split('T')[0]}.xlsx`);
     } catch (e) {
         alert(msg('تعذّر تصدير الملف: ') + e.message);
+    }
+}
+
+// ===================== إدارة قواعد البيانات (نسخ احتياطي + استيراد موردين) =====================
+// عرض تفاصيل آخر نسخة احتياطية (محفوظة في هذا المتصفح)
+function updateLastBackupInfo() {
+    const box = document.getElementById('lastBackupInfo');
+    if (!box) return;
+    let info = '';
+    try { info = localStorage.getItem('lpo_last_backup') || ''; } catch (e) {}
+    const span = box.querySelector('span');
+    if (info) {
+        try {
+            const o = JSON.parse(info);
+            const d = new Date(o.at);
+            const dateStr = d.toLocaleDateString('en-GB') + ' ' + d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+            span.textContent = msg('آخر نسخة احتياطية: ') + dateStr + ' — ' + (o.records || 0) + ' ' + msg('سجل') + (o.by ? ('  •  ' + o.by) : '');
+        } catch (e) { span.textContent = msg('آخر نسخة احتياطية: ') + info; }
+    } else {
+        span.textContent = msg('لم يتم إجراء أي نسخة احتياطية بعد من هذا المتصفح.');
+    }
+}
+
+// تنزيل نسخة احتياطية كاملة (JSON) لجميع بيانات النظام
+function downloadFullBackup() {
+    try {
+        const backup = {
+            meta: {
+                system: 'Takaful Oman LPO System',
+                exportedAt: new Date().toISOString(),
+                exportedBy: (currentUser && currentUser.username) || 'unknown',
+                version: 'v1.0'
+            },
+            purchase_orders: lpoDrafts,
+            drafts: draftSaves,
+            suppliers: suppliers,
+            users: registeredUsers,
+            service_types: serviceTypes,
+            departments: departments,
+            evaluations: (typeof evaluations !== 'undefined' ? evaluations : []),
+            permissions: (typeof rolePermissions !== 'undefined' ? rolePermissions : {})
+        };
+        const records = (lpoDrafts.length + draftSaves.length + suppliers.length + registeredUsers.length
+                         + serviceTypes.length + departments.length);
+        const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'LPO_Backup_' + new Date().toISOString().replace(/[:.]/g, '-').split('T').join('_').slice(0, 19) + '.json';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        try { localStorage.setItem('lpo_last_backup', JSON.stringify({ at: new Date().toISOString(), records: records, by: (currentUser && currentUser.username) || '' })); } catch (e) {}
+        updateLastBackupInfo();
+        recordAction('تنزيل نسخة احتياطية كاملة');
+    } catch (e) {
+        alert(msg('تعذّر إنشاء النسخة الاحتياطية: ') + e.message);
+    }
+}
+
+// تنزيل قالب إكسل جاهز لإدخال بيانات الموردين
+function downloadSupplierTemplate() {
+    if (typeof XLSX === 'undefined') { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
+    try {
+        const headers = ['اسم المورد', 'نوع الخدمة', 'التصنيف', 'الهاتف', 'البريد', 'المدينة', 'الرقم الضريبي', 'السجل التجاري'];
+        const example = [
+            { 'اسم المورد': 'شركة المثال للتجارة', 'نوع الخدمة': 'قرطاسية، طباعة', 'التصنيف': 'Local Supplier', 'الهاتف': '24xxxxxx', 'البريد': 'info@example.com', 'المدينة': 'مسقط', 'الرقم الضريبي': 'OMxxxxxxxx', 'السجل التجاري': '1xxxxxx' }
+        ];
+        const ws = XLSX.utils.json_to_sheet(example, { header: headers });
+        ws['!cols'] = headers.map(() => ({ wch: 20 }));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'الموردون');
+        XLSX.writeFile(wb, 'قالب_بيانات_الموردين.xlsx');
+    } catch (e) {
+        alert(msg('تعذّر إنشاء القالب: ') + e.message);
+    }
+}
+
+// قراءة ملف إكسل وتغذية بيانات الموردين دفعةً واحدة
+async function importSuppliersFromExcel() {
+    const statusEl = document.getElementById('supplierImportStatus');
+    const show = (html, color) => { if (statusEl) { statusEl.style.display = 'block'; statusEl.style.color = color || '#666'; statusEl.innerHTML = html; } };
+    if (isGuest) { alert(msg('الزائر لا يملك صلاحية الإضافة')); return; }
+    if (typeof XLSX === 'undefined') { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
+    const input = document.getElementById('supplierImportFile');
+    if (!input || !input.files || !input.files.length) { alert(msg('يرجى اختيار ملف إكسل أولاً')); return; }
+    show('<i class="fas fa-spinner fa-spin"></i> ' + msg('جارٍ قراءة الملف...'), '#0093c4');
+    try {
+        const file = input.files[0];
+        const buf = await file.arrayBuffer();
+        const wb = XLSX.read(buf, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        if (!rows.length) { show('<i class="fas fa-exclamation-triangle"></i> ' + msg('الملف فارغ أو لا يحتوي على بيانات.'), '#c0392b'); return; }
+
+        // مطابقة أسماء الأعمدة (عربي أو إنجليزي)
+        const pick = (row, keys) => { for (const k of keys) { if (row[k] != null && String(row[k]).trim() !== '') return String(row[k]).trim(); } return ''; };
+        const toInsert = [];
+        let skipped = 0;
+        rows.forEach(r => {
+            const name = pick(r, ['اسم المورد', 'الاسم', 'name', 'Name', 'Supplier', 'supplier']);
+            if (!name) { skipped++; return; }
+            toInsert.push({
+                name: name,
+                service_type: pick(r, ['نوع الخدمة', 'service_type', 'Service Type', 'service']),
+                supplier_type: pick(r, ['التصنيف', 'supplier_type', 'Classification', 'type']) || 'Local Supplier',
+                phone: pick(r, ['الهاتف', 'phone', 'Phone', 'Tel']),
+                email: pick(r, ['البريد', 'البريد الإلكتروني', 'email', 'Email']),
+                city: pick(r, ['المدينة', 'city', 'City']) || 'مسقط',
+                vat_no: pick(r, ['الرقم الضريبي', 'vat_no', 'VAT', 'VAT No']),
+                cr_no: pick(r, ['السجل التجاري', 'cr_no', 'C.R', 'CR'])
+            });
+        });
+        if (!toInsert.length) { show('<i class="fas fa-exclamation-triangle"></i> ' + msg('لم يُعثر على صفوف صالحة (عمود "اسم المورد" مطلوب).'), '#c0392b'); return; }
+
+        show('<i class="fas fa-spinner fa-spin"></i> ' + msg('جارٍ إضافة الموردين... ') + toInsert.length, '#0093c4');
+        const { error } = await sb.from('suppliers').insert(toInsert);
+        if (error) { show('<i class="fas fa-times-circle"></i> ' + msg('تعذّر الاستيراد: ') + error.message, '#c0392b'); return; }
+
+        await loadAllFromCloud();
+        populateAllFilters();
+        loadSuppliersList();
+        populateSupplierSelect();
+        recordAction('استيراد ' + toInsert.length + ' مورد من إكسل');
+        input.value = '';
+        show('<i class="fas fa-check-circle"></i> ' + msg('تم استيراد ') + toInsert.length + msg(' مورد بنجاح') + (skipped ? (' — ' + msg('تم تجاهل ') + skipped + msg(' صف بلا اسم')) : ''), '#2e7d32');
+    } catch (e) {
+        show('<i class="fas fa-times-circle"></i> ' + msg('تعذّر قراءة الملف: ') + e.message, '#c0392b');
     }
 }
 
@@ -4721,6 +5054,7 @@ function loadAdminPanel() {
         });
     }
     renderActivityLog();
+    updateLastBackupInfo();
 }
 
 // تغيير صلاحية مستخدم قائم (المدير فقط) — تشمل الترقية إلى مدير نظام
@@ -4986,10 +5320,10 @@ function buildLPOHtml(data, isDraft) {
     const sup = suppliers.find(function(s){ return (data.supplierId && s.id === data.supplierId) || s.name === data.supplierName; });
     const supPhone = (data.supplierPhone) || (sup && sup.phone) || '';
 
-    // رقم مرجعي للمسودات (RFP) قبل اعتماد أمر الشراء — صيغة RFP-السنة-الرقم التسلسلي
+    // رقم مرجعي: يُستخدم المُدخَل يدوياً (lpoRef) إن وُجد، وإلا يُولَّد تلقائياً
     const lpoRefYear = data.date ? (new Date(data.date).getFullYear() || new Date().getFullYear()) : new Date().getFullYear();
     const lpoRefSerial = String(((String(data.number || '').match(/\d+/g) || ['0']).pop())).padStart(3, '0');
-    const lpoRef = data.ref || ('RFP-' + lpoRefYear + '-' + lpoRefSerial);
+    const lpoRef = data.lpoRef || data.ref || ('RFP-' + lpoRefYear + '-' + lpoRefSerial);
 
     // علامة مائية: "مرفوض / REJECTED" للمرفوضة، وإلا "مسودة / DRAFT" للمسودات
     const watermark = (data.approvalStatus === 'rejected') ? `
@@ -5024,7 +5358,7 @@ function buildLPOHtml(data, isDraft) {
                 <div>VATIN: ${COMPANY_INFO.vatin}</div>
             </div>
             <div style="flex:1; text-align:center; padding-top:2px;">
-                <div style="font-family:'Tajawal','Segoe UI',Tahoma,Arial,sans-serif; font-size:30px; font-weight:700; color:#111; direction:rtl; line-height:1.15; white-space:nowrap;">أمر<span style="display:inline-block; width:8px;"></span>شراء<span style="display:inline-block; width:8px;"></span>محلي</div>
+                <div style="font-family:Arial,'Segoe UI',Tahoma,sans-serif; font-size:30px; font-weight:700; color:#111; direction:rtl; line-height:1.15; white-space:nowrap;">أمر<span style="display:inline-block; width:8px;"></span>شراء<span style="display:inline-block; width:8px;"></span>محلي</div>
                 <div style="width:82%; height:2px; background:linear-gradient(90deg, rgba(0,147,196,0) 0%, #0093c4 50%, rgba(0,147,196,0) 100%); margin:5px auto;"></div>
                 <div style="font-size:20px; font-weight:700; color:#444; letter-spacing:2.5px; line-height:1.1; white-space:nowrap;">LOCAL PURCHASE ORDER</div>
             </div>
@@ -5119,8 +5453,8 @@ function buildLPOHtml(data, isDraft) {
                         </div>
                         <div style="font-size:8.5px; font-weight:600; color:#c0392b; margin-top:4px; white-space:nowrap;">${data.approvedBy ? escapeHtml(data.approvedBy) : ''}${data.approvedAt ? ' · ' + new Date(data.approvedAt).toLocaleDateString('en-GB') : ''}</div>
                     </div>` : ''}
-                    <div style="${data.approvalStatus === 'approved' ? 'position:absolute; top:218px; left:0; right:0; z-index:1;' : 'position:relative; z-index:1;'} border-top:1px solid #333; padding-top:3px; color:#555;">${data.approvalStatus === 'approved' ? '' : escapeHtml(data.staff || '')}</div>
-                    ${data.approvalStatus === 'approved' ? `<div style="position:absolute; top:223px; left:0; right:0; text-align:left; font-size:10px; font-weight:600; color:#555;">${escapeHtml(data.staff || '')}</div>` : ''}
+                    <div style="${data.approvalStatus === 'approved' ? 'position:absolute; top:218px; left:0; right:0; z-index:1;' : 'position:relative; z-index:1;'} border-top:1px solid #333; padding-top:3px; color:#555; font-weight:400;">${data.approvalStatus === 'approved' ? '' : escapeHtml(data.staff || '')}</div>
+                    ${data.approvalStatus === 'approved' ? `<div style="position:absolute; top:223px; left:0; right:0; text-align:left; font-size:10px; font-weight:400; color:#555;">${escapeHtml(data.staff || '')}</div>` : ''}
                 </div>
                 <div style="flex:1; position:relative; text-align:center;">
                     <div style="font-weight:700; font-size:12px; padding-top:40px; margin-bottom:${data.approvalStatus === 'approved' ? '181px' : '160px'};">Received by: &nbsp;<span style="direction:rtl; color:#555;">المُستلم</span></div>
@@ -5171,9 +5505,33 @@ function viewLPO(id) {
     previewLPOData = l;
     previewIsDraft = false;  // أمر محفوظ نهائي → بلا علامة مائية
     document.getElementById('previewContent').innerHTML = buildLPOHtml(l, false);
+    buildPreviewActionBar(l);
     document.getElementById('previewModal').classList.add('active');
     // فتح المحادثة المرتبطة برقم الأمر
     openChat(l.number, 'order');
+}
+
+// بناء شريط أزرار الإجراءات في نافذة المعاينة
+function buildPreviewActionBar(l) {
+    const bar = document.getElementById('previewActionBar');
+    const btns = document.getElementById('previewActionBtns');
+    if (!bar || !btns) return;
+    const en = currentLanguage === 'en';
+    const canApprove = (l.approvalStatus === 'pending') && can('orders','approve');
+    let html = '';
+    if (can('orders','edit')) {
+        html += `<button class="btn btn-small" style="background:#f0ad4e; color:#fff;" onclick="closePreview(); editLPO('${l.id}')" title="${en ? 'Edit order' : 'تعديل الأمر'}"><i class="fas fa-edit"></i> ${en ? 'Edit' : 'تعديل'}</button>`;
+    }
+    if (canApprove) {
+        html += `<button class="btn btn-small" style="background:#2e7d32; color:#fff;" onclick="closePreview(); approveOrder('${l.id}')" title="${en ? 'Approve' : 'اعتماد'}"><i class="fas fa-check"></i> ${en ? 'Approve' : 'اعتماد'}</button>`;
+        html += `<button class="btn btn-small" style="background:#c0392b; color:#fff;" onclick="closePreview(); rejectOrder('${l.id}')" title="${en ? 'Reject' : 'رفض'}"><i class="fas fa-times"></i> ${en ? 'Reject' : 'رفض'}</button>`;
+    }
+    if (html) {
+        btns.innerHTML = html;
+        bar.style.display = 'flex';
+    } else {
+        bar.style.display = 'none';
+    }
 }
 
 // معاينة مسودة (مع المحادثة)
@@ -5522,6 +5880,26 @@ function downloadPreviewPDF() {
     }).from(el).save();
 }
 
+// طباعة/تحميل PDF مباشرة من صف القائمة (دون فتح نافذة المعاينة)
+function quickPrintLPO(id) {
+    const l = lpoDrafts.find(x => x.id === id || String(x.id) === String(id));
+    if (!l) return;
+    // بناء منطقة الطباعة في عنصر مخفي مؤقت
+    const tmp = document.createElement('div');
+    tmp.style.cssText = 'position:fixed; top:-9999px; left:-9999px; width:794px;';
+    tmp.innerHTML = buildLPOHtml(l, false);
+    document.body.appendChild(tmp);
+    const el = tmp.querySelector('#lpoPrintArea');
+    if (!el) { document.body.removeChild(tmp); return; }
+    html2pdf().set({
+        margin: 4,
+        filename: (l.number || 'LPO') + '.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    }).from(el).save().then(() => { document.body.removeChild(tmp); });
+}
+
 // ===================== INIT =====================
 window.addEventListener('load', async function() {
     applyLogo();
@@ -5529,6 +5907,8 @@ window.addEventListener('load', async function() {
     msSetup('msSupplier', '-- كل الموردين --', filterLPOs);
     msSetup('msUser', '-- كل المستخدمين --', filterLPOs);
     msSetup('msService', '-- كل أنواع الخدمات --', filterLPOs);
+    msSetup('msDepartment', '-- كل الأقسام --', filterLPOs);
+    msSetup('msSupSvc', '-- كل أنواع الخدمات --', filterSuppliers);
     // تفعيل حركات النوافذ المنبثقة
     initModalAnimations();
     // تطبيق اللغة الافتراضية (الإنجليزية) على صفحة الدخول وكامل الواجهة
