@@ -9,6 +9,10 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <!-- أيقونات Font Awesome (المستخدمة فعلياً في الواجهة) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- خط Tajawal (مستخدم في ختم الاعتماد داخل PDF) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
     <!-- المكتبات الأساسية: غير حاجبة للعرض (defer) حتى تظهر الصفحة فوراً -->
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
@@ -170,6 +174,11 @@
         #supplierModal { z-index: 1100; }
         /* عند اختيار الإنجليزية (LTR): محاذاة رؤوس أعمدة جدولي أوامر الشراء والموردين لليسار ليتناسق الجدول مع خلاياه */
         html[dir="ltr"] #lpoListTable th, html[dir="ltr"] #suppliersTable th, html[dir="ltr"] #draftsTable th { text-align: left; }
+        /* صفوف مضغوطة لقائمتي أوامر الشراء والمسودات لتوفير مساحة */
+        #lpoListTable th, #draftsTable th { padding: 8px 9px; font-size: 12px; }
+        #lpoListTable td, #draftsTable td { padding: 6px 9px; font-size: 12.5px; }
+        #lpoListTable tbody tr, #draftsTable tbody tr { cursor: pointer; }
+        #lpoListTable td .btn-small, #draftsTable td .btn-small { padding: 4px 7px; font-size: 11px; }
         /* سحب/إزاحة الأعمدة من صف العنوان */
         #lpoListTable thead th, #suppliersTable thead th, #draftsTable thead th { -webkit-user-select: none; user-select: none; position: relative; }
         #lpoListTable thead th.col-dragging, #suppliersTable thead th.col-dragging, #draftsTable thead th.col-dragging { opacity: 0.4; }
@@ -218,6 +227,25 @@
         .tax-cell { display: flex; align-items: center; justify-content: center; gap: 5px; }
         .tax-cell input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
         .tax-cell .tax-pct { width: 42px; padding: 4px; text-align: center; }
+
+        /* ===== نافذة أمر شراء جديد: تنسيق مضغوط لتوفير المساحة ===== */
+        #newLpoModal .form-grid { gap: 0.7rem; margin-bottom: 0.7rem; }
+        #newLpoModal .form-group-item { gap: 3px; }
+        #newLpoModal .form-group-item label { font-size: 11.5px; }
+        #newLpoModal .form-group-item input, #newLpoModal .form-group-item select, #newLpoModal .form-group-item textarea { padding: 7px 9px; font-size: 12.5px; border-radius: 6px; }
+        #newLpoModal .card { padding: 0.9rem 1rem; margin-bottom: 0.9rem; }
+        #newLpoModal .items-table { margin: 0.7rem 0; }
+        #newLpoModal .items-table th { padding: 6px 4px; font-size: 10.5px; }
+        #newLpoModal .items-table td { padding: 3px 3px; vertical-align: middle; }
+        #newLpoModal .items-table input, #newLpoModal .items-table textarea { padding: 4px 6px; font-size: 11.5px; }
+        #newLpoModal .items-table .item-desc { min-height: 30px; line-height: 1.25; }
+        /* سحب صفوف البنود لإعادة الترتيب */
+        .items-table tbody tr.item-dragging { opacity: 0.45; background: #eaf6fb; }
+        .items-table tbody tr.item-drop-above td { box-shadow: inset 0 3px 0 #0093c4; }
+        .items-table tbody tr.item-drop-below td { box-shadow: inset 0 -3px 0 #0093c4; }
+        .row-grip { cursor: grab; color: #9fb3c0; font-weight: 700; user-select: none; font-size: 13px; letter-spacing: -2px; margin-inline-end: 2px; }
+        .row-grip:active { cursor: grabbing; }
+        .col-num .row-no { font-size: 11px; color: #555; }
 
         /* Tables */
         .table-responsive { overflow-x: auto; border-radius: 8px; border: 1px solid #e8eef5; }
@@ -685,7 +713,20 @@
             <div class="filter-title"><i class="fas fa-filter"></i> فلاتر البحث</div>
             <div class="filter-grid">
                 <input type="text" id="filterDraftNumber" placeholder="رقم المسودة..." oninput="loadDrafts()">
-                <select id="filterDraftSupplier" onchange="loadDrafts()"><option value="">-- كل الموردين --</option></select>
+                <div class="ms-wrap" data-ms="msDraftSupplier">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الموردين --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msDraftService">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل أنواع الخدمات --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+            </div>
+            <div class="filter-grid">
+                <div class="ms-wrap" data-ms="msDraftDept">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الأقسام --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
                 <input type="date" id="filterDraftDate" onchange="loadDrafts()">
             </div>
             <div class="filter-actions">
@@ -694,7 +735,7 @@
         </div>
         <div class="table-responsive">
             <table id="draftsTable">
-                <thead><tr><th>رقم المسودة</th><th>المورد</th><th>التاريخ</th><th>الإجمالي (ر.ع)</th><th>الموظف</th><th>الإجراءات</th></tr></thead>
+                <thead><tr><th>تاريخ التسجيل</th><th>رقم المسودة</th><th>المورد</th><th>نوع الخدمة</th><th>القسم / الغرض</th><th>التاريخ</th><th>الإجمالي (ر.ع)</th><th>الموظف</th><th>الإجراءات</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -770,10 +811,11 @@
             <table id="lpoListTable">
                 <thead>
                     <tr>
+                        <th class="sortable" data-col="9" onclick="sortLPOTable(9)">تاريخ التسجيل <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="0" onclick="sortLPOTable(0)">الرقم <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="1" onclick="sortLPOTable(1)">المورد <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="2" onclick="sortLPOTable(2)">نوع الخدمة <span class="sort-arrow">⇅</span></th>
-                        <th class="sortable" data-col="7" onclick="sortLPOTable(7)">القسم / الغرض <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-col="8" onclick="sortLPOTable(8)">القسم / الغرض <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="3" onclick="sortLPOTable(3)">التاريخ <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="4" onclick="sortLPOTable(4)">المبلغ (ر.ع) <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="5" onclick="sortLPOTable(5)">الحالة <span class="sort-arrow">⇅</span></th>
@@ -1520,7 +1562,7 @@ function rowToDraft(r) {
     return { id: r.id, draftNumber: r.draft_number, date: r.order_date, supplierId: r.supplier_id,
              supplierName: r.supplier_name, items: r.items || [], subtotal: +r.subtotal,
              tax: +r.tax, total: +r.total, notes: r.notes, staff: r.staff,
-             department: r.department || '', createdAt: r.created_at };
+             department: r.department || '', lpoRef: r.lpo_ref || '', createdAt: r.created_at };
 }
 function rowToSupplier(r) {
     return { id: r.id, name: r.name, serviceType: r.service_type, phone: r.phone,
@@ -1760,6 +1802,7 @@ const I18N = {
     'الإجمالي (ر.ع)': 'Total (OMR)',
     'الموظف': 'Employee',
     'الإجراء': 'Action',
+    'تاريخ التسجيل': 'Record Date',
     'مرفوض': 'Rejected',
     'بانتظار الاعتماد': 'Pending Approval',
     'معتمد': 'Approved',
@@ -2600,6 +2643,15 @@ function setTodayDate() {
     document.getElementById('lpoDate').value = new Date().toISOString().split('T')[0];
 }
 function fmt(n) { return (parseFloat(n) || 0).toFixed(3); }
+// تنسيق تاريخ ووقت التسجيل (تاريخ الإنشاء) — يظهر التاريخ والوقت معاً
+function fmtRecordDate(iso) {
+    if (!iso) return '<span style="color:#bbb;">—</span>';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '<span style="color:#bbb;">—</span>';
+    const date = d.toLocaleDateString('en-GB');
+    const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    return `<div style="white-space:nowrap;">${date}</div><div style="font-size:10px; color:#8aa2b0; white-space:nowrap;">${time}</div>`;
+}
 
 // ===================== ARABIC NUMBER TO WORDS =====================
 function numToWordsAr(num) {
@@ -2695,7 +2747,7 @@ function addItemRow(data) {
         else priceVal = (data.riyal || 0) + (data.baiza || 0) / 1000;
     }
     tr.innerHTML = `
-        <td class="col-num">${n}</td>
+        <td class="col-num"><span class="row-grip" title="${currentLanguage==='en'?'Drag to reorder':'اسحب لإعادة الترتيب'}"><i class="fas fa-grip-vertical"></i></span><span class="row-no">${n}</span></td>
         <td class="col-desc"><textarea class="item-desc" rows="2" oninput="calculateTotals()" placeholder="الوصف...">${data ? (data.desc||'') : ''}</textarea></td>
         <td class="col-qty"><input type="number" class="item-qty" value="${data ? data.qty : 1}" min="0" step="1" oninput="calculateTotals()" onkeydown="handleTab(event)"></td>
         <td class="col-price"><input type="number" class="item-price" value="${priceVal}" min="0" step="0.001" placeholder="0.000" oninput="calculateTotals()" onkeydown="handleTab(event)"></td>
@@ -2707,8 +2759,52 @@ function addItemRow(data) {
         <td class="col-total"><span class="item-total">0.000</span></td>
         <td class="col-del"><button type="button" class="btn btn-small" onclick="removeItemRow(this)" style="color:#e74c3c; border-color:#f5c6cb;"><i class="fas fa-trash"></i></button></td>
     `;
+    makeItemRowDraggable(tr);
     tbody.appendChild(tr);
     calculateTotals();
+}
+
+// إعادة ترقيم صفوف البنود بعد الحذف أو إعادة الترتيب
+function renumberItems() {
+    document.querySelectorAll('#itemsBody tr').forEach((tr, i) => {
+        const no = tr.querySelector('.row-no'); if (no) no.textContent = i + 1;
+    });
+}
+
+// سحب صف البند لإعادة ترتيبه بين الصفوف (أعلى/أسفل)
+let _itemDragRow = null;
+function makeItemRowDraggable(tr) {
+    tr.setAttribute('draggable', 'true');
+    tr.addEventListener('dragstart', function(e) {
+        // لا يبدأ السحب من داخل حقل إدخال — فقط من مقبض السحب أو خلية الرقم
+        if (e.target.closest('input, textarea, button')) { e.preventDefault(); return; }
+        _itemDragRow = tr; tr.classList.add('item-dragging');
+        try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'row'); } catch(_) {}
+    });
+    tr.addEventListener('dragend', function() {
+        tr.classList.remove('item-dragging');
+        document.querySelectorAll('#itemsBody tr').forEach(r => r.classList.remove('item-drop-above', 'item-drop-below'));
+        _itemDragRow = null;
+    });
+    tr.addEventListener('dragover', function(e) {
+        if (!_itemDragRow || _itemDragRow === tr) return;
+        e.preventDefault();
+        const rect = tr.getBoundingClientRect();
+        const after = (e.clientY - rect.top) > rect.height / 2;
+        tr.classList.toggle('item-drop-below', after);
+        tr.classList.toggle('item-drop-above', !after);
+    });
+    tr.addEventListener('dragleave', function() { tr.classList.remove('item-drop-above', 'item-drop-below'); });
+    tr.addEventListener('drop', function(e) {
+        if (!_itemDragRow || _itemDragRow === tr) return;
+        e.preventDefault();
+        const rect = tr.getBoundingClientRect();
+        const after = (e.clientY - rect.top) > rect.height / 2;
+        if (after) tr.after(_itemDragRow); else tr.before(_itemDragRow);
+        tr.classList.remove('item-drop-above', 'item-drop-below');
+        renumberItems();
+        calculateTotals();
+    });
 }
 
 function handleTab(event) {
@@ -2725,8 +2821,7 @@ function handleTab(event) {
 
 function removeItemRow(btn) {
     btn.closest('tr').remove();
-    // renumber
-    document.querySelectorAll('#itemsBody tr').forEach((tr, i) => { tr.querySelector('.col-num').textContent = i + 1; });
+    renumberItems();
     calculateTotals();
 }
 
@@ -2778,12 +2873,14 @@ async function saveDraft() {
     if (isGuest) { alert(msg('الزائر لا يملك صلاحية الحفظ')); return; }
     if (!document.getElementById('supplierId').value) { alert(msg('يرجى اختيار مورد من القائمة')); return; }
     const supId = document.getElementById('supplierId').value;
+    const draftRefVal = (document.getElementById('lpoRef') ? (document.getElementById('lpoRef').value || '').trim() : '');
     const row = {
         draft_number: (editingDraftId && editingDraftNumber) ? editingDraftNumber : `DRAFT-${new Date().getFullYear()}-${draftSaves.length + 1}`,
         order_date: document.getElementById('lpoDate').value,
         supplier_id: isUuid(supId) ? supId : null,
         supplier_name: document.getElementById('supplierName').value,
         department: document.getElementById('lpoDepartment').value || '',
+        lpo_ref: draftRefVal ? ('Ref-' + draftRefVal) : '',
         items: collectItems(),
         subtotal: parseFloat(document.getElementById('totalSubtotal').textContent),
         tax: parseFloat(document.getElementById('totalTax').textContent),
@@ -2792,7 +2889,13 @@ async function saveDraft() {
         staff: currentUser.username
     };
     const prevDraftId = editingDraftId; // المسودة القديمة المراد استبدالها عند التعديل
-    const { error } = await sb.from('drafts').insert(row);
+    let insRes = await sb.from('drafts').insert(row);
+    // تراجُع رشيق إن لم يكن عمود lpo_ref موجوداً بعد في جدول المسودات
+    if (insRes.error && /lpo_ref/i.test(insRes.error.message || '')) {
+        const clone = Object.assign({}, row); delete clone.lpo_ref;
+        insRes = await sb.from('drafts').insert(clone);
+    }
+    const error = insRes.error;
     if (error) { alert(msg('تعذّر حفظ المسودة: ') + error.message); return; }
     // عند تعديل مسودة قائمة: تُحذف النسخة القديمة بعد نجاح الحفظ فقط
     if (prevDraftId) { await sb.from('drafts').delete().eq('id', prevDraftId); }
@@ -3127,30 +3230,39 @@ function drawStatusChart() {
 function loadDrafts() {
     initColumnDrag('draftsTable', loadDrafts);
     const numF = (document.getElementById('filterDraftNumber').value || '').toLowerCase();
-    const supF = document.getElementById('filterDraftSupplier').value;
+    const supF = msGet('msDraftSupplier');     // مصفوفة معرّفات موردين
+    const svcF = msGet('msDraftService');       // مصفوفة أنواع خدمات
+    const deptF = msGet('msDraftDept');         // مصفوفة أقسام
     const dateF = document.getElementById('filterDraftDate').value;
 
     const tbody = document.querySelector('#draftsTable tbody');
     tbody.innerHTML = '';
     let filtered = draftSaves.filter(d =>
         (!numF || d.draftNumber.toLowerCase().includes(numF)) &&
-        (!supF || d.supplierId === supF) &&
+        (!supF.length || supF.includes(d.supplierId)) &&
+        (!svcF.length || splitSvc(orderServiceType(d)).some(t => svcF.includes(t))) &&
+        (!deptF.length || deptF.includes(d.department)) &&
         (!dateF || d.date === dateF)
     );
-    // الأحدث أولاً (تنازلي حسب تاريخ الإنشاء / التاريخ)
+    // الفرز الافتراضي: الأحدث أولاً حسب تاريخ التسجيل (تنازلي)
     filtered = filtered.slice().sort((a, b) => {
         const ca = a.createdAt || a.date || '';
         const cb = b.createdAt || b.date || '';
         return cb < ca ? -1 : cb > ca ? 1 : 0;
     });
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#999;">لا توجد مسودات</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#999;">لا توجد مسودات</td></tr>';
     } else {
         filtered.forEach(d => {
-            const dEdit = can('orders','edit') ? `<button class="btn btn-small" onclick="editDraft('${d.id}')" title="تعديل"><i class="fas fa-edit"></i></button>` : '';
-            const dDel = can('orders','delete') ? `<button class="btn btn-small" onclick="deleteDraft('${d.id}')" title="حذف" style="color:#e74c3c;"><i class="fas fa-trash"></i></button>` : '';
-            tbody.insertRow().innerHTML = `<td>${d.draftNumber}</td><td>${d.supplierName}</td><td>${d.date}</td><td>${fmt(d.total)}</td><td>${d.staff}</td>
-            <td><button class="btn btn-small" onclick="previewDraft('${d.id}')" title="معاينة"><i class="fas fa-eye"></i></button>${dEdit}${dDel}</td>`;
+            const dEdit = can('orders','edit') ? `<button class="btn btn-small" style="background:#f0ad4e; color:#fff;" onclick="editDraft('${d.id}')" title="${currentLanguage==='en'?'Edit':'تعديل'}"><i class="fas fa-edit"></i></button>` : '';
+            const dDel = can('orders','delete') ? `<button class="btn btn-small" onclick="deleteDraft('${d.id}')" title="${currentLanguage==='en'?'Delete':'حذف'}" style="color:#e74c3c;"><i class="fas fa-trash"></i></button>` : '';
+            const svcLabel = escapeHtml(orderServiceType(d)) || '<span style="color:#bbb;">—</span>';
+            const deptLabel = escapeHtml(d.department || '') || '<span style="color:#bbb;">—</span>';
+            const row = tbody.insertRow();
+            row.style.cursor = 'pointer';
+            row.setAttribute('onclick', `previewDraft('${d.id}')`);
+            row.innerHTML = `<td>${fmtRecordDate(d.createdAt)}</td><td>${d.draftNumber}</td><td>${d.supplierName}</td><td>${svcLabel}</td><td>${deptLabel}</td><td>${d.date}</td><td>${fmt(d.total)}</td><td>${d.staff}</td>
+            <td style="white-space:nowrap;" onclick="event.stopPropagation();"><button class="btn btn-small" onclick="previewDraft('${d.id}')" title="${currentLanguage==='en'?'Preview':'معاينة'}"><i class="fas fa-eye"></i></button>${dEdit}${dDel}</td>`;
         });
     }
     applyColumnOrder('draftsTable');
@@ -3165,6 +3277,8 @@ async function editDraft(id) {
     modal.classList.add('active'); // الحركة يطبّقها مراقب النوافذ تلقائياً
     // تعبئة الحقول من المسودة
     document.getElementById('lpoDate').value = d.date;
+    const refElD = document.getElementById('lpoRef');
+    if (refElD) refElD.value = (d.lpoRef || '').replace(/^Ref-/i, '');
     selectSupplier(suppliers.find(s => s.id === d.supplierId) || { id: d.supplierId, name: d.supplierName, serviceType: '' });
     document.getElementById('generalNotes').value = d.notes || '';
     const deptEl = document.getElementById('lpoDepartment');
@@ -3219,7 +3333,7 @@ async function deleteDraft(id) {
 
 function clearDraftFilters() {
     document.getElementById('filterDraftNumber').value = '';
-    document.getElementById('filterDraftSupplier').value = '';
+    msClear('msDraftSupplier'); msClear('msDraftService'); msClear('msDraftDept');
     document.getElementById('filterDraftDate').value = '';
     loadDrafts();
 }
@@ -3656,7 +3770,7 @@ function getSortedLPOs() {
         });
         return list;
     }
-    const keys = ['number', 'supplierName', 'serviceType', 'date', 'total', 'status', 'staff', null, 'department'];
+    const keys = ['number', 'supplierName', 'serviceType', 'date', 'total', 'status', 'staff', null, 'department', 'createdAt'];
     const key = keys[lpoSortCol];
     if (!key) return list;
     list.sort((a, b) => {
@@ -3682,7 +3796,7 @@ function renderLPOList() {
     const tbody = document.querySelector('#lpoListTable tbody');
     tbody.innerHTML = '';
     if (list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#999;">لا توجد أوامر مطابقة</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; color:#999;">لا توجد أوامر مطابقة</td></tr>';
     } else {
         list.forEach(l => {
             const canApprove = (l.approvalStatus === 'pending') && can('orders', 'approve');
@@ -3703,9 +3817,12 @@ function renderLPOList() {
                 : '';
             const deptLabel = escapeHtml(l.department || '') || '<span style="color:#bbb;">—</span>';
             const printBtn = `<button class="btn btn-small" style="background:#6c757d; color:#fff;" onclick="quickPrintLPO('${l.id}')" title="${currentLanguage === 'en' ? 'Download PDF' : 'تحميل PDF'}"><i class="fas fa-print"></i></button>`;
-            tbody.insertRow().innerHTML = `<td>${l.number}</td><td>${l.supplierName}</td><td>${escapeHtml(orderServiceType(l)) || '<span style="color:#bbb;">—</span>'}</td><td>${deptLabel}</td><td>${l.date}</td><td>${fmt(l.total)}</td>
+            const row = tbody.insertRow();
+            row.style.cursor = 'pointer';
+            row.setAttribute('onclick', `viewLPO('${l.id}')`);
+            row.innerHTML = `<td>${fmtRecordDate(l.createdAt)}</td><td>${l.number}</td><td>${l.supplierName}</td><td>${escapeHtml(orderServiceType(l)) || '<span style="color:#bbb;">—</span>'}</td><td>${deptLabel}</td><td>${l.date}</td><td>${fmt(l.total)}</td>
             <td>${approvalBadge(l)}${reasonLine}</td><td>${l.staff}</td>
-            <td style="white-space:nowrap;"><button class="btn btn-small" onclick="viewLPO('${l.id}')" title="${currentLanguage === 'en' ? 'Preview' : 'معاينة'}"><i class="fas fa-eye"></i></button> ${printBtn} ${editBtn} ${approveBtn} ${rejectBtn} ${delBtn}</td>`;
+            <td style="white-space:nowrap;" onclick="event.stopPropagation();"><button class="btn btn-small" onclick="viewLPO('${l.id}')" title="${currentLanguage === 'en' ? 'Preview' : 'معاينة'}"><i class="fas fa-eye"></i></button> ${printBtn} ${editBtn} ${approveBtn} ${rejectBtn} ${delBtn}</td>`;
         });
     }
     updateSortArrows();
@@ -4453,11 +4570,13 @@ async function saveEvaluation() {
 // ===================== POPULATE ALL FILTERS (Strict dropdowns) =====================
 function populateAllFilters() {
     const supOptions = '<option value="">-- كل الموردين --</option>' + suppliers.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-    ['filterDraftSupplier','reportSupplier'].forEach(id => {
+    ['reportSupplier'].forEach(id => {
         const el = document.getElementById(id); if (el) { const v = el.value; el.innerHTML = supOptions; el.value = v; }
     });
-    // فلتر المورد (قائمة متعددة الاختيارات في صفحة أوامر الشراء)
-    msSetOptions('msSupplier', suppliers.map(s => ({ value: s.id, label: s.name })));
+    // فلتر المورد (قوائم متعددة الاختيارات): صفحة أوامر الشراء + صفحة المسودات
+    const supMsOpts = suppliers.map(s => ({ value: s.id, label: s.name }));
+    msSetOptions('msSupplier', supMsOpts);
+    msSetOptions('msDraftSupplier', supMsOpts);
 
     const staffSet = [...new Set(lpoDrafts.map(l => l.staff))].filter(Boolean);
     const staffOptions = '<option value="">-- كل الموظفين --</option>' + staffSet.map(s => `<option value="${s}">${s}</option>`).join('');
@@ -4473,13 +4592,17 @@ function populateAllFilters() {
     ['reportServiceType'].forEach(id => {
         const el = document.getElementById(id); if (el) { const v = el.value; el.innerHTML = svcOptions; el.value = v; }
     });
-    // فلتر نوع الخدمة (قوائم متعددة الاختيارات): صفحة أوامر الشراء + صفحة الموردين
-    msSetOptions('msService', svcSet.map(s => ({ value: s, label: s })));
-    msSetOptions('msSupSvc', svcSet.map(s => ({ value: s, label: s })));
+    // فلتر نوع الخدمة (قوائم متعددة الاختيارات): أوامر الشراء + الموردين + المسودات
+    const svcMsOpts = svcSet.map(s => ({ value: s, label: s }));
+    msSetOptions('msService', svcMsOpts);
+    msSetOptions('msSupSvc', svcMsOpts);
+    msSetOptions('msDraftService', svcMsOpts);
 
-    // فلتر القسم / الغرض في صفحة أوامر الشراء (قائمة متعددة الاختيار)
-    const deptSet = [...new Set([...departments.map(d => d.name), ...lpoDrafts.map(l => l.department)].filter(Boolean))];
-    msSetOptions('msDepartment', deptSet.map(d => ({ value: d, label: d })));
+    // فلتر القسم / الغرض (قوائم متعددة الاختيار): أوامر الشراء + المسودات
+    const deptSet = [...new Set([...departments.map(d => d.name), ...lpoDrafts.map(l => l.department), ...draftSaves.map(d => d.department)].filter(Boolean))];
+    const deptMsOpts = deptSet.map(d => ({ value: d, label: d }));
+    msSetOptions('msDepartment', deptMsOpts);
+    msSetOptions('msDraftDept', deptMsOpts);
 
     const citySet = [...new Set(suppliers.map(s => s.city).filter(Boolean))];
     const cityEl = document.getElementById('filterSupCity');
@@ -5346,9 +5469,12 @@ function buildLPOHtml(data, isDraft) {
         // الصف الأول يحمل خطاً علوياً صلباً ليتصل برؤوس الأعمدة بنظافة
         const topB = (i === 0) ? 'border-top:1px solid #c5ced6;' : '';
         const cellBase = 'border-left:1px solid #d5dde3; border-right:1px solid #d5dde3; border-bottom:1px dotted #a9cfe3; ' + topB + ' padding:7px 6px;';
+        // اتجاه النص حسب محتواه: عربي → يمين (RTL)، إنجليزي → يسار (LTR) — يمنع تلاصق الكلمات عند توليد PDF
+        const descIsAr = /[؀-ۿ]/.test(it.desc || '');
+        const descDir = descIsAr ? 'direction:rtl; text-align:right;' : 'direction:ltr; text-align:left;';
         return `<tr>
             <td style="${cellBase} text-align:center;">${i + 1}</td>
-            <td style="${cellBase} padding:7px 10px; text-align:left; direction:ltr;">${escapeHtml(it.desc || '')}</td>
+            <td style="${cellBase} padding:7px 10px; ${descDir} word-spacing:1px;">${escapeHtml(it.desc || '')}</td>
             <td style="${cellBase} text-align:center;">${it.qty}</td>
             <td style="${cellBase} text-align:center;">${priceRial}</td>
             <td style="${cellBase} text-align:center;">${String(priceBaiza).padStart(3,'0')}</td>
@@ -5410,7 +5536,7 @@ function buildLPOHtml(data, isDraft) {
             <div style="flex:1; text-align:center; padding-top:2px;">
                 <div style="font-family:Arial,'Segoe UI',Tahoma,sans-serif; font-size:30px; font-weight:700; color:#111; direction:rtl; line-height:1.15; white-space:nowrap;">أمر<span style="display:inline-block; width:8px;"></span>شراء<span style="display:inline-block; width:8px;"></span>محلي</div>
                 <div style="width:82%; height:2px; background:linear-gradient(90deg, rgba(0,147,196,0) 0%, #0093c4 50%, rgba(0,147,196,0) 100%); margin:5px auto;"></div>
-                <div style="font-family:Arial,'Segoe UI',Tahoma,sans-serif; font-size:20px; font-weight:700; color:#444; letter-spacing:0.5px; line-height:1.1; white-space:nowrap;">LOCAL PURCHASE ORDER</div>
+                <div style="font-family:Arial,'Segoe UI',Tahoma,sans-serif; font-size:19px; font-weight:700; color:#444; letter-spacing:normal; line-height:1.1; white-space:nowrap;">LOCAL PURCHASE ORDER</div>
             </div>
             <div style="flex:1.05; font-size:13px; text-align:right; padding-top:4px;">
                 <div style="margin-bottom:3px;"><span style="color:#666;">L.P.O Date:</span> <strong style="color:#111;">${(()=>{const d=new Date(data.date);const m=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];return String(d.getDate()).padStart(2,'0')+'/'+m[d.getMonth()]+'/'+d.getFullYear();})()}</strong></div>
@@ -5470,7 +5596,7 @@ function buildLPOHtml(data, isDraft) {
         <!-- المبلغ بالكلمات -->
         <div style="display:flex; justify-content:space-between; border:1px solid #c5ced6; border-top:none; padding:7px 14px; font-size:10.5px;">
             <span><strong>TOTAL IN WORDS OMR:</strong> ${numToWordsEn(totalRial)} Rials${totalBaiza>0 ? ' and '+String(totalBaiza).padStart(3,'0')+'/1000 Baisas':''} Only</span>
-            <span style="direction:rtl; color:#555; word-spacing:4px;">المبلغ بالحروف</span>
+            <span style="direction:rtl; color:#555;">المبلغ<span style="display:inline-block; width:7px;"></span>بالحروف</span>
         </div>
 
         <!-- عبارة تعليمات الدفع أسفل الجدول -->
@@ -5489,10 +5615,10 @@ function buildLPOHtml(data, isDraft) {
             <!-- التواقيع (مع ختم الشركة وصندوق الاعتماد تحت التوقيع المعتمد عند الاعتماد) -->
             <div style="display:flex; justify-content:space-between; font-size:10px; gap:60px;">
                 <div style="flex:1; position:relative; text-align:center;">
-                    <div style="font-weight:700; font-size:12px; padding-top:40px; margin-bottom:${data.approvalStatus === 'approved' ? '181px' : '160px'}; position:relative; z-index:7;">AUTHORIZED SIGNATURE &nbsp;<span style="direction:rtl; color:#555; word-spacing:4px;">المخول بالتوقيع</span></div>
-                    ${data.approvalStatus === 'approved' ? `<img src="${STAMP_DATA}" alt="ختم الشركة" style="position:absolute; top:58px; left:64%; transform:translateX(-50%); height:138px; width:auto; opacity:1; z-index:5; pointer-events:none;">` : ''}
-                    ${data.approvalStatus === 'approved' ? `<div style="position:absolute; top:120px; left:1%; z-index:6; text-align:left;">
-                        <div style="display:inline-block; border:2px solid #2e7d32; color:#2e7d32; border-radius:6px; padding:3px 8px; font-weight:800; font-size:11px; direction:${currentLanguage === 'en' ? 'ltr' : 'rtl'};">
+                    <div style="font-weight:700; font-size:12px; padding-top:40px; margin-bottom:${data.approvalStatus === 'approved' ? '181px' : '160px'}; position:relative; z-index:7;">AUTHORIZED SIGNATURE &nbsp;<span style="direction:rtl; color:#555;">المخول<span style="display:inline-block; width:7px;"></span>بالتوقيع</span></div>
+                    ${data.approvalStatus === 'approved' ? `<img src="${STAMP_DATA}" alt="ختم الشركة" style="position:absolute; top:58px; left:67%; transform:translateX(-50%); height:138px; width:auto; opacity:1; z-index:5; pointer-events:none;">` : ''}
+                    ${data.approvalStatus === 'approved' ? `<div style="position:absolute; top:120px; left:6%; z-index:6; text-align:left;">
+                        <div style="display:inline-block; font-family:'Tajawal','Segoe UI',Arial,sans-serif; border:2px solid #2e7d32; color:#2e7d32; border-radius:6px; padding:3px 8px; font-weight:800; font-size:11px; direction:${currentLanguage === 'en' ? 'ltr' : 'rtl'};">
                             <i class="fas fa-check-circle"></i> ${currentLanguage === 'en' ? 'APPROVED' : 'معتمد'}
                             <div style="font-size:7.5px; font-weight:500; color:#8aa894; margin-top:1px; white-space:nowrap;">${currentLanguage === 'en' ? 'Date: ' : 'تاريخ الاعتماد: '}${data.approvedAt ? new Date(data.approvedAt).toLocaleDateString('en-GB') : '—'}</div>
                         </div>
@@ -5596,9 +5722,14 @@ function previewDraft(id) {
     previewLPOData = {
         number: d.draftNumber,
         date: d.date,
+        supplierId: d.supplierId,
         supplierName: d.supplierName,
         items: d.items || [],
+        subtotal: d.subtotal,
+        tax: d.tax,
         total: d.total,
+        department: d.department,
+        lpoRef: d.lpoRef || '',
         notes: d.notes,
         staff: d.staff
     };
@@ -5979,6 +6110,9 @@ window.addEventListener('load', async function() {
     msSetup('msService', '-- كل أنواع الخدمات --', filterLPOs);
     msSetup('msDepartment', '-- كل الأقسام --', filterLPOs);
     msSetup('msSupSvc', '-- كل أنواع الخدمات --', filterSuppliers);
+    msSetup('msDraftSupplier', '-- كل الموردين --', loadDrafts);
+    msSetup('msDraftService', '-- كل أنواع الخدمات --', loadDrafts);
+    msSetup('msDraftDept', '-- كل الأقسام --', loadDrafts);
     // تفعيل حركات النوافذ المنبثقة
     initModalAnimations();
     // تطبيق اللغة الافتراضية (الإنجليزية) على صفحة الدخول وكامل الواجهة
