@@ -121,6 +121,16 @@
         /* وضع: مخفي */
         .chat-mode-hidden { display: none !important; }
 
+        /* مقابض تغيير حجم نافذة المحادثة */
+        .chat-resize-x { position: absolute; inset-inline-end: 0; top: 0; height: 100%; width: 8px; cursor: ew-resize; z-index: 20; }
+        .chat-resize-x:hover { background: rgba(0,147,196,0.25); }
+        .chat-resize-corner { position: absolute; inset-inline-end: 0; bottom: 0; width: 18px; height: 18px; cursor: nwse-resize; z-index: 21; display: none; }
+        html[dir="rtl"] .chat-resize-corner { cursor: nesw-resize; }
+        .chat-resize-corner::after { content: ''; position: absolute; inset-inline-end: 3px; bottom: 3px; width: 9px; height: 9px; border-inline-end: 2px solid rgba(0,147,196,0.5); border-bottom: 2px solid rgba(0,147,196,0.5); }
+        /* المقبض الزاوي يظهر في الوضع العائم فقط */
+        .chat-mode-floating .chat-resize-corner { display: block; }
+        body.chat-resizing, body.chat-resizing * { user-select: none !important; }
+
         /* الزر العائم لإعادة الإظهار */
         .chat-fab { position: fixed; bottom: 22px; left: 22px; z-index: 1150; width: 54px; height: 54px; border-radius: 50%; background: linear-gradient(135deg, #0093c4 0%, #007ba3 100%); color: white; border: none; cursor: pointer; font-size: 20px; box-shadow: 0 6px 20px rgba(0,147,196,0.45); display: flex; align-items: center; justify-content: center; }
         html[dir="rtl"] .chat-fab { left: auto; right: 22px; }
@@ -558,7 +568,7 @@
     </div>
 
     <div class="card">
-        <div class="card-header"><div class="card-title"><i class="fas fa-clock"></i> آخر الأوامر المصدرة</div></div>
+        <div class="card-header"><div class="card-title"><i class="fas fa-clock"></i> آخر 10 أوامر شراء</div></div>
         <div class="table-responsive">
             <table id="recentOrdersTable">
                 <thead><tr><th>رقم الأمر</th><th>المورد</th><th>التاريخ</th><th>المبلغ (ر.ع)</th><th>الحالة</th></tr></thead>
@@ -882,20 +892,32 @@
         <div class="filter-section">
             <div class="filter-title"><i class="fas fa-filter"></i> فلاتر البحث</div>
             <div class="filter-grid">
-                <select id="reportMonth" onchange="generateReport()">
-                    <option value="">-- كل الأشهر --</option>
-                    <option value="1">يناير</option><option value="2">فبراير</option><option value="3">مارس</option>
-                    <option value="4">إبريل</option><option value="5">مايو</option><option value="6">يونيو</option>
-                    <option value="7">يوليو</option><option value="8">أغسطس</option><option value="9">سبتمبر</option>
-                    <option value="10">أكتوبر</option><option value="11">نوفمبر</option><option value="12">ديسمبر</option>
-                </select>
-                <select id="reportYear" onchange="generateReport()"><option value="">-- كل السنوات --</option></select>
-                <select id="reportSupplier" onchange="generateReport()"><option value="">-- كل الموردين --</option></select>
+                <div class="ms-wrap" data-ms="msRepMonth">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الأشهر --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msRepYear">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل السنوات --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msRepSupplier">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الموردين --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
             </div>
             <div class="filter-grid">
-                <select id="reportStatus" onchange="generateReport()"><option value="">-- كل الحالات --</option><option value="موقعة">موقعة</option><option value="معلقة">معلقة</option></select>
-                <select id="reportServiceType" onchange="generateReport()"><option value="">-- كل أنواع الخدمات --</option></select>
-                <select id="reportStaff" onchange="generateReport()"><option value="">-- كل الموظفين --</option></select>
+                <div class="ms-wrap" data-ms="msRepStatus">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الحالات --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msRepService">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل أنواع الخدمات --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msRepStaff">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الموظفين --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
             </div>
         </div>
     </div>
@@ -927,6 +949,31 @@
         </div>
     </div>
 
+    <!-- إحصائية حسب حالة الأوامر -->
+    <div class="card" style="margin-bottom:1.5rem;">
+        <div class="card-header"><div class="card-title"><i class="fas fa-tasks"></i> إحصائية حسب حالة الأوامر</div></div>
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr); margin-bottom:0;">
+            <div class="stat-card" style="border-top-color:#f39c12;">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-label">بانتظار الاعتماد</div>
+                <div class="stat-value" id="repStatPending" style="color:#f39c12;">0</div>
+                <div style="font-size:11px; color:#999;" id="repStatPendingAmt">0 ر.ع</div>
+            </div>
+            <div class="stat-card" style="border-top-color:#2e7d32;">
+                <div class="stat-icon">✅</div>
+                <div class="stat-label">معتمدة</div>
+                <div class="stat-value" id="repStatApproved" style="color:#2e7d32;">0</div>
+                <div style="font-size:11px; color:#999;" id="repStatApprovedAmt">0 ر.ع</div>
+            </div>
+            <div class="stat-card" style="border-top-color:#c0392b;">
+                <div class="stat-icon">❌</div>
+                <div class="stat-label">مرفوضة</div>
+                <div class="stat-value" id="repStatRejected" style="color:#c0392b;">0</div>
+                <div style="font-size:11px; color:#999;" id="repStatRejectedAmt">0 ر.ع</div>
+            </div>
+        </div>
+    </div>
+
     <!-- الرسوم البيانية -->
     <div class="charts-row">
         <div class="card" style="margin:0;">
@@ -944,6 +991,12 @@
         <div class="card" style="margin:0;">
             <div class="card-header"><div class="card-title"><i class="fas fa-concierge-bell"></i> الإنفاق حسب نوع الخدمة</div></div>
             <div class="chart-container"><canvas id="reportServiceChart"></canvas></div>
+            <div class="table-responsive" style="margin-top:12px;">
+                <table id="reportServiceTable">
+                    <thead><tr><th>نوع الخدمة</th><th>المبلغ (ر.ع)</th><th>النسبة</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
         <div class="card" style="margin:0;">
             <div class="card-header"><div class="card-title"><i class="fas fa-chart-line"></i> متوسط الإنفاق الشهري</div></div>
@@ -951,12 +1004,23 @@
         </div>
     </div>
 
-    <!-- أكبر 5 أوامر شراء -->
+    <!-- أكبر 10 أوامر شراء -->
     <div class="card" style="margin-top:1.5rem;">
-        <div class="card-header"><div class="card-title"><i class="fas fa-trophy"></i> أكبر 5 أوامر شراء (Top 5)</div></div>
+        <div class="card-header"><div class="card-title"><i class="fas fa-trophy"></i> أكبر 10 أوامر شراء (Top 10)</div></div>
         <div class="table-responsive">
             <table id="top5Table">
                 <thead><tr><th>#</th><th>رقم الأمر</th><th>المورد</th><th>القيمة الإجمالية (ر.ع)</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- أفضل 10 موردين (حسب إجمالي الإنفاق) -->
+    <div class="card" style="margin-top:1.5rem;">
+        <div class="card-header"><div class="card-title"><i class="fas fa-medal"></i> أفضل 10 موردين (الأعلى إنفاقاً)</div></div>
+        <div class="table-responsive">
+            <table id="topSuppliersTable">
+                <thead><tr><th>#</th><th>المورد</th><th>عدد الأوامر</th><th>إجمالي الإنفاق (ر.ع)</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -1211,6 +1275,9 @@
 
 <!-- ============ صندوق المحادثة (مستقل: عائم / مثبت جانبي / مخفي) ============ -->
 <div id="chatSection" class="chat-panel chat-mode-docked" style="display:none;">
+    <!-- مقابض تغيير حجم نافذة المحادثة -->
+    <div id="chatResizeX" class="chat-resize-x" title="اسحب لتغيير العرض"></div>
+    <div id="chatResizeCorner" class="chat-resize-corner" title="اسحب لتغيير الحجم"></div>
     <div class="chat-header" id="chatHeader">
         <div style="display:flex; align-items:center; gap:8px; min-width:0;">
             <i class="fas fa-comments"></i>
@@ -1308,7 +1375,7 @@
 </div>
 
 <!-- ============ SUPPLIER VIEW MODAL (استعراض بيانات المورد) ============ -->
-<div id="supplierViewModal" class="modal">
+<div id="supplierViewModal" class="modal" onclick="if(event.target===this) closeSupplierViewModal()">
     <div class="modal-content" style="max-width:720px;">
         <div class="modal-header">
             <h2><i class="fas fa-address-card"></i> <span data-i18n="استعراض بيانات المورد">استعراض بيانات المورد</span></h2>
@@ -1756,6 +1823,7 @@ const I18N = {
     'الإنفاق الشهري (ر.ع)': 'Monthly Spending (OMR)',
     'حالة الأوامر': 'Orders Status',
     'آخر الأوامر المصدرة': 'Recent Orders',
+    'آخر 10 أوامر شراء': 'Last 10 Purchase Orders',
     'رقم الأمر': 'Order No.',
     'المورد': 'Supplier',
     'التاريخ': 'Date',
@@ -3049,7 +3117,11 @@ function loadDashboard() {
     if (lpoDrafts.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999;">لا توجد أوامر بعد</td></tr>';
     } else {
-        lpoDrafts.slice(-6).reverse().forEach(l => {
+        const recent = lpoDrafts.slice().sort((a, b) => {
+            const ca = a.createdAt || a.date || '', cb = b.createdAt || b.date || '';
+            return cb < ca ? -1 : cb > ca ? 1 : 0;
+        }).slice(0, 10);
+        recent.forEach(l => {
             tbody.insertRow().innerHTML = `<td>${l.number}</td><td>${l.supplierName}</td><td>${l.date}</td><td>${fmt(l.total)}</td><td>${approvalBadge(l)}</td>`;
         });
     }
@@ -4569,34 +4641,37 @@ async function saveEvaluation() {
 }
 // ===================== POPULATE ALL FILTERS (Strict dropdowns) =====================
 function populateAllFilters() {
-    const supOptions = '<option value="">-- كل الموردين --</option>' + suppliers.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-    ['reportSupplier'].forEach(id => {
-        const el = document.getElementById(id); if (el) { const v = el.value; el.innerHTML = supOptions; el.value = v; }
-    });
-    // فلتر المورد (قوائم متعددة الاختيارات): صفحة أوامر الشراء + صفحة المسودات
+    // فلتر المورد (قوائم متعددة الاختيارات): أوامر الشراء + المسودات + التقارير
     const supMsOpts = suppliers.map(s => ({ value: s.id, label: s.name }));
     msSetOptions('msSupplier', supMsOpts);
     msSetOptions('msDraftSupplier', supMsOpts);
+    msSetOptions('msRepSupplier', supMsOpts);
 
     const staffSet = [...new Set(lpoDrafts.map(l => l.staff))].filter(Boolean);
-    const staffOptions = '<option value="">-- كل الموظفين --</option>' + staffSet.map(s => `<option value="${s}">${s}</option>`).join('');
-    ['reportStaff'].forEach(id => {
-        const el = document.getElementById(id); if (el) { const v = el.value; el.innerHTML = staffOptions; el.value = v; }
-    });
-    // فلتر المستخدم (قائمة متعددة الاختيارات)
-    msSetOptions('msUser', staffSet.map(s => ({ value: s, label: s })));
+    // فلتر المستخدم/الموظف (قوائم متعددة الاختيارات): أوامر الشراء + التقارير
+    const staffMsOpts = staffSet.map(s => ({ value: s, label: s }));
+    msSetOptions('msUser', staffMsOpts);
+    msSetOptions('msRepStaff', staffMsOpts);
 
     // أنواع الخدمات للفلاتر: من جدول أنواع الخدمات + ما هو موجود فعلاً لدى الموردين (مع تقسيم المتعدد)
     const svcSet = allServiceTypesSet();
-    const svcOptions = '<option value="">-- كل أنواع الخدمات --</option>' + svcSet.map(s => `<option value="${s}">${s}</option>`).join('');
-    ['reportServiceType'].forEach(id => {
-        const el = document.getElementById(id); if (el) { const v = el.value; el.innerHTML = svcOptions; el.value = v; }
-    });
-    // فلتر نوع الخدمة (قوائم متعددة الاختيارات): أوامر الشراء + الموردين + المسودات
+    // فلتر نوع الخدمة (قوائم متعددة الاختيارات): أوامر الشراء + الموردين + المسودات + التقارير
     const svcMsOpts = svcSet.map(s => ({ value: s, label: s }));
     msSetOptions('msService', svcMsOpts);
     msSetOptions('msSupSvc', svcMsOpts);
     msSetOptions('msDraftService', svcMsOpts);
+    msSetOptions('msRepService', svcMsOpts);
+
+    // فلاتر التقارير الثابتة: الأشهر والحالة
+    const monthNamesAr = ['يناير','فبراير','مارس','إبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    const monthNamesEn = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const mNames = currentLanguage === 'en' ? monthNamesEn : monthNamesAr;
+    msSetOptions('msRepMonth', mNames.map((nm, i) => ({ value: String(i + 1), label: nm })));
+    msSetOptions('msRepStatus', [
+        { value: 'pending', label: currentLanguage === 'en' ? 'Pending Approval' : 'بانتظار الاعتماد' },
+        { value: 'approved', label: currentLanguage === 'en' ? 'Approved' : 'معتمد' },
+        { value: 'rejected', label: currentLanguage === 'en' ? 'Rejected' : 'مرفوض' }
+    ]);
 
     // فلتر القسم / الغرض (قوائم متعددة الاختيار): أوامر الشراء + المسودات
     const deptSet = [...new Set([...departments.map(d => d.name), ...lpoDrafts.map(l => l.department), ...draftSaves.map(d => d.department)].filter(Boolean))];
@@ -4608,11 +4683,10 @@ function populateAllFilters() {
     const cityEl = document.getElementById('filterSupCity');
     if (cityEl) { const v = cityEl.value; cityEl.innerHTML = '<option value="">-- كل المدن --</option>' + citySet.map(c => `<option value="${c}">${c}</option>`).join(''); cityEl.value = v; }
 
-    // years
+    // السنوات (قائمة متعددة الاختيار في التقارير)
     const yearSet = [...new Set(lpoDrafts.map(l => new Date(l.date).getFullYear()))];
     if (yearSet.length === 0) yearSet.push(new Date().getFullYear());
-    const yearEl = document.getElementById('reportYear');
-    if (yearEl) { const v = yearEl.value; yearEl.innerHTML = '<option value="">-- كل السنوات --</option>' + yearSet.sort().map(y => `<option value="${y}">${y}</option>`).join(''); yearEl.value = v; }
+    msSetOptions('msRepYear', yearSet.sort((a, b) => b - a).map(y => ({ value: String(y), label: String(y) })));
 
     // قائمة المورد المنسدلة المقيدة في نافذة أمر الشراء
     populateSupplierSelect();
@@ -4638,22 +4712,23 @@ function populateAllFilters() {
 
 // ===================== REPORTS =====================
 function getReportFiltered() {
-    const month = document.getElementById('reportMonth').value;
-    const year = document.getElementById('reportYear').value;
-    const sup = document.getElementById('reportSupplier').value;
-    const status = document.getElementById('reportStatus').value;
-    const svcType = document.getElementById('reportServiceType').value;
-    const staff = document.getElementById('reportStaff').value;
+    const monthF = msGet('msRepMonth');     // قيم 1..12 كنصوص
+    const yearF = msGet('msRepYear');
+    const supF = msGet('msRepSupplier');
+    const statusF = msGet('msRepStatus');    // pending | approved | rejected
+    const svcF = msGet('msRepService');
+    const staffF = msGet('msRepStaff');
 
     return lpoDrafts.filter(l => {
         const d = new Date(l.date);
         const supObj = suppliers.find(s => s.id === l.supplierId);
-        return (!month || (d.getMonth() + 1) == month) &&
-               (!year || d.getFullYear() == year) &&
-               (!sup || l.supplierId === sup) &&
-               (!status || l.status === status) &&
-               (!svcType || (supObj && supObj.serviceType === svcType)) &&
-               (!staff || l.staff === staff);
+        const st = l.approvalStatus || 'approved';
+        return (!monthF.length || monthF.includes(String(d.getMonth() + 1))) &&
+               (!yearF.length || yearF.includes(String(d.getFullYear()))) &&
+               (!supF.length || supF.includes(l.supplierId)) &&
+               (!statusF.length || statusF.includes(st)) &&
+               (!svcF.length || (supObj && splitSvc(supObj.serviceType).some(t => svcF.includes(t)))) &&
+               (!staffF.length || staffF.includes(l.staff));
     });
 }
 
@@ -4665,6 +4740,22 @@ function generateReport() {
     document.getElementById('repStatTotal').textContent = total.toFixed(0);
     document.getElementById('repStatTax').textContent = tax.toFixed(0);
     document.getElementById('repStatAvg').textContent = list.length ? (total / list.length).toFixed(0) : '0';
+
+    // إحصائية حسب حالة الأوامر (بانتظار / معتمدة / مرفوضة)
+    const byStatus = { pending: { c: 0, t: 0 }, approved: { c: 0, t: 0 }, rejected: { c: 0, t: 0 } };
+    list.forEach(l => {
+        const st = l.approvalStatus || 'approved';
+        if (!byStatus[st]) byStatus[st] = { c: 0, t: 0 };
+        byStatus[st].c++; byStatus[st].t += l.total;
+    });
+    const setStat = (idC, idA, s) => {
+        const c = document.getElementById(idC), a = document.getElementById(idA);
+        if (c) c.textContent = byStatus[s].c;
+        if (a) a.textContent = byStatus[s].t.toFixed(0) + (currentLanguage === 'en' ? ' OMR' : ' ر.ع');
+    };
+    setStat('repStatPending', 'repStatPendingAmt', 'pending');
+    setStat('repStatApproved', 'repStatApprovedAmt', 'approved');
+    setStat('repStatRejected', 'repStatRejectedAmt', 'rejected');
 
     // table
     const tbody = document.querySelector('#reportTable tbody');
@@ -4706,7 +4797,31 @@ function generateReport() {
     renderServiceTypeChart(list);
     renderMonthlyAvgChart(list);
     renderTop5(list);
+    renderTopSuppliers(list);
     renderDepartmentStats(list);
+}
+
+// أفضل 10 موردين حسب إجمالي الإنفاق ضمن النتائج المصفّاة
+function renderTopSuppliers(list) {
+    const tbody = document.querySelector('#topSuppliersTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const agg = {};
+    list.forEach(l => {
+        const key = l.supplierName || '—';
+        if (!agg[key]) agg[key] = { count: 0, total: 0 };
+        agg[key].count++; agg[key].total += l.total;
+    });
+    const ranked = Object.keys(agg).map(k => ({ name: k, count: agg[k].count, total: agg[k].total }))
+        .sort((a, b) => b.total - a.total).slice(0, 10);
+    if (ranked.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#999;">' + (currentLanguage === 'en' ? 'No data' : 'لا توجد بيانات') + '</td></tr>';
+        return;
+    }
+    ranked.forEach((r, i) => {
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+        tbody.insertRow().innerHTML = `<td style="text-align:center; font-weight:700;">${medal}</td><td>${escapeHtml(r.name)}</td><td style="text-align:center;">${r.count}</td><td style="font-weight:700; color:#0093c4;">${fmt(r.total)}</td>`;
+    });
 }
 
 // رسم الإنفاق حسب نوع الخدمة (يربط المورد بنوع خدمته)
@@ -4719,13 +4834,29 @@ function renderServiceTypeChart(list) {
         const share = l.total / types.length;
         types.forEach(t => { byService[t] = (byService[t] || 0) + share; });
     });
-    const labels = Object.keys(byService);
+    const labels = Object.keys(byService).sort((a, b) => byService[b] - byService[a]);
+    const palette = ['#0093c4','#7cb342','#f39c12','#e74c3c','#9b59b6','#1abc9c','#34495e','#e67e22','#16a085','#2980b9'];
     destroyChart('reportService');
     chartInstances.reportService = new Chart(document.getElementById('reportServiceChart').getContext('2d'), {
         type: 'doughnut',
-        data: { labels: labels, datasets: [{ data: labels.map(s => +byService[s].toFixed(3)), backgroundColor: ['#0093c4','#7cb342','#f39c12','#e74c3c','#9b59b6','#1abc9c','#34495e','#e67e22'] }] },
+        data: { labels: labels, datasets: [{ data: labels.map(s => +byService[s].toFixed(3)), backgroundColor: labels.map((_, i) => palette[i % palette.length]) }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });
+
+    // جدول البيانات الملخص أسفل الرسم الدائري مباشرةً
+    const svcTbody = document.querySelector('#reportServiceTable tbody');
+    if (svcTbody) {
+        svcTbody.innerHTML = '';
+        const grand = labels.reduce((s, k) => s + byService[k], 0);
+        if (!labels.length) {
+            svcTbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">' + (currentLanguage === 'en' ? 'No data' : 'لا توجد بيانات') + '</td></tr>';
+        } else {
+            labels.forEach((k, i) => {
+                const pct = grand ? ((byService[k] / grand) * 100).toFixed(1) : '0.0';
+                svcTbody.insertRow().innerHTML = `<td><span style="display:inline-block; width:10px; height:10px; border-radius:2px; background:${palette[i % palette.length]}; margin-inline-end:6px;"></span>${escapeHtml(k)}</td><td style="font-weight:600;">${fmt(byService[k])}</td><td>${pct}%</td>`;
+            });
+        }
+    }
 }
 
 // رسم متوسط الإنفاق الشهري (خطي)
@@ -4753,7 +4884,7 @@ function renderTop5(list) {
     const tbody = document.querySelector('#top5Table tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
-    const top = list.slice().sort((a, b) => b.total - a.total).slice(0, 5);
+    const top = list.slice().sort((a, b) => b.total - a.total).slice(0, 10);
     if (top.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#999;">لا توجد بيانات</td></tr>';
         return;
@@ -4824,24 +4955,18 @@ async function exportReportPDF() {
     const now = new Date();
     const dateStr = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString(en ? 'en-GB' : 'ar-EG', { hour: '2-digit', minute: '2-digit' });
 
-    // ملخّص الفلاتر المطبّقة
-    const g = (id) => { const e = document.getElementById(id); return e ? e.value : ''; };
-    const monthSel = document.getElementById('reportMonth');
-    const monthTxt = monthSel && monthSel.selectedIndex > 0 ? monthSel.options[monthSel.selectedIndex].text : '';
+    // ملخّص الفلاتر المطبّقة (من القوائم متعددة الاختيار)
+    const monthNames = en ? ['January','February','March','April','May','June','July','August','September','October','November','December']
+                          : ['يناير','فبراير','مارس','إبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    const statusLabel = (s) => s === 'pending' ? (en ? 'Pending' : 'بانتظار الاعتماد') : s === 'rejected' ? (en ? 'Rejected' : 'مرفوض') : (en ? 'Approved' : 'معتمد');
     const parts = [];
-    if (monthTxt) parts.push((en ? 'Month: ' : 'الشهر: ') + monthTxt);
-    if (g('reportYear')) parts.push((en ? 'Year: ' : 'السنة: ') + g('reportYear'));
-    if (g('reportSupplier')) { const sup = suppliers.find(s => String(s.id) === g('reportSupplier')); parts.push((en ? 'Supplier: ' : 'المورد: ') + (sup ? sup.name : '')); }
-    if (g('reportStatus')) parts.push((en ? 'Status: ' : 'الحالة: ') + g('reportStatus'));
-    if (g('reportServiceType')) parts.push((en ? 'Service: ' : 'الخدمة: ') + g('reportServiceType'));
-    if (g('reportStaff')) parts.push((en ? 'Employee: ' : 'الموظف: ') + g('reportStaff'));
+    const mSel = msGet('msRepMonth'); if (mSel.length) parts.push((en ? 'Month: ' : 'الشهر: ') + mSel.map(m => monthNames[+m - 1]).join('، '));
+    const ySel = msGet('msRepYear'); if (ySel.length) parts.push((en ? 'Year: ' : 'السنة: ') + ySel.join('، '));
+    const spSel = msGet('msRepSupplier'); if (spSel.length) parts.push((en ? 'Supplier: ' : 'المورد: ') + spSel.map(id => { const s = suppliers.find(x => x.id === id); return s ? s.name : id; }).join('، '));
+    const stSel = msGet('msRepStatus'); if (stSel.length) parts.push((en ? 'Status: ' : 'الحالة: ') + stSel.map(statusLabel).join('، '));
+    const svSel = msGet('msRepService'); if (svSel.length) parts.push((en ? 'Service: ' : 'الخدمة: ') + svSel.join('، '));
+    const sfSel = msGet('msRepStaff'); if (sfSel.length) parts.push((en ? 'Employee: ' : 'الموظف: ') + sfSel.join('، '));
     const filterSummary = parts.length ? parts.join('  •  ') : (en ? 'All data (no filters applied)' : 'كل البيانات (بدون تصفية)');
-
-    // الأرقام المهمة
-    const sCount = (document.getElementById('repStatCount') || {}).textContent || '0';
-    const sTotal = (document.getElementById('repStatTotal') || {}).textContent || '0';
-    const sTax = (document.getElementById('repStatTax') || {}).textContent || '0';
-    const sAvg = (document.getElementById('repStatAvg') || {}).textContent || '0';
 
     const header = document.createElement('div');
     header.id = '__reportPdfHeader';
@@ -4860,17 +4985,30 @@ async function exportReportPDF() {
         </div>
         <div style="margin-top:8px; font-size:11.5px; color:#444; background:#eef7fb; border:1px solid #cfe7f3; border-radius:6px; padding:6px 10px;">
             <i class="fas fa-filter" style="color:#0093c4;"></i> ${escapeHtml(filterSummary)}
-        </div>
-        <div style="display:flex; gap:10px; margin-top:10px;">
-            <div style="flex:1; text-align:center; background:#f8fafc; border:1px solid #e8eef5; border-radius:8px; padding:8px;"><div style="font-size:11px; color:#7a8b99;">${en ? 'Total Orders' : 'إجمالي الأوامر'}</div><div style="font-size:18px; font-weight:800; color:#0093c4;">${sCount}</div></div>
-            <div style="flex:1; text-align:center; background:#f8fafc; border:1px solid #e8eef5; border-radius:8px; padding:8px;"><div style="font-size:11px; color:#7a8b99;">${en ? 'Total Spend (OMR)' : 'إجمالي الإنفاق (ر.ع)'}</div><div style="font-size:18px; font-weight:800; color:#7cb342;">${sTotal}</div></div>
-            <div style="flex:1; text-align:center; background:#f8fafc; border:1px solid #e8eef5; border-radius:8px; padding:8px;"><div style="font-size:11px; color:#7a8b99;">${en ? 'Total Tax (OMR)' : 'إجمالي الضرائب (ر.ع)'}</div><div style="font-size:18px; font-weight:800; color:#f39c12;">${sTax}</div></div>
-            <div style="flex:1; text-align:center; background:#f8fafc; border:1px solid #e8eef5; border-radius:8px; padding:8px;"><div style="font-size:11px; color:#7a8b99;">${en ? 'Avg Order (OMR)' : 'متوسط الأمر (ر.ع)'}</div><div style="font-size:18px; font-weight:800; color:#0093c4;">${sAvg}</div></div>
         </div>`;
 
     // تمييز البطاقات لمنع انقسامها بين الصفحات أثناء الطباعة
     el.classList.add('pdf-exporting');
     el.insertBefore(header, el.firstChild);
+
+    // ===== استبدال الرسوم البيانية بصور ثابتة لمنع التشوّه عند التقاط html2canvas =====
+    const chartKeys = ['report', 'reportSupplier', 'reportService', 'reportMonthly', 'reportDept'];
+    const chartSnaps = [];
+    chartKeys.forEach(k => {
+        const ch = chartInstances[k];
+        if (!ch || !ch.canvas) return;
+        const canvas = ch.canvas;
+        let dataUrl;
+        try { dataUrl = ch.toBase64Image('image/png', 1); } catch (e) { return; }
+        const w = canvas.clientWidth || canvas.width, h = canvas.clientHeight || canvas.height;
+        const img = document.createElement('img');
+        img.src = dataUrl;
+        img.className = '__chartSnap';
+        img.style.cssText = `display:block; width:${w}px; height:${h}px; margin:0 auto; object-fit:contain;`;
+        canvas.style.display = 'none';
+        canvas.parentNode.insertBefore(img, canvas);
+        chartSnaps.push({ canvas, img });
+    });
 
     const opt = {
         margin: [8, 8, 10, 8],
@@ -4878,16 +5016,17 @@ async function exportReportPDF() {
         image: { type: 'jpeg', quality: 0.96 },
         html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'], avoid: ['.card', 'table', '.stat-card', 'canvas'] }
+        pagebreak: { mode: ['css', 'legacy'], avoid: ['.card', 'table', '.stat-card', '.chart-container', 'img'] }
     };
-    // مهلة قصيرة لضمان اكتمال رسم الرسوم البيانية قبل الالتقاط
+    // مهلة لضمان اكتمال تحميل صور الرسوم قبل الالتقاط
     setTimeout(() => {
         html2pdf().set(opt).from(el).save().then(cleanup).catch(cleanup);
-    }, 350);
+    }, 450);
 
     function cleanup() {
         const h = document.getElementById('__reportPdfHeader');
         if (h && h.parentNode) h.parentNode.removeChild(h);
+        chartSnaps.forEach(s => { if (s.img.parentNode) s.img.parentNode.removeChild(s.img); s.canvas.style.display = ''; });
         el.classList.remove('pdf-exporting');
     }
 }
@@ -4940,7 +5079,7 @@ function renderVPITable(filteredOrders) {
 }
 
 function clearReportFilters() {
-    ['reportMonth','reportYear','reportSupplier','reportStatus','reportServiceType','reportStaff'].forEach(id => document.getElementById(id).value = '');
+    ['msRepMonth','msRepYear','msRepSupplier','msRepStatus','msRepService','msRepStaff'].forEach(k => msClear(k));
     generateReport();
 }
 
@@ -5763,8 +5902,9 @@ function setChatMode(mode) {
         return;
     }
 
-    // إزالة أي موضع ناتج عن السحب حتى يتولّى الوضع الجديد التموضع
+    // إزالة أي موضع/حجم ناتج عن السحب أو التحجيم حتى يتولّى الوضع الجديد التموضع
     panel.style.left = ''; panel.style.top = ''; panel.style.right = ''; panel.style.bottom = '';
+    panel.style.width = ''; panel.style.height = ''; panel.style.maxWidth = ''; panel.style.maxHeight = '';
 
     panel.classList.add(mode === 'floating' ? 'chat-mode-floating' : 'chat-mode-docked');
     panel.style.display = 'flex';
@@ -5851,6 +5991,65 @@ function closeChatPanel() {
         document.addEventListener('DOMContentLoaded', initChatDrag);
     } else {
         initChatDrag();
+    }
+})();
+
+// ===================== تغيير حجم نافذة المحادثة (عرض للمثبّت، عرض+ارتفاع للعائم) =====================
+(function() {
+    function initChatResize() {
+        const panel = document.getElementById('chatSection');
+        const edge = document.getElementById('chatResizeX');
+        const corner = document.getElementById('chatResizeCorner');
+        if (!panel || !edge || !corner) return;
+        const isRtl = () => (document.documentElement.dir === 'rtl');
+        let rs = null;
+
+        function start(handle, e) {
+            const p = e.touches ? e.touches[0] : e;
+            const rect = panel.getBoundingClientRect();
+            // في الوضع العائم: نثبّت الحافة العلوية بالبكسل حتى ينمو الارتفاع للأسفل باتجاه المؤشر
+            if (panel.classList.contains('chat-mode-floating')) {
+                panel.style.top = rect.top + 'px';
+                panel.style.bottom = 'auto';
+            }
+            rs = { handle, x: p.clientX, y: p.clientY, w: rect.width, h: rect.height, rtl: isRtl() };
+            document.body.classList.add('chat-resizing');
+            e.preventDefault(); e.stopPropagation();
+        }
+        function move(e) {
+            if (!rs) return;
+            const p = e.touches ? e.touches[0] : e;
+            const dx = p.clientX - rs.x, dy = p.clientY - rs.y;
+            // العرض: الحافة الداخلية هي inline-end؛ في RTL السحب لليسار يوسّع، في LTR السحب لليمين يوسّع
+            const dw = rs.rtl ? -dx : dx;
+            const maxW = Math.min(window.innerWidth - 16, 900);
+            const newW = Math.max(300, Math.min(rs.w + dw, maxW));
+            panel.style.width = newW + 'px';
+            panel.style.maxWidth = 'none';
+            if (rs.handle === 'corner') {
+                const newH = Math.max(320, Math.min(rs.h + dy, window.innerHeight - 16));
+                panel.style.height = newH + 'px';
+                panel.style.maxHeight = 'none';
+            }
+        }
+        function end() {
+            if (rs) { try { localStorage.setItem('chatPanelSize', JSON.stringify({ w: panel.style.width, h: panel.style.height, mode: panel.classList.contains('chat-mode-floating') ? 'floating' : 'docked' })); } catch(_) {} }
+            rs = null;
+            document.body.classList.remove('chat-resizing');
+        }
+        edge.addEventListener('mousedown', e => start('edge', e));
+        corner.addEventListener('mousedown', e => start('corner', e));
+        document.addEventListener('mousemove', move);
+        document.addEventListener('mouseup', end);
+        edge.addEventListener('touchstart', e => start('edge', e), { passive: false });
+        corner.addEventListener('touchstart', e => start('corner', e), { passive: false });
+        document.addEventListener('touchmove', move, { passive: false });
+        document.addEventListener('touchend', end);
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initChatResize);
+    } else {
+        initChatResize();
     }
 })();
 
@@ -6113,6 +6312,12 @@ window.addEventListener('load', async function() {
     msSetup('msDraftSupplier', '-- كل الموردين --', loadDrafts);
     msSetup('msDraftService', '-- كل أنواع الخدمات --', loadDrafts);
     msSetup('msDraftDept', '-- كل الأقسام --', loadDrafts);
+    msSetup('msRepMonth', '-- كل الأشهر --', generateReport);
+    msSetup('msRepYear', '-- كل السنوات --', generateReport);
+    msSetup('msRepSupplier', '-- كل الموردين --', generateReport);
+    msSetup('msRepStatus', '-- كل الحالات --', generateReport);
+    msSetup('msRepService', '-- كل أنواع الخدمات --', generateReport);
+    msSetup('msRepStaff', '-- كل الموظفين --', generateReport);
     // تفعيل حركات النوافذ المنبثقة
     initModalAnimations();
     // تطبيق اللغة الافتراضية (الإنجليزية) على صفحة الدخول وكامل الواجهة
