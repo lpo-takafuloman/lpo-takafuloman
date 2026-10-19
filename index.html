@@ -321,6 +321,8 @@
         .filter-actions { display: flex; gap: 10px; flex-wrap: wrap; }
         /* قائمة منسدلة متعددة الاختيارات قابلة للبحث */
         .ms-wrap { position: relative; font-size: 13px; }
+        /* رفع القائمة المفتوحة فوق البطاقات والعناصر التالية لها حتى لا تُحجب */
+        .ms-wrap.open { z-index: 1000; }
         .ms-control { min-height: 40px; border: 1.5px solid #ddd; border-radius: 6px; padding: 4px 8px; display: flex; align-items: center; justify-content: space-between; gap: 6px; cursor: pointer; background: #fff; box-sizing: border-box; }
         .ms-control:hover { border-color: #0093c4; }
         .ms-wrap.open .ms-control { border-color: #0093c4; box-shadow: 0 0 0 2px rgba(0,147,196,0.12); }
@@ -1113,6 +1115,11 @@
             <small style="color:#999; margin-top:6px;">تُطبَّق تلقائياً على البنود الجديدة عند تفعيل الضريبة.</small>
         </div>
     </div>
+
+    <!-- رابط تنزيل بيانات الصفحة (أنواع الخدمات + الأقسام) كملف إكسل -->
+    <div style="text-align:center; margin-top:1.5rem; padding-top:12px; border-top:1px dashed #d5dde3;">
+        <a href="#" onclick="downloadControlPanelExcel(); return false;" class="excel-link"><i class="fas fa-file-excel"></i> Download Data (Excel)</a>
+    </div>
 </div>
 
 <!-- ============ ROLES & PERMISSIONS (RBAC) ============ -->
@@ -1201,6 +1208,30 @@
                 <button type="button" class="btn btn-success" onclick="importSuppliersFromExcel()"><i class="fas fa-upload"></i> تحميل ملف بيانات الموردين</button>
             </div>
             <div id="supplierImportStatus" style="font-size:12.5px; margin-top:10px; display:none;"></div>
+        </div>
+
+        <!-- 3) تغذية أنواع الخدمات من ملف إكسل -->
+        <div style="border:1px solid #e8eef5; border-radius:10px; padding:1rem; background:#f8fafc; margin-top:1.2rem;">
+            <div style="font-size:14px; font-weight:700; color:#0093c4; margin-bottom:6px;"><i class="fas fa-concierge-bell"></i> تغذية أنواع الخدمات (Service Types) من ملف إكسل</div>
+            <p style="font-size:12.5px; color:#666; line-height:1.7; margin-bottom:12px;">نزّل القالب الجاهز، أدخل أنواع الخدمات فيه (عمود <strong>نوع الخدمة</strong>)، ثم ارفعه ليُضيفها النظام دفعةً واحدة. تُتجاهَل الأنواع المكرّرة تلقائياً.</p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <button type="button" class="btn btn-primary" onclick="downloadServiceTypeTemplate()"><i class="fas fa-file-download"></i> تنزيل قالب إكسل</button>
+                <input type="file" id="serviceTypeImportFile" accept=".xlsx,.xls" style="font-size:12px;">
+                <button type="button" class="btn btn-success" onclick="importServiceTypesFromExcel()"><i class="fas fa-upload"></i> تحميل ملف أنواع الخدمات</button>
+            </div>
+            <div id="serviceTypeImportStatus" style="font-size:12.5px; margin-top:10px; display:none;"></div>
+        </div>
+
+        <!-- 4) تغذية الأقسام / الغرض من ملف إكسل -->
+        <div style="border:1px solid #e8eef5; border-radius:10px; padding:1rem; background:#f8fafc; margin-top:1.2rem;">
+            <div style="font-size:14px; font-weight:700; color:#0093c4; margin-bottom:6px;"><i class="fas fa-sitemap"></i> تغذية الأقسام / الغرض (Departments) من ملف إكسل</div>
+            <p style="font-size:12.5px; color:#666; line-height:1.7; margin-bottom:12px;">نزّل القالب الجاهز، أدخل الأقسام/الأغراض فيه (عمود <strong>القسم / الغرض</strong>)، ثم ارفعه ليُضيفها النظام دفعةً واحدة. تُتجاهَل الأقسام المكرّرة تلقائياً.</p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <button type="button" class="btn btn-primary" onclick="downloadDepartmentTemplate()"><i class="fas fa-file-download"></i> تنزيل قالب إكسل</button>
+                <input type="file" id="departmentImportFile" accept=".xlsx,.xls" style="font-size:12px;">
+                <button type="button" class="btn btn-success" onclick="importDepartmentsFromExcel()"><i class="fas fa-upload"></i> تحميل ملف الأقسام</button>
+            </div>
+            <div id="departmentImportStatus" style="font-size:12.5px; margin-top:10px; display:none;"></div>
         </div>
     </div>
 
@@ -5237,6 +5268,118 @@ async function importSuppliersFromExcel() {
     } catch (e) {
         show('<i class="fas fa-times-circle"></i> ' + msg('تعذّر قراءة الملف: ') + e.message, '#c0392b');
     }
+}
+
+// ===== قالب واستيراد أنواع الخدمات من إكسل =====
+async function downloadServiceTypeTemplate() {
+    if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
+    try {
+        const headers = ['نوع الخدمة'];
+        const example = [{ 'نوع الخدمة': 'قرطاسية' }, { 'نوع الخدمة': 'طباعة' }, { 'نوع الخدمة': 'صيانة' }];
+        const ws = XLSX.utils.json_to_sheet(example, { header: headers });
+        ws['!cols'] = [{ wch: 28 }];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'أنواع الخدمات');
+        XLSX.writeFile(wb, 'قالب_أنواع_الخدمات.xlsx');
+    } catch (e) { alert(msg('تعذّر إنشاء القالب: ') + e.message); }
+}
+
+async function importServiceTypesFromExcel() {
+    await _importSimpleListFromExcel({
+        inputId: 'serviceTypeImportFile', statusId: 'serviceTypeImportStatus',
+        table: 'service_types', existing: () => serviceTypes,
+        nameKeys: ['نوع الخدمة', 'الخدمة', 'service_type', 'Service Type', 'service', 'name', 'Name'],
+        labelOne: 'نوع خدمة', labelMany: 'أنواع الخدمات', action: 'استيراد أنواع خدمات من إكسل'
+    });
+}
+
+// ===== قالب واستيراد الأقسام / الغرض من إكسل =====
+async function downloadDepartmentTemplate() {
+    if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
+    try {
+        const headers = ['القسم / الغرض'];
+        const example = [{ 'القسم / الغرض': 'المالية' }, { 'القسم / الغرض': 'تقنية المعلومات' }, { 'القسم / الغرض': 'التسويق' }];
+        const ws = XLSX.utils.json_to_sheet(example, { header: headers });
+        ws['!cols'] = [{ wch: 28 }];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'الأقسام');
+        XLSX.writeFile(wb, 'قالب_الأقسام.xlsx');
+    } catch (e) { alert(msg('تعذّر إنشاء القالب: ') + e.message); }
+}
+
+async function importDepartmentsFromExcel() {
+    await _importSimpleListFromExcel({
+        inputId: 'departmentImportFile', statusId: 'departmentImportStatus',
+        table: 'departments', existing: () => departments,
+        nameKeys: ['القسم / الغرض', 'القسم', 'الغرض', 'department', 'Department', 'name', 'Name'],
+        labelOne: 'قسم', labelMany: 'الأقسام', action: 'استيراد أقسام من إكسل'
+    });
+}
+
+// دالة عامة لاستيراد قائمة بسيطة (اسم فقط) من إكسل مع تجاهل المكرّر
+async function _importSimpleListFromExcel(cfg) {
+    const statusEl = document.getElementById(cfg.statusId);
+    const show = (html, color) => { if (statusEl) { statusEl.style.display = 'block'; statusEl.style.color = color || '#666'; statusEl.innerHTML = html; } };
+    if (isGuest) { alert(msg('الزائر لا يملك صلاحية الإضافة')); return; }
+    if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
+    const input = document.getElementById(cfg.inputId);
+    if (!input || !input.files || !input.files.length) { alert(msg('يرجى اختيار ملف إكسل أولاً')); return; }
+    show('<i class="fas fa-spinner fa-spin"></i> ' + msg('جارٍ قراءة الملف...'), '#0093c4');
+    try {
+        const buf = await input.files[0].arrayBuffer();
+        const wb = XLSX.read(buf, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+        if (!rows.length) { show('<i class="fas fa-exclamation-triangle"></i> ' + msg('الملف فارغ أو لا يحتوي على بيانات.'), '#c0392b'); return; }
+        const pick = (row, keys) => { for (const k of keys) { if (row[k] != null && String(row[k]).trim() !== '') return String(row[k]).trim(); } return ''; };
+        const existingNames = new Set((cfg.existing() || []).map(x => (x.name || '').trim().toLowerCase()));
+        const seen = new Set();
+        const toInsert = [];
+        let skipped = 0, dup = 0;
+        rows.forEach(r => {
+            const name = pick(r, cfg.nameKeys);
+            if (!name) { skipped++; return; }
+            const key = name.toLowerCase();
+            if (existingNames.has(key) || seen.has(key)) { dup++; return; }
+            seen.add(key);
+            toInsert.push({ name });
+        });
+        if (!toInsert.length) {
+            show('<i class="fas fa-exclamation-triangle"></i> ' + msg('لا توجد عناصر جديدة للإضافة (ربما كلها مكرّرة أو بلا اسم).'), '#c0392b');
+            return;
+        }
+        show('<i class="fas fa-spinner fa-spin"></i> ' + msg('جارٍ الإضافة... ') + toInsert.length, '#0093c4');
+        const { error } = await sb.from(cfg.table).insert(toInsert);
+        if (error) { show('<i class="fas fa-times-circle"></i> ' + msg('تعذّر الاستيراد: ') + error.message, '#c0392b'); return; }
+        await loadAllFromCloud();
+        loadControlPanel();
+        populateAllFilters();
+        recordAction(cfg.action);
+        input.value = '';
+        const extra = [];
+        if (dup) extra.push(msg('تجاهل ') + dup + msg(' مكرّر'));
+        if (skipped) extra.push(msg('تجاهل ') + skipped + msg(' صف بلا اسم'));
+        show('<i class="fas fa-check-circle"></i> ' + msg('تم استيراد ') + toInsert.length + ' ' + msg(cfg.labelMany) + msg(' بنجاح') + (extra.length ? (' — ' + extra.join('، ')) : ''), '#2e7d32');
+    } catch (e) {
+        show('<i class="fas fa-times-circle"></i> ' + msg('تعذّر قراءة الملف: ') + e.message, '#c0392b');
+    }
+}
+
+// تنزيل بيانات صفحة الإدارة والتحكم (أنواع الخدمات + الأقسام + الضريبة الافتراضية) كملف إكسل
+async function downloadControlPanelExcel() {
+    if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
+    try {
+        const wb = XLSX.utils.book_new();
+        const svcRows = (serviceTypes || []).map((s, i) => ({ '#': i + 1, 'نوع الخدمة': s.name }));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(svcRows.length ? svcRows : [{ '#': '', 'نوع الخدمة': '' }]), 'أنواع الخدمات');
+        const deptRows = (departments || []).map((d, i) => ({ '#': i + 1, 'القسم / الغرض': d.name }));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(deptRows.length ? deptRows : [{ '#': '', 'القسم / الغرض': '' }]), 'الأقسام');
+        const taxEl = document.getElementById('defaultTax');
+        const settingsRows = [{ 'الإعداد': 'نسبة الضريبة الافتراضية (%)', 'القيمة': taxEl ? taxEl.value : '' }];
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(settingsRows), 'الإعدادات');
+        XLSX.writeFile(wb, 'بيانات_الإدارة_والتحكم_' + new Date().toISOString().split('T')[0] + '.xlsx');
+        recordAction('تنزيل بيانات الإدارة والتحكم Excel');
+    } catch (e) { alert(msg('تعذّر تصدير الملف: ') + e.message); }
 }
 
 // ===================== المزامنة السحابية =====================
