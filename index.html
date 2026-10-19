@@ -159,6 +159,15 @@
         .topbar-main-title { font-size: 15px; font-weight: 700; color: #0093c4; line-height: 1.2; }
         .topbar-sub-title { font-size: 11px; color: #7cb342; font-weight: 600; line-height: 1.2; }
         .topbar-page-title { font-size: 14px; font-weight: 600; color: #0093c4; display: flex; align-items: center; gap: 8px; }
+        /* جرس الإشعارات */
+        .notif-wrap { position: relative; }
+        .notif-bell { position: relative; background: #f1f6f9; border: 1px solid #e0e9ef; color: #0093c4; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+        .notif-bell:hover { background: #e3f0f6; }
+        .notif-bell.has-alerts { color: #e67e22; animation: notifShake 2.4s ease-in-out infinite; }
+        @keyframes notifShake { 0%,92%,100%{transform:rotate(0);} 94%{transform:rotate(-12deg);} 96%{transform:rotate(10deg);} 98%{transform:rotate(-6deg);} }
+        .notif-badge { position: absolute; top: -3px; inset-inline-end: -3px; background: #e74c3c; color: #fff; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+        .notif-panel { position: absolute; top: calc(100% + 8px); inset-inline-end: 0; width: 330px; max-width: 86vw; max-height: 420px; overflow-y: auto; background: #fff; border: 1px solid #e0e6ed; border-radius: 12px; box-shadow: 0 12px 34px rgba(0,0,0,0.18); z-index: 1300; }
+        .notif-panel-header { background: linear-gradient(135deg, #0093c4 0%, #007ba3 100%); color: #fff; padding: 11px 14px; font-size: 13px; font-weight: 700; border-radius: 12px 12px 0 0; position: sticky; top: 0; }
         .guest-badge { background: #fff3cd; color: #856404; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; margin-right: 12px; }
 
         /* Buttons */
@@ -493,9 +502,22 @@
                     <div class="topbar-sub-title">تكافل عمان للتأمين</div>
                 </div>
             </div>
-            <div class="topbar-page-title">
-                <span id="guestBadge" class="guest-badge" style="display:none;"><i class="fas fa-eye"></i> وضع الزائر</span>
-                <span id="pageTitle">لوحة التحكم</span>
+            <div style="display:flex; align-items:center; gap:18px;">
+                <div class="topbar-page-title">
+                    <span id="guestBadge" class="guest-badge" style="display:none;"><i class="fas fa-eye"></i> وضع الزائر</span>
+                    <span id="pageTitle">لوحة التحكم</span>
+                </div>
+                <!-- جرس الإشعارات (انتهاء السجل التجاري) -->
+                <div id="notifWrap" class="notif-wrap" data-perm="notifications:view" style="display:none;">
+                    <button type="button" id="notifBell" class="notif-bell" onclick="event.stopPropagation(); toggleNotifPanel()" title="الإشعارات">
+                        <i class="fas fa-bell"></i>
+                        <span id="notifBadge" class="notif-badge" style="display:none;">0</span>
+                    </button>
+                    <div id="notifPanel" class="notif-panel" style="display:none;" onclick="event.stopPropagation();">
+                        <div class="notif-panel-header"><i class="fas fa-bell"></i> <span data-i18n="تنبيهات انتهاء السجل التجاري">تنبيهات انتهاء السجل التجاري</span></div>
+                        <div id="notifPanelBody"></div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="content" id="contentArea">
@@ -605,7 +627,7 @@
                 </div>
                 <div class="form-group-item">
                     <label><i class="fas fa-calendar"></i> التاريخ *</label>
-                    <input type="date" id="lpoDate" required>
+                    <input type="date" lang="en" dir="ltr" id="lpoDate" required>
                 </div>
             </div>
             <div class="form-grid cols-2">
@@ -739,7 +761,7 @@
                     <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الأقسام --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
                     <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
                 </div>
-                <input type="date" id="filterDraftDate" onchange="loadDrafts()">
+                <input type="date" lang="en" dir="ltr" id="filterDraftDate" onchange="loadDrafts()">
             </div>
             <div class="filter-actions">
                 <button type="button" class="btn btn-danger btn-small" onclick="clearDraftFilters()"><i class="fas fa-eraser"></i> مسح التصفية</button>
@@ -805,10 +827,10 @@
                     <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
                 </div>
                 <select id="filterStatus" onchange="filterLPOs()"><option value="">-- كل الحالات --</option><option value="__pending">بانتظار الاعتماد</option><option value="__approved">معتمد</option><option value="__rejected">مرفوض</option></select>
-                <input type="date" id="filterFromDate" onchange="filterLPOs()" title="من تاريخ">
+                <input type="date" lang="en" dir="ltr" id="filterFromDate" onchange="filterLPOs()" title="من تاريخ">
             </div>
             <div class="filter-grid">
-                <input type="date" id="filterToDate" onchange="filterLPOs()" title="إلى تاريخ">
+                <input type="date" lang="en" dir="ltr" id="filterToDate" onchange="filterLPOs()" title="إلى تاريخ">
                 <div class="ms-wrap" data-ms="msDepartment">
                     <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الأقسام --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
                     <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
@@ -868,7 +890,7 @@
         </div>
         <div class="table-responsive">
             <table id="suppliersTable">
-                <thead><tr><th>الاسم</th><th>التقييم</th><th>نوع الخدمة</th><th>التصنيف</th><th>الهاتف</th><th>VAT</th><th>C.R</th><th>الملفات</th><th>الإجراءات</th></tr></thead>
+                <thead><tr><th>تاريخ التسجيل</th><th>الاسم</th><th>التقييم</th><th>نوع الخدمة</th><th>التصنيف</th><th>الهاتف</th><th>VAT</th><th>C.R</th><th>انتهاء السجل التجاري</th><th>الملفات</th><th>الإجراءات</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -1116,6 +1138,19 @@
         </div>
     </div>
 
+    <!-- إعدادات إشعارات انتهاء السجل التجاري -->
+    <div class="card" style="margin-top:1.5rem;" data-perm="notifications:edit">
+        <div class="card-header"><div class="card-title"><i class="fas fa-bell"></i> إعدادات الإشعارات</div></div>
+        <div class="form-group-item" style="max-width:420px;">
+            <label>التنبيه قبل انتهاء السجل التجاري بـ (أيام)</label>
+            <div style="display:flex; gap:10px;">
+                <input type="number" id="crNotifyDaysCtrl" value="30" min="1" max="365" style="flex:1;">
+                <button type="button" class="btn btn-success" onclick="saveNotifDays()"><i class="fas fa-save"></i> حفظ</button>
+            </div>
+            <small style="color:#999; margin-top:6px;">يظهر تنبيه (جرس في الأعلى) للموردين الذين سينتهي سجلهم التجاري خلال هذه المدة.</small>
+        </div>
+    </div>
+
     <!-- رابط تنزيل بيانات الصفحة (أنواع الخدمات + الأقسام) كملف إكسل -->
     <div style="text-align:center; margin-top:1.5rem; padding-top:12px; border-top:1px dashed #d5dde3;">
         <a href="#" onclick="downloadControlPanelExcel(); return false;" class="excel-link"><i class="fas fa-file-excel"></i> Download Data (Excel)</a>
@@ -1158,16 +1193,38 @@
         </div>
     </div>
 
-    <!-- سجل نشاط المستخدمين -->
+    <!-- سجل نشاط المستخدمين والنظام -->
     <div class="card">
-        <div class="card-header"><div class="card-title"><i class="fas fa-history"></i> سجل نشاط المستخدمين</div></div>
+        <div class="card-header"><div class="card-title"><i class="fas fa-history"></i> سجل نشاط المستخدمين والنظام</div></div>
+
+        <!-- خريطة استخدام النظام (اليوم × الساعة) -->
+        <div style="font-size:13px; font-weight:700; color:#0093c4; margin:4px 0 10px;"><i class="fas fa-fire"></i> خريطة استخدام النظام (اليوم × الساعة)</div>
+        <div id="activityHeatmap" class="heatmap-wrap" style="margin-bottom:1.5rem;"></div>
+
+        <!-- رسمان: أكثر المستخدمين نشاطاً + أكثر العمليات نشاطاً -->
+        <div class="charts-row">
+            <div class="card" style="margin:0;">
+                <div class="card-header"><div class="card-title"><i class="fas fa-user-clock"></i> أكثر المستخدمين نشاطاً</div></div>
+                <div class="chart-container"><canvas id="activityUsersChart"></canvas></div>
+            </div>
+            <div class="card" style="margin:0;">
+                <div class="card-header"><div class="card-title"><i class="fas fa-layer-group"></i> أكثر العمليات نشاطاً</div></div>
+                <div class="chart-container"><canvas id="activityOpsChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- جدول كل العمليات -->
+        <div class="card-header" style="margin-top:1.5rem;"><div class="card-title" style="font-size:15px;"><i class="fas fa-list-ul"></i> سجل العمليات</div></div>
         <div class="table-responsive">
             <table id="activityTable">
-                <thead><tr><th>المستخدم</th><th>آخر تسجيل دخول</th><th>آخر إجراء</th><th>تفاصيل آخر إجراء</th></tr></thead>
+                <thead><tr><th>التاريخ والوقت</th><th>المستخدم</th><th>نوع العملية</th><th>التفاصيل</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
-        <small style="color:#999; margin-top:8px; display:block;"><i class="fas fa-info-circle"></i> مرتّب حسب الأحدث نشاطاً. يُحدَّث تلقائياً عند دخول المستخدمين وقيامهم بالإجراءات.</small>
+        <small style="color:#999; margin-top:8px; display:block;"><i class="fas fa-info-circle"></i> مرتّب حسب الأحدث أولاً. يسجّل النظام كل عملية (إضافة، تعديل، حذف، اعتماد، رفض، استيراد، تصدير، دخول...) تلقائياً.</small>
+        <div style="text-align:center; margin-top:16px; padding-top:12px; border-top:1px dashed #d5dde3;">
+            <a href="#" onclick="downloadActivityExcel(); return false;" class="excel-link"><i class="fas fa-file-excel"></i> تنزيل البيانات Excel</a>
+        </div>
     </div>
 
     <div class="card">
@@ -1201,7 +1258,7 @@
         <!-- 2) تغذية الموردين من ملف إكسل -->
         <div style="border:1px solid #e8eef5; border-radius:10px; padding:1rem; background:#f8fafc;">
             <div style="font-size:14px; font-weight:700; color:#0093c4; margin-bottom:6px;"><i class="fas fa-file-import"></i> تغذية بيانات الموردين من ملف إكسل</div>
-            <p style="font-size:12.5px; color:#666; line-height:1.7; margin-bottom:12px;">نزّل القالب الجاهز، أدخل بيانات الموردين فيه، ثم ارفعه ليُضيف النظام جميع الموردين دفعةً واحدة. الأعمدة: <strong>اسم المورد</strong> (إلزامي)، نوع الخدمة (يمكن فصل أكثر من نوع بفاصلة)، التصنيف، الهاتف، البريد، المدينة، الرقم الضريبي، السجل التجاري.</p>
+            <p style="font-size:12.5px; color:#666; line-height:1.7; margin-bottom:12px;">نزّل القالب الجاهز، أدخل بيانات الموردين فيه، ثم ارفعه ليُضيف النظام جميع الموردين دفعةً واحدة. الأعمدة: اسم المورد (إلزامي)، نوع الخدمة (يمكن فصل أكثر من نوع بفاصلة)، التصنيف، الهاتف، البريد، المدينة، الرقم الضريبي، السجل التجاري.</p>
             <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
                 <button type="button" class="btn btn-primary" onclick="downloadSupplierTemplate()"><i class="fas fa-file-download"></i> تنزيل قالب إكسل</button>
                 <input type="file" id="supplierImportFile" accept=".xlsx,.xls" style="font-size:12px;">
@@ -1213,7 +1270,7 @@
         <!-- 3) تغذية أنواع الخدمات من ملف إكسل -->
         <div style="border:1px solid #e8eef5; border-radius:10px; padding:1rem; background:#f8fafc; margin-top:1.2rem;">
             <div style="font-size:14px; font-weight:700; color:#0093c4; margin-bottom:6px;"><i class="fas fa-concierge-bell"></i> تغذية أنواع الخدمات (Service Types) من ملف إكسل</div>
-            <p style="font-size:12.5px; color:#666; line-height:1.7; margin-bottom:12px;">نزّل القالب الجاهز، أدخل أنواع الخدمات فيه (عمود <strong>نوع الخدمة</strong>)، ثم ارفعه ليُضيفها النظام دفعةً واحدة. تُتجاهَل الأنواع المكرّرة تلقائياً.</p>
+            <p style="font-size:12.5px; color:#666; line-height:1.7; margin-bottom:12px;">نزّل القالب الجاهز، أدخل أنواع الخدمات فيه (عمود نوع الخدمة)، ثم ارفعه ليُضيفها النظام دفعةً واحدة. تُتجاهَل الأنواع المكرّرة تلقائياً.</p>
             <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
                 <button type="button" class="btn btn-primary" onclick="downloadServiceTypeTemplate()"><i class="fas fa-file-download"></i> تنزيل قالب إكسل</button>
                 <input type="file" id="serviceTypeImportFile" accept=".xlsx,.xls" style="font-size:12px;">
@@ -1225,7 +1282,7 @@
         <!-- 4) تغذية الأقسام / الغرض من ملف إكسل -->
         <div style="border:1px solid #e8eef5; border-radius:10px; padding:1rem; background:#f8fafc; margin-top:1.2rem;">
             <div style="font-size:14px; font-weight:700; color:#0093c4; margin-bottom:6px;"><i class="fas fa-sitemap"></i> تغذية الأقسام / الغرض (Departments) من ملف إكسل</div>
-            <p style="font-size:12.5px; color:#666; line-height:1.7; margin-bottom:12px;">نزّل القالب الجاهز، أدخل الأقسام/الأغراض فيه (عمود <strong>القسم / الغرض</strong>)، ثم ارفعه ليُضيفها النظام دفعةً واحدة. تُتجاهَل الأقسام المكرّرة تلقائياً.</p>
+            <p style="font-size:12.5px; color:#666; line-height:1.7; margin-bottom:12px;">نزّل القالب الجاهز، أدخل الأقسام/الأغراض فيه (عمود القسم / الغرض)، ثم ارفعه ليُضيفها النظام دفعةً واحدة. تُتجاهَل الأقسام المكرّرة تلقائياً.</p>
             <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
                 <button type="button" class="btn btn-primary" onclick="downloadDepartmentTemplate()"><i class="fas fa-file-download"></i> تنزيل قالب إكسل</button>
                 <input type="file" id="departmentImportFile" accept=".xlsx,.xls" style="font-size:12px;">
@@ -1383,7 +1440,9 @@
                     <div class="form-group-item"><label>المدينة</label><input type="text" id="newSupplierCity" value="مسقط"></div>
                     <div class="form-group-item"><label>الرقم الضريبي (VAT No)</label><input type="text" id="newSupplierVat"></div>
                     <div class="form-group-item"><label>السجل التجاري (C.R)</label><input type="text" id="newSupplierCr"></div>
+                    <div class="form-group-item"><label>تاريخ انتهاء السجل التجاري</label><input type="date" lang="en" dir="ltr" id="newSupplierCrExpiry"></div>
                 </div>
+                <div class="form-group-item full" style="margin-top:0.8rem;"><label>ملاحظات أخرى</label><textarea id="newSupplierNotes" rows="3" placeholder="أدخل أي ملاحظات إضافية عن المورد..." style="width:100%; resize:vertical;"></textarea></div>
 
                 <!-- حقول رفع الملفات (اختيارية) -->
                 <div style="background:#f8fafc; border:1px solid #e8eef5; border-radius:8px; padding:1rem; margin-top:1rem;">
@@ -1560,6 +1619,7 @@ let registeredUsers = [];
 let serviceTypes = [];   // أنواع الخدمات (من صفحة الإدارة والتحكم)
 let departments = [];    // الأقسام / الغرض (من صفحة الإدارة والتحكم)
 let evaluations = [];    // تقييمات الموردين
+let activityLog = [];    // سجل نشاط النظام (كل العمليات)
 let defaultTaxRate = 5;
 let chartInstances = {};
 let lpoSortState = {};
@@ -1588,11 +1648,12 @@ const ROLE_ORDER = ['requester','purchasing_officer','approver','storekeeper','f
 
 // الوحدات (الموارد) التي تُضبط صلاحياتها
 const PERM_MODULES = [
-    { key: 'orders',    ar: 'أوامر الشراء',     en: 'Purchase Orders' },
-    { key: 'suppliers', ar: 'الموردون',         en: 'Suppliers' },
-    { key: 'reports',   ar: 'التقارير',          en: 'Reports' },
-    { key: 'control',   ar: 'الإدارة والتحكم',   en: 'Control Panel' },
-    { key: 'users',     ar: 'إدارة المستخدمين',  en: 'User Management' }
+    { key: 'orders',        ar: 'أوامر الشراء',     en: 'Purchase Orders' },
+    { key: 'suppliers',     ar: 'الموردون',         en: 'Suppliers' },
+    { key: 'reports',       ar: 'التقارير',          en: 'Reports' },
+    { key: 'control',       ar: 'الإدارة والتحكم',   en: 'Control Panel' },
+    { key: 'notifications', ar: 'الإشعارات',         en: 'Notifications' },
+    { key: 'users',         ar: 'إدارة المستخدمين',  en: 'User Management' }
 ];
 // الإجراءات (CRUD + Approve)
 const PERM_ACTIONS = [
@@ -1610,25 +1671,25 @@ function viewOnly() { return { view:true, create:false, edit:false, delete:false
 function noPerm()   { return { view:false, create:false, edit:false, delete:false, approve:false }; }
 const DEFAULT_PERMISSIONS = {
     // مدير النظام: كل الصلاحيات
-    sysadmin: { orders:fullPerm(), suppliers:fullPerm(), reports:fullPerm(), control:fullPerm(), users:fullPerm() },
+    sysadmin: { orders:fullPerm(), suppliers:fullPerm(), reports:fullPerm(), control:fullPerm(), notifications:fullPerm(), users:fullPerm() },
     // مدير شراء (قديم)
-    manager: { orders:fullPerm(), suppliers:fullPerm(), reports:fullPerm(), control:fullPerm(), users:noPerm() },
+    manager: { orders:fullPerm(), suppliers:fullPerm(), reports:fullPerm(), control:fullPerm(), notifications:{view:true,create:false,edit:true,delete:false,approve:false}, users:noPerm() },
     // موظف شراء (قديم)
-    staff: { orders:{view:true,create:true,edit:true,delete:false,approve:false}, suppliers:{view:true,create:true,edit:true,delete:false,approve:false}, reports:viewOnly(), control:noPerm(), users:noPerm() },
+    staff: { orders:{view:true,create:true,edit:true,delete:false,approve:false}, suppliers:{view:true,create:true,edit:true,delete:false,approve:false}, reports:viewOnly(), control:noPerm(), notifications:viewOnly(), users:noPerm() },
     // زائر (قديم)
-    guest: { orders:viewOnly(), suppliers:viewOnly(), reports:viewOnly(), control:noPerm(), users:noPerm() },
+    guest: { orders:viewOnly(), suppliers:viewOnly(), reports:viewOnly(), control:noPerm(), notifications:noPerm(), users:noPerm() },
     // طالب الشراء: ينشئ طلبات، لا يعتمد
-    requester: { orders:{view:true,create:true,edit:true,delete:false,approve:false}, suppliers:viewOnly(), reports:viewOnly(), control:noPerm(), users:noPerm() },
+    requester: { orders:{view:true,create:true,edit:true,delete:false,approve:false}, suppliers:viewOnly(), reports:viewOnly(), control:noPerm(), notifications:viewOnly(), users:noPerm() },
     // مسؤول المشتريات: يدير الأوامر والموردين
-    purchasing_officer: { orders:{view:true,create:true,edit:true,delete:true,approve:false}, suppliers:fullPerm(), reports:viewOnly(), control:{view:true,create:true,edit:true,delete:false,approve:false}, users:noPerm() },
+    purchasing_officer: { orders:{view:true,create:true,edit:true,delete:true,approve:false}, suppliers:fullPerm(), reports:viewOnly(), control:{view:true,create:true,edit:true,delete:false,approve:false}, notifications:{view:true,create:false,edit:true,delete:false,approve:false}, users:noPerm() },
     // المعتمد المالي: يعتمد الأوامر
-    approver: { orders:{view:true,create:false,edit:false,delete:false,approve:true}, suppliers:viewOnly(), reports:viewOnly(), control:noPerm(), users:noPerm() },
+    approver: { orders:{view:true,create:false,edit:false,delete:false,approve:true}, suppliers:viewOnly(), reports:viewOnly(), control:noPerm(), notifications:viewOnly(), users:noPerm() },
     // أمين المستودع: رؤية الأوامر والموردين
-    storekeeper: { orders:viewOnly(), suppliers:viewOnly(), reports:viewOnly(), control:noPerm(), users:noPerm() },
+    storekeeper: { orders:viewOnly(), suppliers:viewOnly(), reports:viewOnly(), control:noPerm(), notifications:viewOnly(), users:noPerm() },
     // المحاسب: رؤية + تقارير كاملة
-    finance: { orders:viewOnly(), suppliers:viewOnly(), reports:fullPerm(), control:noPerm(), users:noPerm() },
+    finance: { orders:viewOnly(), suppliers:viewOnly(), reports:fullPerm(), control:noPerm(), notifications:viewOnly(), users:noPerm() },
     // الزائر/المدقق: رؤية فقط
-    auditor: { orders:viewOnly(), suppliers:viewOnly(), reports:viewOnly(), control:noPerm(), users:noPerm() }
+    auditor: { orders:viewOnly(), suppliers:viewOnly(), reports:viewOnly(), control:noPerm(), notifications:viewOnly(), users:noPerm() }
 };
 
 // المصفوفة الفعلية (تُحمَّل من السحابة؛ تبدأ بالافتراضية)
@@ -1642,8 +1703,12 @@ function can(module, action) {
     // مدير النظام يملك كل الصلاحيات دائماً — محصّن ضد أي تعديل في قاعدة البيانات
     if (role === 'sysadmin') return true;
     const rp = rolePermissions[role] || DEFAULT_PERMISSIONS[role];
-    if (!rp || !rp[module]) return false;
-    return !!rp[module][action];
+    if (!rp) return false;
+    // وحدة غير موجودة في الصلاحيات المحفوظة (مثل وحدة جديدة): نرجع للقيمة الافتراضية للدور
+    let modPerm = rp[module];
+    if (!modPerm && DEFAULT_PERMISSIONS[role]) modPerm = DEFAULT_PERMISSIONS[role][module];
+    if (!modPerm) return false;
+    return !!modPerm[action];
 }
 
 // ===================== طبقة قاعدة البيانات السحابية =====================
@@ -1665,6 +1730,7 @@ function rowToDraft(r) {
 function rowToSupplier(r) {
     return { id: r.id, name: r.name, serviceType: r.service_type, phone: r.phone,
              email: r.email, city: r.city, vatNo: r.vat_no || '', crNo: r.cr_no || '',
+             crExpiry: r.cr_expiry || '', notes: r.notes || '', createdAt: r.created_at,
              supplierType: r.supplier_type || 'Local Supplier',
              taxCardUrl: r.tax_card_url || '', crCertUrl: r.cr_cert_url || '', otherFilesUrl: r.other_files_url || '' };
 }
@@ -1700,8 +1766,20 @@ async function loadAllFromCloud() {
         departments = (deptRes.data || []).map(r => ({ id: r.id, name: r.name }));
         evaluations = (evalRes.data || []).map(rowToEval);
         if (setRes.data && setRes.data.value) defaultTaxRate = parseFloat(setRes.data.value) || 5;
+        // تحميل مدة التنبيه لانتهاء السجل التجاري (بالأيام)
+        try {
+            const { data: nd } = await sb.from('settings').select('value').eq('key', 'cr_notify_days').maybeSingle();
+            if (nd && nd.value) crNotifyDays = parseInt(nd.value, 10) || 30;
+            const ctrl = document.getElementById('crNotifyDaysCtrl'); if (ctrl) ctrl.value = crNotifyDays;
+        } catch (e) {}
+        // تحميل سجل نشاط النظام (آخر 1000 عملية) — يفشل بصمت إن لم يُنشأ الجدول بعد
+        try {
+            const { data: al } = await sb.from('activity_log').select('*').order('created_at', { ascending: false }).limit(1000);
+            if (al) activityLog = al.map(r => ({ id: r.id, username: r.username || '—', userEmail: r.user_email || '', actionType: r.action_type || 'other', details: r.details || '', createdAt: r.created_at }));
+        } catch (e) {}
         // تحميل مصفوفة الصلاحيات المحفوظة (إن وُجدت)
         await loadRolePermissions();
+        try { updateNotifBadge(); } catch (e) {}
     } catch (e) {
         console.error('خطأ في تحميل البيانات السحابية:', e);
         alert(msg('تعذّر تحميل البيانات من السحابة. تحقق من اتصالك ومن إعدادات Supabase.'));
@@ -2090,7 +2168,40 @@ const I18N = {
     'مزامنة تلقائية بالوقت الحقيقي مفعّلة': 'Real-time automatic sync enabled',
     'يناير': 'January', 'فبراير': 'February', 'مارس': 'March', 'إبريل': 'April',
     'مايو': 'May', 'يونيو': 'June', 'يوليو': 'July', 'أغسطس': 'August',
-    'سبتمبر': 'September', 'أكتوبر': 'October', 'نوفمبر': 'November', 'ديسمبر': 'December'
+    'سبتمبر': 'September', 'أكتوبر': 'October', 'نوفمبر': 'November', 'ديسمبر': 'December',
+    'سجل نشاط المستخدمين والنظام': 'Users & System Activity Log',
+    'أكثر المستخدمين نشاطاً': 'Most Active Users',
+    'أكثر العمليات نشاطاً': 'Most Active Operations',
+    'سجل العمليات': 'Operations Log',
+    'التاريخ والوقت': 'Date & Time',
+    'نوع العملية': 'Operation Type',
+    'التفاصيل': 'Details',
+    'مرتّب حسب الأحدث أولاً. يسجّل النظام كل عملية (إضافة، تعديل، حذف، اعتماد، رفض، استيراد، تصدير، دخول...) تلقائياً.': 'Sorted newest first. The system automatically logs every operation (create, update, delete, approve, reject, import, export, login...).',
+    'إدارة قواعد البيانات': 'Database Management',
+    'النسخ الاحتياطي لبيانات النظام': 'System Data Backup',
+    'تنزيل نسخة احتياطية كاملة من جميع بيانات النظام (أوامر الشراء، المسودات، الموردون، المستخدمون، أنواع الخدمات، الأقسام، التقييمات) في ملف واحد يُحفظ لديك كأرشيف آمن.': 'Download a full backup of all system data (purchase orders, drafts, suppliers, users, service types, departments, evaluations) in a single secure archive file.',
+    'تنزيل نسخة احتياطية كاملة': 'Download Full Backup',
+    'نسخة Excel (أوامر + موردون)': 'Excel Copy (Orders + Suppliers)',
+    'لم يتم إجراء أي نسخة احتياطية بعد من هذا المتصفح.': 'No backup has been made from this browser yet.',
+    'تغذية بيانات الموردين من ملف إكسل': 'Import Suppliers from Excel',
+    'نزّل القالب الجاهز، أدخل بيانات الموردين فيه، ثم ارفعه ليُضيف النظام جميع الموردين دفعةً واحدة. الأعمدة: اسم المورد (إلزامي)، نوع الخدمة (يمكن فصل أكثر من نوع بفاصلة)، التصنيف، الهاتف، البريد، المدينة، الرقم الضريبي، السجل التجاري.': 'Download the ready template, enter supplier data, then upload it to add all suppliers at once. Columns: Supplier Name (required), Service Type (multiple types separated by comma), Classification, Phone, Email, City, VAT No, C.R.',
+    'تنزيل قالب إكسل': 'Download Excel Template',
+    'تحميل ملف بيانات الموردين': 'Upload Suppliers File',
+    'تغذية أنواع الخدمات (Service Types) من ملف إكسل': 'Import Service Types from Excel',
+    'نزّل القالب الجاهز، أدخل أنواع الخدمات فيه (عمود نوع الخدمة)، ثم ارفعه ليُضيفها النظام دفعةً واحدة. تُتجاهَل الأنواع المكرّرة تلقائياً.': 'Download the ready template, enter the service types (Service Type column), then upload it to add them all at once. Duplicate types are skipped automatically.',
+    'تحميل ملف أنواع الخدمات': 'Upload Service Types File',
+    'تغذية الأقسام / الغرض (Departments) من ملف إكسل': 'Import Departments from Excel',
+    'نزّل القالب الجاهز، أدخل الأقسام/الأغراض فيه (عمود القسم / الغرض)، ثم ارفعه ليُضيفها النظام دفعةً واحدة. تُتجاهَل الأقسام المكرّرة تلقائياً.': 'Download the ready template, enter the departments/purposes (Department / Purpose column), then upload it to add them all at once. Duplicate departments are skipped automatically.',
+    'تحميل ملف الأقسام': 'Upload Departments File',
+    'تاريخ انتهاء السجل التجاري': 'C.R Expiry Date',
+    'ملاحظات أخرى': 'Other Notes',
+    'أدخل أي ملاحظات إضافية عن المورد...': 'Enter any additional notes about the supplier...',
+    'انتهاء السجل التجاري': 'C.R Expiry',
+    'تنبيهات انتهاء السجل التجاري': 'C.R Expiry Alerts',
+    'الإشعارات': 'Notifications',
+    'إعدادات الإشعارات': 'Notification Settings',
+    'التنبيه قبل انتهاء السجل التجاري بـ (أيام)': 'Notify before C.R expiry (days)',
+    'يظهر تنبيه (جرس في الأعلى) للموردين الذين سينتهي سجلهم التجاري خلال هذه المدة.': 'An alert (bell at the top) appears for suppliers whose C.R will expire within this period.',
 };
 
 // ===================== قاموس رسائل التنبيه والأخطاء =====================
@@ -2185,8 +2296,34 @@ function changeLanguage(lang, ev) {
 
     applyTranslations(lang);
     updateAboutDescription(lang);
+    // إبقاء حقول التاريخ بالإنجليزية حتى بعد التبديل إلى العربية
+    forceEnglishDateInputs();
     // تحديث نصوص القوائم متعددة الاختيارات (placeholder حسب اللغة)
     try { Object.keys(MS).forEach(k => msRenderTags(k)); } catch (e) {}
+    // إعادة رسم محتوى الصفحة النشطة (رسوم/جداول ديناميكية) ليعكس اللغة الجديدة
+    try {
+        const appEl = document.getElementById('mainApp');
+        if (appEl && appEl.style.display !== 'none') {
+            const active = document.querySelector('.page.active');
+            const id = active ? active.id : '';
+            if (id === 'page-admin') loadAdminPanel();
+            else if (id === 'page-dashboard') loadDashboard();
+            else if (id === 'page-reports') generateReport();
+            else if (id === 'page-suppliers') filterSuppliers();
+            else if (id === 'page-lpo-management') { renderLPOList(); loadDrafts(); }
+        }
+    } catch (e) {}
+}
+
+// فرض عرض كل حقول التاريخ باللغة الإنجليزية (الأرقام وأسماء الأشهر في المنتقي) مهما كانت لغة الواجهة
+function forceEnglishDateInputs() {
+    try {
+        document.querySelectorAll('input[type="date"], input[type="datetime-local"], input[type="month"], input[type="time"]').forEach(el => {
+            el.setAttribute('lang', 'en');
+            el.setAttribute('dir', 'ltr');
+            el.style.direction = 'ltr';
+        });
+    } catch (e) {}
 }
 
 // تبديل فقرة وصف البرنامج بين العربية والإنجليزية
@@ -2256,21 +2393,67 @@ function translateNode(root, lang) {
 const ALLOWED_EMAIL_DOMAIN = 'takafuloman.om';
 
 // تسجيل آخر دخول للمستخدم الحالي في قاعدة البيانات
+// أنواع العمليات/الأحداث في سجل النشاط (مفتاح → تسمية ولون)
+const ACTIVITY_TYPES = {
+    login:       { ar: 'تسجيل دخول', en: 'Login',            color: '#0093c4' },
+    create:      { ar: 'إضافة',      en: 'Create',           color: '#2e7d32' },
+    update:      { ar: 'تعديل',      en: 'Update',           color: '#f0ad4e' },
+    delete:      { ar: 'حذف',        en: 'Delete',           color: '#c0392b' },
+    approve:     { ar: 'اعتماد',     en: 'Approve',          color: '#1e8449' },
+    reject:      { ar: 'رفض',        en: 'Reject',           color: '#e74c3c' },
+    draft:       { ar: 'مسودة',      en: 'Draft',            color: '#9b59b6' },
+    import:      { ar: 'استيراد',    en: 'Import',           color: '#16a085' },
+    export:      { ar: 'تصدير/تنزيل', en: 'Export/Download',  color: '#34495e' },
+    permissions: { ar: 'صلاحيات',    en: 'Permissions',      color: '#8e44ad' },
+    other:       { ar: 'إجراء',      en: 'Action',           color: '#7a8b99' }
+};
+
+// استنتاج نوع العملية من النص الوصفي
+function inferActivityTypeKey(desc) {
+    const d = (desc || '');
+    if (/تسجيل دخول|دخول|login|sign in/i.test(d)) return 'login';
+    if (/استيراد|import/i.test(d)) return 'import';
+    if (/تصدير|تنزيل|نسخة احتياطية|backup|export|download/i.test(d)) return 'export';
+    if (/اعتماد|approve/i.test(d)) return 'approve';
+    if (/رفض|reject/i.test(d)) return 'reject';
+    if (/مسودة|draft/i.test(d)) return 'draft';
+    if (/صلاحي|permission|role/i.test(d)) return 'permissions';
+    if (/حذف|delete|remove/i.test(d)) return 'delete';
+    if (/تعديل|تحديث|update|edit/i.test(d)) return 'update';
+    if (/إضافة|اضافة|إنشاء|انشاء|add|create|new/i.test(d)) return 'create';
+    return 'other';
+}
+
+function activityTypeLabel(key) {
+    const t = ACTIVITY_TYPES[key] || ACTIVITY_TYPES.other;
+    return currentLanguage === 'en' ? t.en : t.ar;
+}
+function activityTypeColor(key) { return (ACTIVITY_TYPES[key] || ACTIVITY_TYPES.other).color; }
+
 async function recordLogin() {
     if (isGuest || !sb || !currentUser || !currentUser.authId) return;
     try {
         await sb.from('app_users').update({ last_login: new Date().toISOString() }).eq('auth_id', currentUser.authId);
     } catch (e) {}
+    recordAction(currentLanguage === 'en' ? 'User login' : 'تسجيل دخول المستخدم', 'login');
 }
 
-// تسجيل آخر إجراء تفاعلي للمستخدم الحالي
-async function recordAction(desc) {
-    if (isGuest || !sb || !currentUser || !currentUser.authId) return;
+// تسجيل عملية في سجل النشاط + تحديث آخر إجراء للمستخدم الحالي
+async function recordAction(desc, typeKey) {
+    if (isGuest || !sb || !currentUser) return;
+    const type = typeKey || inferActivityTypeKey(desc);
+    const now = new Date().toISOString();
+    const uname = currentUser.username || currentUser.email || '—';
+    // إضافة فورية محلياً لتظهر مباشرةً في السجل
+    try { activityLog.unshift({ id: 'local-' + Date.now(), username: uname, userEmail: currentUser.email || '', actionType: type, details: desc || '', createdAt: now }); } catch (e) {}
     try {
-        await sb.from('app_users').update({
-            last_action: new Date().toISOString(),
-            last_action_desc: desc || ''
-        }).eq('auth_id', currentUser.authId);
+        if (currentUser.authId) {
+            await sb.from('app_users').update({ last_action: now, last_action_desc: desc || '' }).eq('auth_id', currentUser.authId);
+        }
+    } catch (e) {}
+    // الكتابة في جدول سجل النشاط (إن كان موجوداً) — تفشل بصمت إن لم يُنشأ الجدول بعد
+    try {
+        await sb.from('activity_log').insert({ username: uname, user_email: currentUser.email || '', action_type: type, details: desc || '', created_at: now });
     } catch (e) {}
 }
 
@@ -3164,6 +3347,7 @@ function loadDashboard() {
     drawDashSupplierSpend();
     drawDashDeptChart();
     drawUsageHeatmap();
+    updateNotifBadge();
 }
 
 // رسم "مبالغ أوامر الشراء حسب القسم المعني" في لوحة التحكم
@@ -3204,18 +3388,12 @@ function drawDashSupplierSpend() {
 }
 
 // خريطة حرارية: كثافة استخدام النظام عبر اليوم (7) × الساعة (24)
-function drawUsageHeatmap() {
-    const wrap = document.getElementById('usageHeatmap');
-    if (!wrap) return;
+// بناء HTML خريطة حرارية (يوم × ساعة) من مجموعة طوابع زمنية
+function buildHeatmapHtml(stamps) {
     const en = currentLanguage === 'en';
-    // تجميع كل الطوابع الزمنية الدالة على نشاط النظام
-    const stamps = [];
-    lpoDrafts.forEach(l => { if (l.createdAt) stamps.push(l.createdAt); });
-    draftSaves.forEach(d => { if (d.createdAt) stamps.push(d.createdAt); });
-    registeredUsers.forEach(u => { if (u.lastLogin) stamps.push(u.lastLogin); if (u.lastAction) stamps.push(u.lastAction); });
     const grid = Array.from({ length: 7 }, () => new Array(24).fill(0));
     let max = 0;
-    stamps.forEach(ts => {
+    (stamps || []).forEach(ts => {
         const dt = new Date(ts);
         if (isNaN(dt.getTime())) return;
         const d = dt.getDay(), h = dt.getHours();
@@ -3224,8 +3402,7 @@ function drawUsageHeatmap() {
     });
     const days = en ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] : ['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
     if (max === 0) {
-        wrap.innerHTML = `<div style="text-align:center; color:#999; padding:26px; font-size:13px;">${en ? 'No usage data yet' : 'لا توجد بيانات استخدام بعد'}</div>`;
-        return;
+        return `<div style="text-align:center; color:#999; padding:26px; font-size:13px;">${en ? 'No usage data yet' : 'لا توجد بيانات استخدام بعد'}</div>`;
     }
     let html = '<div class="heatmap-grid"><div class="heatmap-h"></div>';
     for (let h = 0; h < 24; h++) html += `<div class="heatmap-h">${h}</div>`;
@@ -3245,7 +3422,17 @@ function drawUsageHeatmap() {
         + '<span class="box" style="background:rgba(0,147,196,0.70)"></span>'
         + '<span class="box" style="background:rgba(0,147,196,1)"></span>'
         + `<span>${en ? 'More' : 'أكثر'}</span></div>`;
-    wrap.innerHTML = html;
+    return html;
+}
+
+function drawUsageHeatmap() {
+    const wrap = document.getElementById('usageHeatmap');
+    if (!wrap) return;
+    const stamps = [];
+    lpoDrafts.forEach(l => { if (l.createdAt) stamps.push(l.createdAt); });
+    draftSaves.forEach(d => { if (d.createdAt) stamps.push(d.createdAt); });
+    registeredUsers.forEach(u => { if (u.lastLogin) stamps.push(u.lastLogin); if (u.lastAction) stamps.push(u.lastAction); });
+    wrap.innerHTML = buildHeatmapHtml(stamps);
 }
 
 // إعادة ضبط أبعاد جميع الرسوم عند تغيير حجم النافذة (مع تجميع الأحداث المتتابعة)
@@ -3823,6 +4010,11 @@ document.addEventListener('click', function(e) {
     if (e.target.closest('[data-ms]')) return;
     document.querySelectorAll('[data-ms].open').forEach(el => el.classList.remove('open'));
 });
+// إغلاق لوحة الإشعارات عند النقر خارجها
+document.addEventListener('click', function(e) {
+    if (e.target.closest('#notifWrap')) return;
+    closeNotifPanel();
+});
 
 // نوع الخدمة لأمر الشراء (من المورد المرتبط)
 function orderServiceType(l) {
@@ -4264,6 +4456,7 @@ async function downloadSuppliersExcel() {
     try {
         const en = currentLanguage === 'en';
         const columns = [
+            { header: 'تاريخ التسجيل', headerEn: 'Rec Date', key: 'recDate', width: 20, align: 'center' },
             { header: 'اسم المورد', headerEn: 'Supplier Name', key: 'name', width: 30, align: 'right' },
             { header: 'نوع الخدمة', headerEn: 'Service Type', key: 'service', width: 22, align: 'right' },
             { header: 'التصنيف', headerEn: 'Classification', key: 'type', width: 18, align: 'center' },
@@ -4276,11 +4469,12 @@ async function downloadSuppliersExcel() {
             { header: 'عدد التقييمات', headerEn: 'Ratings', key: 'ratingCount', width: 13, align: 'center' },
             { header: 'عدد الأوامر', headerEn: 'Orders', key: 'orders', width: 12, align: 'center' }
         ];
-        const sorted = suppliers.slice().sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'ar'));
+        const sorted = suppliers.slice().sort((a, b) => { const ca = a.createdAt || '', cb = b.createdAt || ''; return cb < ca ? -1 : cb > ca ? 1 : 0; });
         const rows = sorted.map(s => {
             const r = getSupplierAvgRating(s.id);
             const orderCount = lpoDrafts.filter(l => (s.id && l.supplierId === s.id) || l.supplierName === s.name).length;
             return {
+                recDate: s.createdAt ? new Date(s.createdAt).toLocaleString('en-GB') : '',
                 name: s.name || '',
                 service: s.serviceType || '',
                 type: s.supplierType || '',
@@ -4307,6 +4501,118 @@ async function downloadSuppliersExcel() {
     }
 }
 
+// ===================== انتهاء السجل التجاري والإشعارات =====================
+let crNotifyDays = 30; // عدد أيام التنبيه المسبق قبل انتهاء السجل التجاري
+
+// عدد الأيام المتبقية حتى تاريخ معيّن (سالب = منتهٍ)
+function crDaysLeft(dateStr) {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return null;
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    d.setHours(0, 0, 0, 0);
+    return Math.round((d - today) / 86400000);
+}
+
+// خلية عرض تاريخ انتهاء السجل التجاري مع تلوين حسب القرب/الانتهاء
+function crExpiryCell(dateStr) {
+    const en = currentLanguage === 'en';
+    if (!dateStr) return '<span style="color:#ccc;">-</span>';
+    const dl = crDaysLeft(dateStr);
+    const d = new Date(dateStr);
+    const dateFmt = isNaN(d.getTime()) ? escapeHtml(dateStr) : d.toLocaleDateString('en-GB');
+    if (dl === null) return escapeHtml(dateStr);
+    if (dl < 0) return `<span style="color:#c0392b; font-weight:700;" title="${en ? 'Expired' : 'منتهٍ'}"><i class="fas fa-exclamation-circle"></i> ${dateFmt}</span>`;
+    if (dl <= crNotifyDays) return `<span style="color:#e67e22; font-weight:700;" title="${en ? ('Expires in ' + dl + ' days') : ('ينتهي خلال ' + dl + ' يوماً')}"><i class="fas fa-exclamation-triangle"></i> ${dateFmt}</span>`;
+    return `<span style="color:#2e7d32;">${dateFmt}</span>`;
+}
+
+// الموردون الذين اقترب أو انتهى سجلهم التجاري (ضمن مدة التنبيه)
+function getCrExpiryAlerts() {
+    const alerts = [];
+    (suppliers || []).forEach(s => {
+        const dl = crDaysLeft(s.crExpiry);
+        if (dl !== null && dl <= crNotifyDays) alerts.push({ supplier: s, daysLeft: dl });
+    });
+    alerts.sort((a, b) => a.daysLeft - b.daysLeft);
+    return alerts;
+}
+
+// تحديث شارة جرس الإشعارات + إظهار/إخفاء الجرس حسب الصلاحية
+function updateNotifBadge() {
+    const wrap = document.getElementById('notifWrap');
+    const badge = document.getElementById('notifBadge');
+    if (!wrap || !badge) return;
+    const allowed = can('notifications', 'view');
+    wrap.style.display = allowed ? '' : 'none';
+    if (!allowed) return;
+    const n = getCrExpiryAlerts().length;
+    badge.textContent = n;
+    badge.style.display = n > 0 ? 'flex' : 'none';
+    const bell = document.getElementById('notifBell');
+    if (bell) bell.classList.toggle('has-alerts', n > 0);
+}
+
+function toggleNotifPanel() {
+    const panel = document.getElementById('notifPanel');
+    if (!panel) return;
+    if (panel.style.display === 'block') { panel.style.display = 'none'; return; }
+    renderNotifPanel();
+    panel.style.display = 'block';
+}
+function closeNotifPanel() { const p = document.getElementById('notifPanel'); if (p) p.style.display = 'none'; }
+
+function renderNotifPanel() {
+    const body = document.getElementById('notifPanelBody');
+    if (!body) return;
+    const en = currentLanguage === 'en';
+    const alerts = getCrExpiryAlerts();
+    const daysInput = `<div style="padding:10px 12px; border-bottom:1px solid #eef2f5; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <span style="font-size:12px; color:#555;">${en ? 'Notify before (days):' : 'التنبيه قبل (أيام):'}</span>
+        <input type="number" id="notifDaysInput" value="${crNotifyDays}" min="1" max="365" style="width:70px; padding:5px 8px; border:1.5px solid #ddd; border-radius:6px; font-size:12px;">
+        <button class="btn btn-small btn-success" onclick="saveNotifDays()"><i class="fas fa-save"></i> ${en ? 'Save' : 'حفظ'}</button>
+    </div>`;
+    let listHtml = '';
+    if (alerts.length === 0) {
+        listHtml = `<div style="padding:22px 12px; text-align:center; color:#2e7d32; font-size:13px;"><i class="fas fa-check-circle"></i> ${en ? 'No upcoming C.R expiries.' : 'لا توجد سجلات تجارية قاربت على الانتهاء.'}</div>`;
+    } else {
+        listHtml = alerts.map(a => {
+            const dl = a.daysLeft;
+            const expired = dl < 0;
+            const color = expired ? '#c0392b' : '#e67e22';
+            const icon = expired ? 'fa-exclamation-circle' : 'fa-exclamation-triangle';
+            const statusTxt = expired
+                ? (en ? ('Expired ' + Math.abs(dl) + ' days ago') : ('انتهى منذ ' + Math.abs(dl) + ' يوماً'))
+                : (en ? ('Expires in ' + dl + ' days') : ('ينتهي خلال ' + dl + ' يوماً'));
+            const dateFmt = new Date(a.supplier.crExpiry).toLocaleDateString('en-GB');
+            const sid = String(a.supplier.id).replace(/'/g, "\\'");
+            return `<div onclick="closeNotifPanel(); viewSupplierDetails('${sid}')" style="padding:10px 12px; border-bottom:1px solid #f0f2f5; cursor:pointer; display:flex; gap:10px; align-items:flex-start;">
+                <i class="fas ${icon}" style="color:${color}; margin-top:2px;"></i>
+                <div style="flex:1; min-width:0;">
+                    <div style="font-weight:700; font-size:13px; color:#223;">${escapeHtml(a.supplier.name)}</div>
+                    <div style="font-size:11.5px; color:${color}; font-weight:600;">${statusTxt}</div>
+                    <div style="font-size:11px; color:#8aa2b0;">${en ? 'Expiry: ' : 'تاريخ الانتهاء: '}${dateFmt}</div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+    body.innerHTML = daysInput + listHtml;
+}
+
+// حفظ عدد أيام التنبيه في إعدادات النظام
+async function saveNotifDays() {
+    const inp = document.getElementById('notifDaysInput') || document.getElementById('crNotifyDaysCtrl');
+    const v = parseInt(inp ? inp.value : crNotifyDays, 10);
+    if (!v || v < 1) { alert(msg('يرجى إدخال عدد أيام صحيح')); return; }
+    crNotifyDays = v;
+    try { await sb.from('settings').upsert({ key: 'cr_notify_days', value: String(v) }); } catch (e) {}
+    const ctrl = document.getElementById('crNotifyDaysCtrl'); if (ctrl) ctrl.value = v;
+    updateNotifBadge();
+    if (document.getElementById('notifPanel') && document.getElementById('notifPanel').style.display === 'block') renderNotifPanel();
+    try { filterSuppliers(); } catch (e) {}
+    alert(msg('تم حفظ مدة التنبيه بنجاح'));
+}
+
 // ===================== SUPPLIERS =====================
 function loadSuppliersList() {
     populateAllFilters();
@@ -4324,9 +4630,13 @@ function filterSuppliers() {
         (!nameF || s.name.toLowerCase().includes(nameF)) &&
         (!svcF.length || splitSvc(s.serviceType).some(t => svcF.includes(t))) &&
         (!cityF || s.city === cityF)
-    );
+    ).sort((a, b) => {
+        // الأحدث تسجيلاً أولاً (تنازلي حسب تاريخ التسجيل) — كما في قائمة أوامر الشراء
+        const ca = a.createdAt || '', cb = b.createdAt || '';
+        return cb < ca ? -1 : cb > ca ? 1 : 0;
+    });
     if (list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#999;">لا يوجد موردون مطابقون</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; color:#999;">لا يوجد موردون مطابقون</td></tr>';
     } else {
         list.forEach(s => {
             const sid = String(s.id).replace(/'/g, "\\'");
@@ -4343,7 +4653,7 @@ function filterSuppliers() {
             const filesHtml = files.length ? files.join(' ') : '<span style="color:#ccc;">-</span>';
             const row = tbody.insertRow();
             row.setAttribute('onclick', `viewSupplierDetails('${sid}')`);
-            row.innerHTML = `<td>${s.name}</td><td>${supplierRatingLabel(s.id)}</td><td>${s.serviceType||'-'}</td><td>${s.supplierType||'-'}</td><td>${s.phone||'-'}</td><td>${s.vatNo||'-'}</td><td>${s.crNo||'-'}</td><td style="font-size:16px;" onclick="event.stopPropagation();">${filesHtml}</td><td style="white-space:nowrap;" onclick="event.stopPropagation();">${viewBtn} ${editBtn} ${evalBtn} ${delBtn}</td>`;
+            row.innerHTML = `<td>${fmtRecordDate(s.createdAt)}</td><td>${s.name}</td><td>${supplierRatingLabel(s.id)}</td><td>${s.serviceType||'-'}</td><td>${s.supplierType||'-'}</td><td>${s.phone||'-'}</td><td>${s.vatNo||'-'}</td><td>${s.crNo||'-'}</td><td>${crExpiryCell(s.crExpiry)}</td><td style="font-size:16px;" onclick="event.stopPropagation();">${filesHtml}</td><td style="white-space:nowrap;" onclick="event.stopPropagation();">${viewBtn} ${editBtn} ${evalBtn} ${delBtn}</td>`;
         });
     }
     animateTableRows('#suppliersTable');
@@ -4393,7 +4703,7 @@ function closeSupplierModal() {
     supplierModalFromLPO = false;
     editingSupplierId = null;
     document.getElementById('supplierModal').classList.remove('active');
-    ['newSupplierName','newSupplierPhone','newSupplierEmail','newSupplierVat','newSupplierCr'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    ['newSupplierName','newSupplierPhone','newSupplierEmail','newSupplierVat','newSupplierCr','newSupplierCrExpiry','newSupplierNotes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     msClear('msNewSupplierSvc');
     document.getElementById('newSupplierCity').value = 'مسقط';
     document.getElementById('newSupplierType').value = 'Local Supplier';
@@ -4418,6 +4728,8 @@ function editSupplier(id) {
     document.getElementById('newSupplierCity').value = s.city || 'مسقط';
     document.getElementById('newSupplierVat').value = s.vatNo || '';
     document.getElementById('newSupplierCr').value = s.crNo || '';
+    document.getElementById('newSupplierCrExpiry').value = s.crExpiry || '';
+    document.getElementById('newSupplierNotes').value = s.notes || '';
     setSupplierModalMode('edit');
 }
 
@@ -4444,7 +4756,9 @@ function viewSupplierDetails(id) {
             ${item(en?'City':'المدينة', esc(s.city))}
             ${item('VAT No', esc(s.vatNo))}
             ${item('C.R No', esc(s.crNo))}
+            ${item(en?'C.R Expiry Date':'تاريخ انتهاء السجل التجاري', s.crExpiry ? crExpiryCell(s.crExpiry) : '')}
         </div>
+        ${s.notes ? `<div style="font-size:12px; font-weight:700; color:#0093c4; margin:16px 0 6px;"><i class="fas fa-sticky-note"></i> ${en?'Other Notes':'ملاحظات أخرى'}</div><div style="background:#f8fafc; border:1px solid #e8eef5; border-radius:8px; padding:10px 12px; font-size:13px; color:#333; white-space:pre-wrap; line-height:1.6;">${esc(s.notes)}</div>` : ''}
         <div style="font-size:12px; font-weight:700; color:#0093c4; margin:16px 0 6px;"><i class="fas fa-paperclip"></i> ${en?'Attachments':'المرفقات'}</div>
         ${filesHtml}`;
     const editBtn = document.getElementById('supplierViewEditBtn');
@@ -4508,20 +4822,31 @@ async function addSupplier(event) {
         city: document.getElementById('newSupplierCity').value || 'مسقط',
         vat_no: document.getElementById('newSupplierVat').value,
         cr_no: document.getElementById('newSupplierCr').value,
+        cr_expiry: document.getElementById('newSupplierCrExpiry').value || null,
+        notes: document.getElementById('newSupplierNotes').value || null,
         tax_card_url: taxUrl || null,
         cr_cert_url: crUrl || null,
         other_files_url: otherUrl || null
     };
+    // إسقاط أي عمود غير موجود بعد في قاعدة البيانات (cr_expiry / notes) بأمان ثم إعادة المحاولة
+    const stripUnknownCols = (obj, errMsg) => {
+        const clone = Object.assign({}, obj);
+        let stripped = false;
+        ['cr_expiry', 'notes'].forEach(c => { if (new RegExp(c, 'i').test(errMsg || '')) { delete clone[c]; stripped = true; } });
+        return stripped ? clone : null;
+    };
     // وضع التعديل: تحديث بيانات مورد قائم بدل إضافة مورد جديد
     if (editingSupplierId) {
         const upd = { name: row.name, service_type: row.service_type, supplier_type: row.supplier_type,
-                      phone: row.phone, email: row.email, city: row.city, vat_no: row.vat_no, cr_no: row.cr_no };
+                      phone: row.phone, email: row.email, city: row.city, vat_no: row.vat_no, cr_no: row.cr_no,
+                      cr_expiry: row.cr_expiry, notes: row.notes };
         // الملفات: تُستبدل فقط إذا رُفع ملف جديد، وإلا تبقى الملفات الحالية كما هي
         if (taxUrl) upd.tax_card_url = taxUrl;
         if (crUrl) upd.cr_cert_url = crUrl;
         if (otherUrl) upd.other_files_url = otherUrl;
-        const { error: updErr } = await sb.from('suppliers').update(upd).eq('id', editingSupplierId);
-        if (updErr) { alert(msg('تعذّر تحديث المورد: ') + updErr.message); return; }
+        let updRes = await sb.from('suppliers').update(upd).eq('id', editingSupplierId);
+        if (updRes.error) { const fb = stripUnknownCols(upd, updRes.error.message); if (fb) updRes = await sb.from('suppliers').update(fb).eq('id', editingSupplierId); }
+        if (updRes.error) { alert(msg('تعذّر تحديث المورد: ') + updRes.error.message); return; }
         await loadAllFromCloud();
         recordAction('تعديل مورد ' + row.name);
         closeSupplierModal();
@@ -4531,7 +4856,9 @@ async function addSupplier(event) {
         alert(msg('تم تحديث بيانات المورد بنجاح'));
         return;
     }
-    const { data: insData, error } = await sb.from('suppliers').insert(row).select();
+    let insRes = await sb.from('suppliers').insert(row).select();
+    if (insRes.error) { const fb = stripUnknownCols(row, insRes.error.message); if (fb) insRes = await sb.from('suppliers').insert(fb).select(); }
+    const insData = insRes.data, error = insRes.error;
     if (error) { alert(msg('تعذّر إضافة المورد: ') + error.message); return; }
     await loadAllFromCloud();
     recordAction('إضافة مورد ' + row.name);
@@ -5203,9 +5530,9 @@ function downloadFullBackup() {
 async function downloadSupplierTemplate() {
     if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
     try {
-        const headers = ['اسم المورد', 'نوع الخدمة', 'التصنيف', 'الهاتف', 'البريد', 'المدينة', 'الرقم الضريبي', 'السجل التجاري'];
+        const headers = ['اسم المورد', 'نوع الخدمة', 'التصنيف', 'الهاتف', 'البريد', 'المدينة', 'الرقم الضريبي', 'السجل التجاري', 'تاريخ انتهاء السجل التجاري', 'ملاحظات أخرى'];
         const example = [
-            { 'اسم المورد': 'شركة المثال للتجارة', 'نوع الخدمة': 'قرطاسية، طباعة', 'التصنيف': 'Local Supplier', 'الهاتف': '24xxxxxx', 'البريد': 'info@example.com', 'المدينة': 'مسقط', 'الرقم الضريبي': 'OMxxxxxxxx', 'السجل التجاري': '1xxxxxx' }
+            { 'اسم المورد': 'شركة المثال للتجارة', 'نوع الخدمة': 'قرطاسية، طباعة', 'التصنيف': 'Local Supplier', 'الهاتف': '24xxxxxx', 'البريد': 'info@example.com', 'المدينة': 'مسقط', 'الرقم الضريبي': 'OMxxxxxxxx', 'السجل التجاري': '1xxxxxx', 'تاريخ انتهاء السجل التجاري': '2027-12-31', 'ملاحظات أخرى': 'مورد معتمد' }
         ];
         const ws = XLSX.utils.json_to_sheet(example, { header: headers });
         ws['!cols'] = headers.map(() => ({ wch: 20 }));
@@ -5249,14 +5576,21 @@ async function importSuppliersFromExcel() {
                 email: pick(r, ['البريد', 'البريد الإلكتروني', 'email', 'Email']),
                 city: pick(r, ['المدينة', 'city', 'City']) || 'مسقط',
                 vat_no: pick(r, ['الرقم الضريبي', 'vat_no', 'VAT', 'VAT No']),
-                cr_no: pick(r, ['السجل التجاري', 'cr_no', 'C.R', 'CR'])
+                cr_no: pick(r, ['السجل التجاري', 'cr_no', 'C.R', 'CR']),
+                cr_expiry: pick(r, ['تاريخ انتهاء السجل التجاري', 'cr_expiry', 'C.R Expiry', 'CR Expiry']) || null,
+                notes: pick(r, ['ملاحظات أخرى', 'ملاحظات', 'notes', 'Notes']) || null
             });
         });
         if (!toInsert.length) { show('<i class="fas fa-exclamation-triangle"></i> ' + msg('لم يُعثر على صفوف صالحة (عمود "اسم المورد" مطلوب).'), '#c0392b'); return; }
 
         show('<i class="fas fa-spinner fa-spin"></i> ' + msg('جارٍ إضافة الموردين... ') + toInsert.length, '#0093c4');
-        const { error } = await sb.from('suppliers').insert(toInsert);
-        if (error) { show('<i class="fas fa-times-circle"></i> ' + msg('تعذّر الاستيراد: ') + error.message, '#c0392b'); return; }
+        let impRes = await sb.from('suppliers').insert(toInsert);
+        // تراجُع رشيق إن لم تكن أعمدة cr_expiry / notes موجودة بعد
+        if (impRes.error && /(cr_expiry|notes)/i.test(impRes.error.message || '')) {
+            const cleaned = toInsert.map(r => { const c = Object.assign({}, r); delete c.cr_expiry; delete c.notes; return c; });
+            impRes = await sb.from('suppliers').insert(cleaned);
+        }
+        if (impRes.error) { show('<i class="fas fa-times-circle"></i> ' + msg('تعذّر الاستيراد: ') + impRes.error.message, '#c0392b'); return; }
 
         await loadAllFromCloud();
         populateAllFilters();
@@ -5545,24 +5879,110 @@ async function changeUserRole(id, newRole) {
 }
 
 // عرض سجل نشاط المستخدمين مرتّباً حسب الأحدث
-function renderActivityLog() {
-    const tbody = document.querySelector('#activityTable tbody');
-    if (!tbody) return;
-    tbody.innerHTML = '';
-    const fmtDateTime = (d) => d ? new Date(d).toLocaleString(currentLanguage === 'en' ? 'en-GB' : 'ar', { dateStyle: 'short', timeStyle: 'short' }) : '—';
-    // ترتيب: الأحدث نشاطاً أولاً (حسب آخر إجراء أو آخر دخول)
-    const sorted = registeredUsers.slice().sort((a, b) => {
-        const ta = new Date(a.lastAction || a.lastLogin || 0).getTime();
-        const tb = new Date(b.lastAction || b.lastLogin || 0).getTime();
-        return tb - ta;
-    });
-    if (sorted.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#999;">لا يوجد نشاط بعد</td></tr>';
-        return;
+// تجميع كل عمليات النظام: من جدول سجل النشاط إن وُجد، وإلا اشتقاقها من البيانات الحالية
+function getActivityEntries() {
+    if (activityLog && activityLog.length) {
+        return activityLog.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
-    sorted.forEach(u => {
-        tbody.insertRow().innerHTML = `<td>${u.username}</td><td>${fmtDateTime(u.lastLogin)}</td><td>${fmtDateTime(u.lastAction)}</td><td style="font-size:12px; color:#666;">${u.lastActionDesc || '—'}</td>`;
+    // اشتقاق سجل مبدئي من البيانات المتاحة (قبل تفعيل جدول activity_log)
+    const en = currentLanguage === 'en';
+    const entries = [];
+    lpoDrafts.forEach(l => {
+        if (l.createdAt) entries.push({ username: l.staff || '—', actionType: 'create', details: (en ? 'Create order ' : 'إنشاء أمر شراء ') + (l.number || ''), createdAt: l.createdAt });
+        if (l.approvalStatus === 'approved' && l.approvedAt) entries.push({ username: l.approvedBy || '—', actionType: 'approve', details: (en ? 'Approve order ' : 'اعتماد أمر ') + (l.number || ''), createdAt: l.approvedAt });
+        if (l.approvalStatus === 'rejected' && l.approvedAt) entries.push({ username: l.approvedBy || '—', actionType: 'reject', details: (en ? 'Reject order ' : 'رفض أمر ') + (l.number || ''), createdAt: l.approvedAt });
     });
+    draftSaves.forEach(d => { if (d.createdAt) entries.push({ username: d.staff || '—', actionType: 'draft', details: (en ? 'Save draft ' : 'حفظ مسودة ') + (d.draftNumber || ''), createdAt: d.createdAt }); });
+    registeredUsers.forEach(u => {
+        if (u.lastLogin) entries.push({ username: u.username, actionType: 'login', details: (en ? 'Last login' : 'آخر تسجيل دخول'), createdAt: u.lastLogin });
+        if (u.lastAction && u.lastActionDesc) entries.push({ username: u.username, actionType: inferActivityTypeKey(u.lastActionDesc), details: u.lastActionDesc, createdAt: u.lastAction });
+    });
+    return entries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+}
+
+function renderActivityLog() {
+    const entries = getActivityEntries();
+    const en = currentLanguage === 'en';
+    const tbody = document.querySelector('#activityTable tbody');
+    if (tbody) {
+        tbody.innerHTML = '';
+        const fmtDT = (d) => d ? new Date(d).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+        if (entries.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999;">${en ? 'No activity yet' : 'لا يوجد نشاط بعد'}</td></tr>`;
+        } else {
+            entries.slice(0, 500).forEach(e => {
+                const badge = `<span style="display:inline-block; background:${activityTypeColor(e.actionType)}22; color:${activityTypeColor(e.actionType)}; border:1px solid ${activityTypeColor(e.actionType)}55; border-radius:12px; padding:2px 10px; font-size:11px; font-weight:700;">${activityTypeLabel(e.actionType)}</span>`;
+                tbody.insertRow().innerHTML = `<td style="white-space:nowrap; font-size:12px;">${fmtDT(e.createdAt)}</td><td style="font-weight:600;">${escapeHtml(e.username || '—')}</td><td>${badge}</td><td style="font-size:12px; color:#555;">${escapeHtml(e.details || '—')}</td>`;
+            });
+        }
+    }
+    // الرسوم البيانية الثلاثة
+    drawActivityHeatmap(entries);
+    drawActivityUsersChart(entries);
+    drawActivityOpsChart(entries);
+}
+
+// خريطة استخدام النظام في صفحة مدير النظام (من سجل النشاط)
+function drawActivityHeatmap(entries) {
+    const wrap = document.getElementById('activityHeatmap');
+    if (!wrap) return;
+    wrap.innerHTML = buildHeatmapHtml((entries || []).map(e => e.createdAt));
+}
+
+// رسم: أكثر المستخدمين نشاطاً
+function drawActivityUsersChart(entries) {
+    const el = document.getElementById('activityUsersChart');
+    if (!el || typeof Chart === 'undefined') return;
+    const en = currentLanguage === 'en';
+    const byUser = {};
+    (entries || []).forEach(e => { const u = e.username || '—'; byUser[u] = (byUser[u] || 0) + 1; });
+    const ranked = Object.keys(byUser).map(u => ({ u, c: byUser[u] })).sort((a, b) => b.c - a.c).slice(0, 8);
+    const palette = ['#0093c4','#7cb342','#f39c12','#e74c3c','#9b59b6','#1abc9c','#34495e','#e67e22'];
+    destroyChart('activityUsers');
+    chartInstances.activityUsers = new Chart(el.getContext('2d'), {
+        type: 'bar',
+        data: { labels: ranked.map(r => r.u), datasets: [{ label: en ? 'Operations' : 'عدد العمليات', data: ranked.map(r => r.c), backgroundColor: ranked.map((_, i) => palette[i % palette.length]), borderRadius: 6, maxBarThickness: 42 }] },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+}
+
+// رسم: أكثر العمليات نشاطاً (حسب النوع)
+function drawActivityOpsChart(entries) {
+    const el = document.getElementById('activityOpsChart');
+    if (!el || typeof Chart === 'undefined') return;
+    const byType = {};
+    (entries || []).forEach(e => { const t = e.actionType || 'other'; byType[t] = (byType[t] || 0) + 1; });
+    const keys = Object.keys(byType).sort((a, b) => byType[b] - byType[a]);
+    destroyChart('activityOps');
+    chartInstances.activityOps = new Chart(el.getContext('2d'), {
+        type: 'doughnut',
+        data: { labels: keys.map(k => activityTypeLabel(k)), datasets: [{ data: keys.map(k => byType[k]), backgroundColor: keys.map(k => activityTypeColor(k)) }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+    });
+}
+
+// تنزيل سجل النشاط كملف Excel
+async function downloadActivityExcel() {
+    if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
+    const en = currentLanguage === 'en';
+    const entries = getActivityEntries();
+    if (!entries.length) { alert(msg('لا توجد بيانات للتصدير')); return; }
+    try {
+        const rows = entries.map(e => ({
+            [en ? 'Date & Time' : 'التاريخ والوقت']: e.createdAt ? new Date(e.createdAt).toLocaleString('en-GB') : '',
+            [en ? 'User' : 'المستخدم']: e.username || '',
+            [en ? 'Operation Type' : 'نوع العملية']: activityTypeLabel(e.actionType),
+            [en ? 'Details' : 'التفاصيل']: e.details || ''
+        }));
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(rows);
+        ws['!cols'] = [{ wch: 20 }, { wch: 22 }, { wch: 16 }, { wch: 48 }];
+        XLSX.utils.book_append_sheet(wb, ws, en ? 'Activity Log' : 'سجل النشاط');
+        XLSX.writeFile(wb, (en ? 'Activity_Log_' : 'سجل_النشاط_') + new Date().toISOString().split('T')[0] + '.xlsx');
+        recordAction(en ? 'Export activity log' : 'تصدير سجل النشاط', 'export');
+    } catch (e) {
+        alert(msg('تعذّر تصدير الملف: ') + e.message);
+    }
 }
 
 function openUserModal() { document.getElementById('userModal').classList.add('active'); }
@@ -6461,6 +6881,8 @@ window.addEventListener('load', async function() {
     msSetup('msRepStatus', '-- كل الحالات --', generateReport);
     msSetup('msRepService', '-- كل أنواع الخدمات --', generateReport);
     msSetup('msRepStaff', '-- كل الموظفين --', generateReport);
+    // فرض اللغة الإنجليزية على كل حقول إدخال التاريخ (منتقي التاريخ والتنسيق) حتى في الواجهة العربية
+    forceEnglishDateInputs();
     // تفعيل حركات النوافذ المنبثقة
     initModalAnimations();
     // تطبيق اللغة الافتراضية (الإنجليزية) على صفحة الدخول وكامل الواجهة
