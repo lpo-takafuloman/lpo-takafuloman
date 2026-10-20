@@ -300,6 +300,34 @@
         .items-table input:focus, .items-table textarea:focus { border-color: #0093c4; outline: none; }
         .col-num { width: 4%; text-align: center; }
         .col-desc { width: 38%; }
+        /* قوائم الإدارة والتحكم: بحث + تمرير للقوائم الطويلة */
+        .ctrl-search { position: relative; margin-bottom: 10px; }
+        .ctrl-search input { width: 100%; padding: 8px 32px 8px 12px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit; }
+        .ctrl-search i { position: absolute; top: 50%; inset-inline-end: 11px; transform: translateY(-50%); color: #aab6c0; font-size: 12px; pointer-events: none; }
+        .ctrl-list-scroll { max-height: 300px; overflow-y: auto; border: 1px solid #eef2f5; border-radius: 8px; }
+        .ctrl-list-scroll table { margin: 0; }
+        .ctrl-list-scroll thead th { position: sticky; top: 0; background: #f8fafc; z-index: 1; }
+        .ctrl-count { font-size: 11px; font-weight: 700; color: #0093c4; background: #eaf4f9; border-radius: 20px; padding: 1px 9px; margin-inline-start: 6px; }
+        /* محاكاة المستخدم */
+        .impr-banner { background: linear-gradient(135deg,#e67e22,#d35400); color: #fff; border-radius: 10px; padding: 10px 16px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 13px; font-weight: 600; box-shadow: 0 4px 14px rgba(211,84,0,0.25); }
+        .impr-banner .impr-back { background: #fff; color: #d35400; border: none; border-radius: 7px; padding: 6px 14px; font-weight: 700; cursor: pointer; font-size: 12.5px; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
+        .impr-list { display: flex; flex-direction: column; }
+        .impr-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px solid #f0f3f6; cursor: pointer; transition: background 0.12s; }
+        .impr-item:last-child { border-bottom: none; }
+        .impr-item:hover { background: #eef5f9; }
+        .impr-avatar { width: 36px; height: 36px; border-radius: 50%; background: #0093c4; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex-shrink: 0; }
+        .impr-item .impr-nm { font-weight: 700; color: #2a3b47; font-size: 13.5px; }
+        .impr-item .impr-sub { font-size: 11.5px; color: #8aa2b0; }
+        .impr-item .impr-role { font-size: 11px; font-weight: 700; color: #4e8b2a; background: #eaf6ea; border: 1px solid #cfe8c7; border-radius: 20px; padding: 2px 10px; margin-inline-start: auto; white-space: nowrap; }
+        /* محرّر قاعدة البيانات */
+        .db-grid { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .db-grid th { background: #0093c4; color: #fff; padding: 7px 8px; position: sticky; top: 0; white-space: nowrap; font-weight: 700; z-index: 2; }
+        .db-grid td { border: 1px solid #e8eef5; padding: 4px; vertical-align: top; }
+        .db-grid tr:nth-child(even) td { background: #f9fbfc; }
+        .db-grid input, .db-grid textarea { width: 100%; min-width: 120px; border: 1px solid #dde4ea; border-radius: 5px; padding: 5px 7px; font-size: 12px; font-family: inherit; box-sizing: border-box; }
+        .db-grid textarea { min-height: 54px; resize: vertical; direction: ltr; }
+        .db-grid .db-ro { background: #f1f4f7; color: #8696a3; }
+        .db-actions-cell { white-space: nowrap; position: sticky; inset-inline-end: 0; background: #fff; }
         .col-qty { width: 9%; }
         .col-price { width: 14%; }
         .col-taxchk { width: 9%; text-align: center; }
@@ -692,6 +720,8 @@
             </div>
         </div>
         <div class="content" id="contentArea">
+<!-- شريط محاكاة المستخدم (يظهر فقط أثناء تجربة الدخول كمستخدم آخر) -->
+<div id="impersonationBanner" class="impr-banner" style="display:none;"></div>
 <!-- ============ DASHBOARD ============ -->
 <div class="page active" id="page-dashboard">
     <div class="stats-grid stats-grid-5">
@@ -881,6 +911,8 @@
                 </thead>
                 <tbody id="itemsBody"></tbody>
             </table>
+            <!-- قائمة اقتراحات نصوص البنود (Description) — تُغذّى تلقائياً من المُدخَلات السابقة -->
+            <datalist id="itemDescList"></datalist>
             <div style="font-size:11px; color:#999; margin-top:8px;"><i class="fas fa-lightbulb"></i> أدخل السعر بالكسر العشري (مثال: 12.500 = 12 ريال و500 بيسة). فعّل علامة الصح لتطبيق الضريبة. اضغط Tab في آخر خانة لإضافة بند جديد.</div>
         </div>
 
@@ -1289,14 +1321,15 @@
     <div class="charts-row">
         <!-- جزء 1: أنواع الخدمات -->
         <div class="card" style="margin:0;">
-            <div class="card-header"><div class="card-title"><i class="fas fa-cogs"></i> أنواع الخدمات</div></div>
-            <div style="display:flex; gap:8px; margin-bottom:1rem;">
+            <div class="card-header"><div class="card-title"><i class="fas fa-cogs"></i> أنواع الخدمات <span class="ctrl-count" id="svcCount">0</span></div></div>
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
                 <input type="text" id="newServiceType" placeholder="أدخل نوع خدمة جديد..." style="flex:1; padding:10px 12px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-family:inherit;" onkeydown="if(event.key==='Enter'){event.preventDefault();addServiceType();}">
                 <button type="button" class="btn btn-success" data-perm="control:create" onclick="addServiceType()"><i class="fas fa-plus"></i> إضافة</button>
             </div>
-            <div class="table-responsive">
+            <div class="ctrl-search"><input type="text" id="svcSearch" placeholder="بحث في أنواع الخدمات..." oninput="loadControlPanel()"><i class="fas fa-search"></i></div>
+            <div class="ctrl-list-scroll">
                 <table id="serviceTypesTable">
-                    <thead><tr><th>نوع الخدمة</th><th style="width:60px;"></th></tr></thead>
+                    <thead><tr><th>نوع الخدمة</th><th style="width:70px;"></th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -1304,20 +1337,39 @@
 
         <!-- جزء 2: الأقسام / الغرض -->
         <div class="card" style="margin:0;">
-            <div class="card-header"><div class="card-title"><i class="fas fa-sitemap"></i> الأقسام / الغرض</div></div>
-            <div style="display:flex; gap:8px; margin-bottom:1rem;">
+            <div class="card-header"><div class="card-title"><i class="fas fa-sitemap"></i> الأقسام / الغرض <span class="ctrl-count" id="deptCount">0</span></div></div>
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
                 <input type="text" id="newDepartment" placeholder="أدخل قسماً أو غرضاً جديداً..." style="flex:1; padding:10px 12px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-family:inherit;" onkeydown="if(event.key==='Enter'){event.preventDefault();addDepartment();}">
                 <button type="button" class="btn btn-success" data-perm="control:create" onclick="addDepartment()"><i class="fas fa-plus"></i> إضافة</button>
             </div>
-            <div class="table-responsive">
+            <div class="ctrl-search"><input type="text" id="deptSearch" placeholder="بحث في الأقسام..." oninput="loadControlPanel()"><i class="fas fa-search"></i></div>
+            <div class="ctrl-list-scroll">
                 <table id="departmentsTable">
-                    <thead><tr><th>القسم / الغرض</th><th style="width:60px;"></th></tr></thead>
+                    <thead><tr><th>القسم / الغرض</th><th style="width:70px;"></th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
         </div>
     </div>
-    <div style="background:#e8f4fd; border:1px solid #b3d9f2; border-radius:8px; padding:1rem; font-size:13px; color:#0093c4; line-height:1.7;">
+
+    <!-- جزء 3: نصوص بنود أوامر الشراء (Descriptions) -->
+    <div class="card" style="margin-top:1.5rem;">
+        <div class="card-header"><div class="card-title"><i class="fas fa-align-left"></i> نصوص البنود (Description) <span class="ctrl-count" id="descCount">0</span></div></div>
+        <p style="font-size:12.5px; color:#667; line-height:1.7; margin-bottom:10px;">تُحفظ هنا تلقائياً نصوص بنود أوامر الشراء التي يُدخلها المستخدمون، وتظهر كاقتراحات في حقل الوصف بنافذة أمر الشراء. يمكنك إضافتها أو تعديلها أو حذفها.</p>
+        <div style="display:flex; gap:8px; margin-bottom:10px;">
+            <input type="text" id="newDescription" placeholder="أدخل نص بند جديد..." style="flex:1; padding:10px 12px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-family:inherit;" onkeydown="if(event.key==='Enter'){event.preventDefault();addDescription();}">
+            <button type="button" class="btn btn-success" data-perm="control:create" onclick="addDescription()"><i class="fas fa-plus"></i> إضافة</button>
+        </div>
+        <div class="ctrl-search"><input type="text" id="descSearch" placeholder="بحث في نصوص البنود..." oninput="loadControlPanel()"><i class="fas fa-search"></i></div>
+        <div class="ctrl-list-scroll" style="max-height:360px;">
+            <table id="descriptionsTable">
+                <thead><tr><th>نص البند / الوصف</th><th style="width:100px;"></th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div style="background:#e8f4fd; border:1px solid #b3d9f2; border-radius:8px; padding:1rem; font-size:13px; color:#0093c4; line-height:1.7; margin-top:1.5rem;">
         <i class="fas fa-info-circle"></i> القوائم التي تُضيفها هنا تظهر تلقائياً في نافذة "أمر شراء جديد" وفي نافذة "إضافة مورد"، مما يضمن توحيد البيانات ودقتها.
     </div>
 
@@ -1408,6 +1460,43 @@
         </div>
     </div>
 
+    <!-- محاكاة المستخدم (Log in as User) -->
+    <div class="card">
+        <div class="card-header"><div class="card-title"><i class="fas fa-user-secret"></i> محاكاة المستخدم (تجربة الدخول كمستخدم)</div></div>
+        <p style="font-size:12.5px; color:#667; line-height:1.7; margin-bottom:10px;">اختر مستخدماً لتجربة النظام بصلاحياته ورؤيته كما يراها هو تماماً. لا يؤثر ذلك على بيانات المستخدم، ويمكنك العودة إلى حسابك في أي وقت من الشريط العلوي.</p>
+        <div class="ctrl-search"><input type="text" id="imprSearch" placeholder="بحث عن مستخدم بالاسم أو البريد..." oninput="renderImpersonationList()"><i class="fas fa-search"></i></div>
+        <div class="ctrl-list-scroll" style="max-height:340px;"><div id="impersonationList" class="impr-list"></div></div>
+    </div>
+
+    <!-- تعديل مباشر لقواعد البيانات (Direct Database Editor) -->
+    <div class="card">
+        <div class="card-header"><div class="card-title"><i class="fas fa-database"></i> التعديل المباشر لقواعد البيانات</div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <select id="dbTableSelect" onchange="loadDbTable()" style="padding:8px 10px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-family:inherit;">
+                    <option value="">— اختر الجدول —</option>
+                    <option value="purchase_orders">أوامر الشراء (purchase_orders)</option>
+                    <option value="drafts">المسودات (drafts)</option>
+                    <option value="suppliers">الموردون (suppliers)</option>
+                    <option value="app_users">المستخدمون (app_users)</option>
+                    <option value="service_types">أنواع الخدمات (service_types)</option>
+                    <option value="departments">الأقسام (departments)</option>
+                    <option value="descriptions">نصوص البنود (descriptions)</option>
+                    <option value="supplier_evaluations">تقييمات الموردين (supplier_evaluations)</option>
+                    <option value="comments">المحادثات (comments)</option>
+                    <option value="activity_log">سجل النشاط (activity_log)</option>
+                    <option value="settings">الإعدادات (settings)</option>
+                </select>
+                <input type="text" id="dbSearch" placeholder="بحث..." oninput="renderDbTable()" style="padding:8px 10px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-family:inherit; width:150px;">
+                <button type="button" class="btn btn-small" onclick="loadDbTable()" title="تحديث"><i class="fas fa-sync"></i></button>
+            </div>
+        </div>
+        <div style="background:#fff4e5; border:1px solid #ffd9a8; border-radius:8px; padding:0.7rem 1rem; font-size:12.5px; color:#9a6a1f; line-height:1.7; margin-bottom:12px;">
+            <i class="fas fa-triangle-exclamation"></i> هذه أداة متقدمة لمدير النظام تتيح استعراض وتعديل وحذف أي سجل في قاعدة البيانات مباشرةً. التعديل يؤثر فوراً على بيانات النظام — توخَّ الحذر. الحقول المعقّدة (مثل البنود) تُعرض بصيغة JSON.
+        </div>
+        <div id="dbEditorStatus" style="font-size:12.5px; margin-bottom:10px; display:none;"></div>
+        <div class="ctrl-list-scroll" id="dbEditorScroll" style="max-height:560px; overflow:auto;"><div id="dbEditorContent" style="padding:14px; text-align:center; color:#999; font-size:13px;">اختر جدولاً لعرض بياناته وتعديلها.</div></div>
+    </div>
+
     <!-- إدارة الأدوار والصلاحيات (مدمجة ضمن صفحة مدير النظام) -->
     <div class="card">
         <div class="card-header">
@@ -1493,6 +1582,18 @@
                 <button type="button" class="btn btn-success" onclick="importDepartmentsFromExcel()"><i class="fas fa-upload"></i> تحميل ملف الأقسام</button>
             </div>
             <div id="departmentImportStatus" style="font-size:12.5px; margin-top:10px; display:none;"></div>
+        </div>
+
+        <!-- 5) تغذية نصوص البنود (Descriptions) من ملف إكسل -->
+        <div style="border:1px solid #e8eef5; border-radius:10px; padding:1rem; background:#f8fafc; margin-top:1.2rem;">
+            <div style="font-size:14px; font-weight:700; color:#0093c4; margin-bottom:6px;"><i class="fas fa-align-left"></i> تغذية نصوص البنود (Description / Particulars) من ملف إكسل</div>
+            <p style="font-size:12.5px; color:#666; line-height:1.7; margin-bottom:12px;">نزّل القالب الجاهز، أدخل نصوص بنود الوصف فيه (عمود الوصف)، ثم ارفعه ليُضيفها النظام دفعةً واحدة، فتظهر كاقتراحات في حقل الوصف بنافذة أمر الشراء. تُتجاهَل النصوص المكرّرة تلقائياً.</p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <button type="button" class="btn btn-primary" onclick="downloadDescriptionTemplate()"><i class="fas fa-file-download"></i> تنزيل قالب إكسل</button>
+                <input type="file" id="descriptionImportFile" accept=".xlsx,.xls" style="font-size:12px;">
+                <button type="button" class="btn btn-success" onclick="importDescriptionsFromExcel()"><i class="fas fa-upload"></i> تحميل ملف نصوص البنود</button>
+            </div>
+            <div id="descriptionImportStatus" style="font-size:12.5px; margin-top:10px; display:none;"></div>
         </div>
     </div>
 
@@ -1992,6 +2093,7 @@ let suppliers = [];
 let registeredUsers = [];
 let serviceTypes = [];   // أنواع الخدمات (من صفحة الإدارة والتحكم)
 let departments = [];    // الأقسام / الغرض (من صفحة الإدارة والتحكم)
+let descriptions = [];   // نصوص بنود أوامر الشراء (Description) — تُحفظ تلقائياً وتُدار من الإدارة والتحكم
 let evaluations = [];    // تقييمات الموردين
 let activityLog = [];    // سجل نشاط النظام (كل العمليات)
 let deletedOrders = [];   // أوامر الشراء المحذوفة (سلة المهملات)
@@ -2180,6 +2282,11 @@ async function loadAllFromCloud() {
         departments = (deptRes.data || []).map(r => ({ id: r.id, name: r.name }));
         evaluations = (evalRes.data || []).map(rowToEval);
         if (setRes.data && setRes.data.value) defaultTaxRate = parseFloat(setRes.data.value) || 5;
+        // تحميل نصوص بنود الوصف (Description) — يفشل بصمت إن لم يُنشأ الجدول بعد
+        try {
+            const { data: dsc } = await sb.from('descriptions').select('*').order('name', { ascending: true });
+            if (dsc) descriptions = dsc.map(r => ({ id: r.id, name: r.name }));
+        } catch (e) {}
         // تحميل مدة التنبيه لانتهاء السجل التجاري (بالأيام)
         try {
             const { data: nd } = await sb.from('settings').select('value').eq('key', 'cr_notify_days').maybeSingle();
@@ -2246,6 +2353,7 @@ function subscribeRealtime() {
 // مزامنة دور المستخدم الحالي لحظياً من قائمة المستخدمين (عند تغييره من مدير النظام)
 function syncCurrentUserRoleLive() {
     if (!currentUser || isGuest) return;
+    if (_realAdminUser) return; // أثناء محاكاة مستخدم: لا نُغيّر الهوية المُحاكاة
     // المدير الافتراضي يبقى مدير نظام دائماً
     if ((currentUser.email || '').toLowerCase() === DEFAULT_SYSADMIN_EMAIL) { currentUser.role = 'sysadmin'; }
     else {
@@ -3204,6 +3312,7 @@ async function startApp() {
     setTodayDate();
     if (!isGuest) { document.getElementById('itemsBody').innerHTML = ''; addItemRow(); }
     setupSupplierDropdown();
+    populateDescDatalist();
     populateAllFilters();
     loadDashboard();
 
@@ -3273,6 +3382,17 @@ function animateModalOpen(modalEl) {
     const content = modalEl.querySelector('.modal-content');
     mAnimate(modalEl, { opacity: [0, 1] }, { duration: 0.2 });
     mAnimate(content, { opacity: [0, 1], transform: ['scale(0.96) translateY(8px)', 'scale(1) translateY(0)'] }, { duration: 0.28, easing: [0.22, 1, 0.36, 1] });
+}
+
+// نقل كل النوافذ المنبثقة (.modal) لتصبح أبناءً مباشرين لـ body — حتى يعمل تثبيتها
+// position:fixed بالنسبة للشاشة كاملة، لا بالنسبة لعنصر صفحة قد يحمل transform من الحركات
+// (كان ذلك يسبّب ظهور فراغ أسفل نافذة أمر الشراء وقص جزء من محتواها).
+function relocateModals() {
+    try {
+        document.querySelectorAll('.modal').forEach(function (m) {
+            if (m.parentNode !== document.body) document.body.appendChild(m);
+        });
+    } catch (e) {}
 }
 
 // مراقب يكتشف فتح أي نافذة منبثقة ويطبّق الحركة تلقائياً
@@ -3644,7 +3764,7 @@ function addItemRow(data) {
     }
     tr.innerHTML = `
         <td class="col-num"><span class="row-grip" title="${currentLanguage==='en'?'Drag to reorder':'اسحب لإعادة الترتيب'}"><i class="fas fa-grip-vertical"></i></span><span class="row-no">${n}</span></td>
-        <td class="col-desc"><textarea class="item-desc" rows="2" oninput="calculateTotals()" placeholder="الوصف...">${data ? (data.desc||'') : ''}</textarea></td>
+        <td class="col-desc"><input type="text" class="item-desc" list="itemDescList" autocomplete="off" oninput="calculateTotals()" placeholder="${currentLanguage==='en'?'Description... (type or pick)':'الوصف... (اكتب أو اختر من السابق)'}" value="${data ? escapeHtml(data.desc||'') : ''}"></td>
         <td class="col-qty"><input type="number" class="item-qty" dir="ltr" lang="en" inputmode="numeric" style="text-align:center;" value="${data ? data.qty : 1}" min="0" step="1" oninput="calculateTotals()" onkeydown="handleTab(event)"></td>
         <td class="col-price"><input type="number" class="item-price" dir="ltr" lang="en" inputmode="decimal" style="text-align:center;" value="${priceVal}" min="0" step="0.001" placeholder="0.000" oninput="calculateTotals()" onkeydown="handleTab(event)"></td>
         <td class="col-taxchk"><div class="tax-cell">
@@ -3874,11 +3994,14 @@ async function saveLPO(event) {
     if (error) { alert(msg(prevOrderId ? 'تعذّر تحديث الأمر: ' : 'تعذّر حفظ الأمر: ') + error.message); return; }
     // تحويل مسودة إلى أمر: تُحذف المسودة الأصلية بعد نجاح الإصدار فقط
     if (prevDraftId) { await sb.from('drafts').delete().eq('id', prevDraftId); }
+    // حفظ أي نصوص وصف جديدة من البنود تلقائياً (لتظهر كاقتراحات لاحقاً)
+    await saveNewDescriptions(row.items);
     // التقاط بيانات المورد قبل تفريغ النموذج (للتقييم)
     const savedSupId = row.supplier_id;
     const savedSupName = row.supplier_name;
     const savedOrderNum = row.number;
     await loadAllFromCloud();
+    populateDescDatalist();
     recordAction((prevOrderId ? 'تعديل أمر شراء ' : 'حفظ أمر شراء ') + row.number);
     alert(msg((prevOrderId ? 'تم تحديث أمر الشراء بنجاح: ' : 'تم حفظ أمر الشراء بنجاح في السحابة: ')) + row.number);
     resetForm();
@@ -6679,6 +6802,29 @@ async function importDepartmentsFromExcel() {
     });
 }
 
+// ===== قالب واستيراد نصوص البنود (Descriptions) من إكسل =====
+async function downloadDescriptionTemplate() {
+    if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
+    try {
+        const headers = ['الوصف / Description'];
+        const example = [{ 'الوصف / Description': 'توريد أجهزة حاسب محمولة' }, { 'الوصف / Description': 'صيانة أجهزة التكييف' }, { 'الوصف / Description': 'خدمات استشارية' }];
+        const ws = XLSX.utils.json_to_sheet(example, { header: headers });
+        ws['!cols'] = [{ wch: 44 }];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'الأوصاف');
+        XLSX.writeFile(wb, 'قالب_نصوص_البنود.xlsx');
+    } catch (e) { alert(msg('تعذّر إنشاء القالب: ') + e.message); }
+}
+
+async function importDescriptionsFromExcel() {
+    await _importSimpleListFromExcel({
+        inputId: 'descriptionImportFile', statusId: 'descriptionImportStatus',
+        table: 'descriptions', existing: () => descriptions,
+        nameKeys: ['الوصف / Description', 'الوصف', 'description', 'Description', 'particulars', 'Particulars', 'name', 'Name', 'البند'],
+        labelOne: 'وصف', labelMany: 'نصوص البنود', action: 'استيراد نصوص بنود من إكسل'
+    });
+}
+
 // دالة عامة لاستيراد قائمة بسيطة (اسم فقط) من إكسل مع تجاهل المكرّر
 async function _importSimpleListFromExcel(cfg) {
     const statusEl = document.getElementById(cfg.statusId);
@@ -6717,6 +6863,7 @@ async function _importSimpleListFromExcel(cfg) {
         await loadAllFromCloud();
         loadControlPanel();
         populateAllFilters();
+        try { populateDescDatalist(); } catch (e) {}
         recordAction(cfg.action);
         input.value = '';
         const extra = [];
@@ -6880,10 +7027,195 @@ function loadAdminPanel() {
         });
     }
     updateLastBackupInfo();
+    renderImpersonationList();
     // تفعيل الفرز/السحب/التمديد للأعمدة (مرة واحدة) ثم تطبيق الترتيب والفرز المحفوظ
     initColumnDrag('usersTable', loadAdminPanel);
     applyColumnOrder('usersTable');
     applyGenericSort('usersTable');
+}
+
+// ======================================================================
+// ===================== محاكاة المستخدم (Impersonation) ================
+// ======================================================================
+let _realAdminUser = null; // يحفظ حساب مدير النظام الحقيقي أثناء المحاكاة
+
+function renderImpersonationList() {
+    const box = document.getElementById('impersonationList');
+    if (!box) return;
+    const en = currentLanguage === 'en';
+    const q = (document.getElementById('imprSearch') ? (document.getElementById('imprSearch').value || '') : '').trim().toLowerCase();
+    const realEmail = ((_realAdminUser || currentUser) ? ((_realAdminUser || currentUser).email || '') : '').toLowerCase();
+    const users = registeredUsers.filter(u => {
+        if (!q) return true;
+        return (u.username || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q);
+    });
+    if (!users.length) { box.innerHTML = `<div style="padding:16px; text-align:center; color:#999; font-size:13px;">${registeredUsers.length ? (en ? 'No matches' : 'لا توجد نتائج') : (en ? 'No users' : 'لا يوجد مستخدمون')}</div>`; return; }
+    box.innerHTML = users.map(u => {
+        const initial = (u.username || u.email || '?').trim().charAt(0).toUpperCase();
+        const isMe = (u.email || '').toLowerCase() === realEmail;
+        return `<div class="impr-item" onclick="impersonateUser('${u.id}')">
+            <div class="impr-avatar">${escapeHtml(initial)}</div>
+            <div style="min-width:0;"><div class="impr-nm">${escapeHtml(u.username || '—')}${isMe ? ' <span style="font-size:10px; color:#8aa2b0;">(' + (en ? 'you' : 'أنت') + ')</span>' : ''}</div><div class="impr-sub" dir="ltr">${escapeHtml(u.email || '')}</div></div>
+            <span class="impr-role">${escapeHtml(roleLabel(u.role))}</span>
+        </div>`;
+    }).join('');
+}
+
+function impersonateUser(id) {
+    if (!currentUser || (currentUser.role !== 'sysadmin' && !_realAdminUser)) { alert(msg('هذه الخاصية لمدير النظام فقط')); return; }
+    const u = registeredUsers.find(x => String(x.id) === String(id));
+    if (!u) return;
+    const base = _realAdminUser || currentUser;
+    if ((u.email || '').toLowerCase() === (base.email || '').toLowerCase()) { alert(msg('أنت مُسجّل بهذا الحساب بالفعل')); return; }
+    if (!_realAdminUser) _realAdminUser = Object.assign({}, currentUser); // حفظ حساب المدير الحقيقي مرة واحدة
+    // التحوّل إلى هوية المستخدم المُحاكى (العرض والصلاحيات فقط — الجلسة الفعلية تبقى للمدير)
+    currentUser = { username: u.username, email: u.email, role: u.role, authId: u.authId || '', id: u.id, _impersonated: true };
+    updateImpersonationBanner();
+    // تحديث الواجهة بالكامل لتعكس صلاحيات المستخدم المُحاكى
+    document.getElementById('sidebarUsername').textContent = currentUser.username;
+    const se = document.getElementById('sidebarEmail'); if (se) { const sp = se.querySelector('span'); if (sp) sp.textContent = currentUser.email; }
+    const sr = document.getElementById('sidebarRole'); if (sr) sr.textContent = roleLabel(currentUser.role);
+    applyPermissionsToUI();
+    goHome(); // العودة للوحة التحكم بصلاحيات المستخدم
+    recordAction('محاكاة المستخدم: ' + (u.username || u.email), 'login');
+}
+
+function stopImpersonation() {
+    if (!_realAdminUser) return;
+    currentUser = _realAdminUser;
+    _realAdminUser = null;
+    updateImpersonationBanner();
+    document.getElementById('sidebarUsername').textContent = currentUser.username;
+    const se = document.getElementById('sidebarEmail'); if (se) { const sp = se.querySelector('span'); if (sp) sp.textContent = currentUser.email; }
+    const sr = document.getElementById('sidebarRole'); if (sr) sr.textContent = roleLabel(currentUser.role);
+    applyPermissionsToUI();
+    showPage('admin', document.getElementById('adminNav'));
+}
+
+function updateImpersonationBanner() {
+    const b = document.getElementById('impersonationBanner');
+    if (!b) return;
+    if (_realAdminUser && currentUser) {
+        const en = currentLanguage === 'en';
+        b.style.display = 'flex';
+        b.innerHTML = `<span><i class="fas fa-user-secret"></i> ${en ? 'You are viewing the system as' : 'أنت تستعرض النظام بحساب'} <strong>${escapeHtml(currentUser.username)}</strong> (${escapeHtml(roleLabel(currentUser.role))}) — ${en ? 'actions run under your admin session.' : 'أي إجراء يُنفَّذ بجلسة المدير.'}</span>
+            <button class="impr-back" onclick="stopImpersonation()"><i class="fas fa-arrow-rotate-left"></i> ${en ? 'Return to my account' : 'العودة إلى حسابي'}</button>`;
+    } else {
+        b.style.display = 'none'; b.innerHTML = '';
+    }
+}
+
+// ======================================================================
+// ===================== التعديل المباشر لقواعد البيانات ================
+// ======================================================================
+let _dbRows = [];     // الصفوف المحمّلة للجدول الحالي (بقيمها الأصلية)
+let _dbTable = '';    // اسم الجدول الحالي
+let _dbPk = 'id';     // اسم المفتاح الأساسي (id أو key)
+
+async function loadDbTable() {
+    const sel = document.getElementById('dbTableSelect');
+    const table = sel ? sel.value : '';
+    const content = document.getElementById('dbEditorContent');
+    const status = document.getElementById('dbEditorStatus');
+    const setStatus = (html, color) => { if (status) { status.style.display = html ? 'block' : 'none'; status.style.color = color || '#666'; status.innerHTML = html; } };
+    if (!table) { if (content) content.innerHTML = '<div style="padding:14px; text-align:center; color:#999; font-size:13px;">اختر جدولاً لعرض بياناته وتعديلها.</div>'; setStatus('', ''); return; }
+    if (!(currentUser && currentUser.role === 'sysadmin') || _realAdminUser) { if (content) content.innerHTML = '<div style="padding:14px; text-align:center; color:#c0392b;">هذه الأداة لمدير النظام فقط.</div>'; return; }
+    _dbTable = table;
+    setStatus('<i class="fas fa-spinner fa-spin"></i> جارٍ التحميل...', '#0093c4');
+    try {
+        const { data, error } = await sb.from(table).select('*').limit(1000);
+        if (error) { setStatus('<i class="fas fa-times-circle"></i> تعذّر التحميل: ' + error.message, '#c0392b'); if (content) content.innerHTML = ''; return; }
+        _dbRows = data || [];
+        _dbPk = (_dbRows[0] && Object.prototype.hasOwnProperty.call(_dbRows[0], 'id')) ? 'id' : ((_dbRows[0] && Object.prototype.hasOwnProperty.call(_dbRows[0], 'key')) ? 'key' : 'id');
+        setStatus('<i class="fas fa-check-circle"></i> تم تحميل ' + _dbRows.length + ' سجل.', '#2e7d32');
+        renderDbTable();
+    } catch (e) { setStatus('<i class="fas fa-times-circle"></i> خطأ: ' + e.message, '#c0392b'); }
+}
+
+function _dbCellValue(v) {
+    if (v === null || v === undefined) return '';
+    if (typeof v === 'object') return JSON.stringify(v);
+    return String(v);
+}
+function _dbIsComplex(v) { return v !== null && typeof v === 'object'; }
+
+function renderDbTable() {
+    const content = document.getElementById('dbEditorContent');
+    if (!content) return;
+    if (!_dbRows.length) { content.innerHTML = '<div style="padding:14px; text-align:center; color:#999; font-size:13px;">لا توجد سجلات في هذا الجدول.</div>'; return; }
+    const q = (document.getElementById('dbSearch') ? (document.getElementById('dbSearch').value || '') : '').trim().toLowerCase();
+    const cols = Object.keys(_dbRows[0]);
+    const rows = q ? _dbRows.filter(r => cols.some(c => _dbCellValue(r[c]).toLowerCase().includes(q))) : _dbRows;
+    const esc = (s) => escapeHtml(String(s));
+    let html = '<table class="db-grid"><thead><tr>';
+    cols.forEach(c => { html += `<th>${esc(c)}</th>`; });
+    html += '<th class="db-actions-cell">إجراءات</th></tr></thead><tbody>';
+    rows.forEach(r => {
+        const pkVal = r[_dbPk];
+        html += `<tr data-pk="${esc(pkVal)}">`;
+        cols.forEach(c => {
+            const complex = _dbIsComplex(r[c]);
+            const ro = (c === _dbPk || c === 'created_at' || c === 'auth_id');
+            const val = _dbCellValue(r[c]);
+            if (complex) {
+                html += `<td><textarea data-field="${esc(c)}" ${ro ? 'readonly class="db-ro"' : ''}>${esc(val)}</textarea></td>`;
+            } else {
+                html += `<td><input type="text" dir="auto" data-field="${esc(c)}" value="${esc(val)}" ${ro ? 'readonly class="db-ro"' : ''}></td>`;
+            }
+        });
+        html += `<td class="db-actions-cell"><button class="btn btn-small btn-success" onclick="saveDbRow(this,'${esc(pkVal)}')" title="حفظ"><i class="fas fa-save"></i></button> <button class="btn btn-small" style="color:#e74c3c;" onclick="deleteDbRow('${esc(pkVal)}')" title="حذف"><i class="fas fa-trash"></i></button></td>`;
+        html += '</tr>';
+    });
+    html += '</tbody></table>';
+    content.innerHTML = html;
+}
+
+async function saveDbRow(btn, pkVal) {
+    if (!(currentUser && currentUser.role === 'sysadmin') || _realAdminUser) { alert(msg('غير مصرّح')); return; }
+    const tr = btn.closest('tr');
+    const orig = _dbRows.find(r => String(r[_dbPk]) === String(pkVal));
+    if (!orig) return;
+    const upd = {};
+    let parseErr = null;
+    tr.querySelectorAll('[data-field]').forEach(inp => {
+        const field = inp.getAttribute('data-field');
+        if (field === _dbPk || field === 'created_at' || field === 'auth_id') return;
+        const raw = inp.value;
+        const origVal = orig[field];
+        let newVal;
+        if (_dbIsComplex(origVal)) {
+            try { newVal = raw.trim() === '' ? null : JSON.parse(raw); } catch (e) { parseErr = field; return; }
+        } else if (typeof origVal === 'number') {
+            if (raw.trim() === '') newVal = null; else { const n = Number(raw); newVal = isNaN(n) ? raw : n; }
+        } else if (typeof origVal === 'boolean') {
+            newVal = (raw === 'true' || raw === '1' || raw === 'نعم');
+        } else {
+            newVal = (raw === '' && origVal === null) ? null : raw;
+        }
+        // أضف فقط الحقول المتغيّرة
+        if (JSON.stringify(newVal) !== JSON.stringify(origVal === undefined ? null : origVal)) upd[field] = newVal;
+    });
+    if (parseErr) { alert(msg('قيمة JSON غير صحيحة في الحقل: ') + parseErr); return; }
+    if (!Object.keys(upd).length) { alert(msg('لا يوجد تغيير للحفظ')); return; }
+    if (!confirm(msg('حفظ التعديلات على هذا السجل مباشرةً في قاعدة البيانات؟'))) return;
+    const { error } = await sb.from(_dbTable).update(upd).eq(_dbPk, pkVal);
+    if (error) { alert(msg('تعذّر الحفظ: ') + error.message); return; }
+    recordAction('تعديل مباشر في جدول ' + _dbTable, 'update');
+    await loadAllFromCloud();
+    try { populateDescDatalist(); } catch (e) {}
+    await loadDbTable();
+    alert(msg('تم حفظ التعديلات ✅'));
+}
+
+async function deleteDbRow(pkVal) {
+    if (!(currentUser && currentUser.role === 'sysadmin') || _realAdminUser) { alert(msg('غير مصرّح')); return; }
+    if (!confirm(msg('⚠ حذف هذا السجل نهائياً من قاعدة البيانات؟ لا يمكن التراجع.'))) return;
+    const { error } = await sb.from(_dbTable).delete().eq(_dbPk, pkVal);
+    if (error) { alert(msg('تعذّر الحذف: ') + error.message); return; }
+    recordAction('حذف مباشر من جدول ' + _dbTable, 'delete');
+    await loadAllFromCloud();
+    await loadDbTable();
+    alert(msg('تم حذف السجل.'));
 }
 
 // تغيير صلاحية مستخدم قائم (المدير فقط) — تشمل الترقية إلى مدير نظام
@@ -7605,29 +7937,93 @@ async function saveDefaultTax() {
 }
 
 // ===================== الإدارة والتحكم (أنواع الخدمات + الأقسام) =====================
+// رسم قائمة قابلة للبحث (نوع خدمة/قسم/وصف) مع زر حذف (وتعديل للوصف)
+function renderCtrlList(tbodySel, items, searchId, delFn, editFn) {
+    const tbody = document.querySelector(tbodySel);
+    if (!tbody) return;
+    const en = currentLanguage === 'en';
+    const q = (document.getElementById(searchId) ? (document.getElementById(searchId).value || '') : '').trim().toLowerCase();
+    const filtered = q ? items.filter(x => (x.name || '').toLowerCase().includes(q)) : items;
+    tbody.innerHTML = '';
+    if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#999; padding:14px;">${items.length ? (en ? 'No matches' : 'لا توجد نتائج مطابقة') : (en ? 'No data yet' : 'لا توجد بيانات بعد')}</td></tr>`;
+        return;
+    }
+    filtered.forEach(x => {
+        const editBtn = editFn ? `<button class="btn btn-small" onclick="${editFn}('${x.id}')" title="${en ? 'Edit' : 'تعديل'}" style="color:#f0ad4e;"><i class="fas fa-edit"></i></button> ` : '';
+        tbody.insertRow().innerHTML = `<td>${escapeHtml(x.name || '')}</td><td style="white-space:nowrap;">${editBtn}<button class="btn btn-small" onclick="${delFn}('${x.id}')" title="${en ? 'Delete' : 'حذف'}" style="color:#e74c3c;"><i class="fas fa-trash"></i></button></td>`;
+    });
+}
+
 function loadControlPanel() {
-    // أنواع الخدمات
-    const svcBody = document.querySelector('#serviceTypesTable tbody');
-    svcBody.innerHTML = '';
-    if (serviceTypes.length === 0) {
-        svcBody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:#999;">لا توجد أنواع خدمات بعد</td></tr>';
-    } else {
-        serviceTypes.forEach(s => {
-            svcBody.insertRow().innerHTML = `<td>${s.name}</td><td><button class="btn btn-small" onclick="deleteServiceType('${s.id}')" style="color:#e74c3c;"><i class="fas fa-trash"></i></button></td>`;
-        });
-    }
-    // الأقسام
-    const deptBody = document.querySelector('#departmentsTable tbody');
-    deptBody.innerHTML = '';
-    if (departments.length === 0) {
-        deptBody.innerHTML = '<tr><td colspan="2" style="text-align:center; color:#999;">لا توجد أقسام بعد</td></tr>';
-    } else {
-        departments.forEach(d => {
-            deptBody.insertRow().innerHTML = `<td>${d.name}</td><td><button class="btn btn-small" onclick="deleteDepartment('${d.id}')" style="color:#e74c3c;"><i class="fas fa-trash"></i></button></td>`;
-        });
-    }
+    renderCtrlList('#serviceTypesTable tbody', serviceTypes, 'svcSearch', 'deleteServiceType', null);
+    renderCtrlList('#departmentsTable tbody', departments, 'deptSearch', 'deleteDepartment', null);
+    renderCtrlList('#descriptionsTable tbody', descriptions, 'descSearch', 'deleteDescription', 'editDescriptionPrompt');
+    // عدّادات
+    const setC = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n; };
+    setC('svcCount', serviceTypes.length); setC('deptCount', departments.length); setC('descCount', descriptions.length);
     // سجل نشاط المستخدمين والنظام (منقول إلى هذه الصفحة)
     try { renderActivityLog(); } catch (e) {}
+}
+
+// ===================== نصوص البنود (Descriptions) =====================
+// تغذية قائمة اقتراحات الوصف في نافذة أمر الشراء
+function populateDescDatalist() {
+    const dl = document.getElementById('itemDescList');
+    if (!dl) return;
+    dl.innerHTML = descriptions.map(d => `<option value="${escapeHtml(d.name)}"></option>`).join('');
+}
+
+// حفظ أي نصوص وصف جديدة (غير موجودة) من بنود أمر الشراء تلقائياً — يفشل بصمت قبل إنشاء الجدول
+async function saveNewDescriptions(items) {
+    if (!sb || !items || !items.length) return;
+    const existing = new Set(descriptions.map(d => (d.name || '').trim().toLowerCase()));
+    const seen = new Set();
+    const toAdd = [];
+    items.forEach(it => {
+        const t = (it.desc || '').trim();
+        const key = t.toLowerCase();
+        if (t && !existing.has(key) && !seen.has(key)) { seen.add(key); toAdd.push({ name: t }); }
+    });
+    if (!toAdd.length) return;
+    try { await sb.from('descriptions').insert(toAdd); } catch (e) {}
+}
+
+async function addDescription() {
+    const input = document.getElementById('newDescription');
+    const name = (input.value || '').trim();
+    if (!name) { alert(msg('يرجى إدخال نص البند')); return; }
+    if (descriptions.some(d => (d.name || '').trim().toLowerCase() === name.toLowerCase())) { alert(msg('هذا النص موجود مسبقاً')); return; }
+    const { error } = await sb.from('descriptions').insert({ name });
+    if (error) { alert(msg('تعذّر الإضافة: ') + error.message); return; }
+    input.value = '';
+    await loadAllFromCloud();
+    loadControlPanel();
+    populateDescDatalist();
+}
+
+async function deleteDescription(id) {
+    if (confirm(msg('هل تريد حذف نص الوصف هذا؟'))) {
+        const { error } = await sb.from('descriptions').delete().eq('id', id);
+        if (error) { alert(msg('تعذّر الحذف: ') + error.message); return; }
+        await loadAllFromCloud();
+        loadControlPanel();
+        populateDescDatalist();
+    }
+}
+
+async function editDescriptionPrompt(id) {
+    const d = descriptions.find(x => String(x.id) === String(id));
+    if (!d) return;
+    const nv = prompt(msg('تعديل نص الوصف:'), d.name);
+    if (nv === null) return;
+    const name = nv.trim();
+    if (!name) { alert(msg('لا يمكن ترك النص فارغاً')); return; }
+    const { error } = await sb.from('descriptions').update({ name }).eq('id', id);
+    if (error) { alert(msg('تعذّر التعديل: ') + error.message); return; }
+    await loadAllFromCloud();
+    loadControlPanel();
+    populateDescDatalist();
 }
 
 async function addServiceType() {
@@ -8561,7 +8957,8 @@ window.addEventListener('load', async function() {
     msSetup('msRepStaff', '-- كل الموظفين --', generateReport);
     // فرض اللغة الإنجليزية على كل حقول إدخال التاريخ (منتقي التاريخ والتنسيق) حتى في الواجهة العربية
     forceEnglishDateInputs();
-    // تفعيل حركات النوافذ المنبثقة
+    // نقل النوافذ المنبثقة إلى body أولاً (إصلاح الفراغ/القص أسفل النافذة) ثم تفعيل حركاتها
+    relocateModals();
     initModalAnimations();
     // تطبيق اللغة الافتراضية (الإنجليزية) على صفحة الدخول وكامل الواجهة
     if (currentLanguage === 'en') { applyTranslations('en'); updateAboutDescription('en'); }
