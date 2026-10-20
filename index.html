@@ -22,8 +22,12 @@
     (function(){
         // لكل مكتبة عدة مصادر بديلة (CDN) تُجرَّب بالترتيب حتى ينجح أحدها —
         // حتى لو حُجب أو تعطّل أحد مزوّدي الـ CDN في بلد المستخدم، يعمل التصدير/الاستيراد.
+        // المصدر الأول في كل قائمة هو نسخة محلية (بجانب ملف الموقع) — إن وُجدت تعمل دائماً
+        // حتى لو حُجبت كل مزوّدات الـ CDN. ضع الملفات الثلاثة في مجلد lib بجانب الموقع لضمان
+        // عمل إكسل/الطباعة بلا إنترنت خارجي. (اختياري — إن لم توجد يُتابَع تلقائياً عبر الـ CDN)
         var LIB_SRC = {
             xlsx: [
+                'lib/xlsx.full.min.js',
                 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
                 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
                 'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js',
@@ -31,11 +35,13 @@
                 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js'
             ],
             exceljs: [
+                'lib/exceljs.min.js',
                 'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',
                 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js',
                 'https://unpkg.com/exceljs@4.4.0/dist/exceljs.min.js'
             ],
             html2pdf: [
+                'lib/html2pdf.bundle.min.js',
                 'https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js',
                 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
                 'https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js'
@@ -121,8 +127,12 @@
         .sidebar-header { padding: 1.5rem; background: rgba(255,255,255,0.95); border-bottom: 3px solid #7cb342; text-align: center; }
         .sidebar-logo { width: 90px; margin: 0 auto 6px; }
         .sidebar-logo img { width: 100%; height: auto; }
-        .sidebar-user { font-size: 12px; font-weight: 600; color: #0093c4; padding-top: 10px; margin-top: 10px; border-top: 1px solid rgba(0,0,0,0.1); }
-        .sidebar-user #sidebarRole { color: #7cb342; font-weight: 600; }
+        .sidebar-user { padding-top: 12px; margin-top: 10px; border-top: 1px solid rgba(0,0,0,0.1); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .sidebar-user .su-email { font-size: 10.5px; color: #5a6b7a; font-weight: 600; display: flex; align-items: center; gap: 5px; max-width: 100%; word-break: break-all; text-align: center; line-height: 1.3; }
+        .sidebar-user .su-email i { color: #9aa7b2; font-size: 10px; flex-shrink: 0; }
+        .sidebar-user .su-role { background: #eaf6ea; color: #4e8b2a; border: 1px solid #cfe8c7; border-radius: 20px; padding: 2px 13px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .sidebar-user .su-name { font-size: 13.5px; font-weight: 800; color: #0093c4; display: flex; align-items: center; gap: 6px; }
+        .sidebar-user .su-name i { font-size: 15px; }
         .sidebar-nav { flex: 1; padding: 1rem 0; }
         .nav-item { padding: 12px 1.4rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; }
         .nav-item:hover { background: rgba(255,255,255,0.12); color: white; }
@@ -270,6 +280,17 @@
         .form-group-item input:focus, .form-group-item select:focus { outline: none; border-color: #0093c4; box-shadow: 0 0 0 3px rgba(0,147,196,0.1); }
         .form-group-item input[readonly] { background: #f9f9f9; }
         .form-group-item.full { grid-column: 1 / -1; }
+        /* قائمة منسدلة قابلة للبحث والكتابة (Searchable combobox) */
+        .combo { position: relative; }
+        .combo-input { width: 100%; padding-inline-end: 30px !important; }
+        .combo-caret { position: absolute; top: 50%; inset-inline-end: 10px; transform: translateY(-50%); color: #8aa2b0; cursor: pointer; font-size: 11px; }
+        .combo-list { position: absolute; top: calc(100% + 4px); inset-inline-start: 0; width: 100%; max-height: 240px; overflow-y: auto; background: #fff; border: 1px solid #e3eaf0; border-radius: 8px; box-shadow: 0 12px 30px rgba(0,0,0,0.16); z-index: 120; }
+        .combo-item { padding: 8px 12px; cursor: pointer; display: flex; flex-direction: column; gap: 2px; border-bottom: 1px solid #f3f6f9; }
+        .combo-item:last-child { border-bottom: none; }
+        .combo-item:hover, .combo-item.combo-active { background: #eef5f9; }
+        .combo-item-name { font-size: 13px; font-weight: 600; color: #2a3b47; }
+        .combo-item-sub { font-size: 11px; color: #8aa2b0; }
+        .combo-empty { padding: 12px; text-align: center; color: #9fb0bc; font-size: 12.5px; }
 
         /* Items table */
         .items-table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; }
@@ -358,6 +379,8 @@
         .stats-grid-slim .stat-value { grid-column: 2; line-height: 1.1; }
         /* قسم فلاتر مضغوط: قوائم أنحف ومسافات أقل بين الصفوف */
         .filter-grid-4 { grid-template-columns: repeat(4, 1fr); }
+        /* شبكة فلاتر مرنة: تملأ أكبر عدد ممكن من الأعمدة لتبقى الفلاتر في سطرين إلى ثلاثة */
+        .filter-grid-auto { grid-template-columns: repeat(auto-fit, minmax(165px, 1fr)); }
         .filter-section-compact { padding: 1rem 1.1rem; margin-bottom: 1rem; }
         .filter-section-compact .filter-title { margin-bottom: 0.6rem; }
         .filter-section-compact .filter-grid { gap: 0.6rem; margin-bottom: 0.6rem; }
@@ -613,7 +636,11 @@
     <div class="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-logo" onclick="goHome()" style="cursor:pointer;" title="الانتقال إلى لوحة التحكم"><img id="sidebarLogo" alt="تكافل عمان"></div>
-            <div class="sidebar-user"><i class="fas fa-user-circle"></i> <span id="sidebarUsername">مستخدم</span><br><span id="sidebarRole"></span></div>
+            <div class="sidebar-user">
+                <div class="su-email" id="sidebarEmail"><i class="fas fa-envelope"></i> <span>—</span></div>
+                <div class="su-role" id="sidebarRole">—</div>
+                <div class="su-name"><i class="fas fa-user-circle"></i> <span id="sidebarUsername">مستخدم</span></div>
+            </div>
         </div>
         <div class="sidebar-nav">
             <div class="nav-item active" data-perm="dashboard:view" onclick="showPage('dashboard', this)"><i class="fas fa-chart-line"></i> لوحة التحكم</div>
@@ -774,22 +801,16 @@
                     <input type="date" lang="en" dir="ltr" id="lpoDate" required>
                 </div>
             </div>
-            <div class="form-grid cols-2">
-                <div class="form-group-item">
-                    <label><i class="fas fa-hashtag"></i> L.P.O Ref</label>
-                    <div style="display:flex; align-items:center; gap:0;">
-                        <span style="background:#f0f2f5; border:1px solid #ddd; border-right:none; padding:9px 10px; border-radius:6px 0 0 6px; font-size:13px; color:#666; white-space:nowrap; font-weight:600;">Ref-</span>
-                        <input type="text" id="lpoRef" placeholder="أدخل الرقم المرجعي..." style="border-radius:0 6px 6px 0; border-left:none;">
-                    </div>
-                </div>
-                <div class="form-group-item" style="visibility:hidden;"></div>
-            </div>
             <div class="form-grid">
                 <div class="form-group-item">
                     <label><i class="fas fa-building"></i> المورد *</label>
-                    <select id="supplierSelect" onchange="onSupplierSelected()">
-                        <option value="">-- اختر المورد --</option>
-                    </select>
+                    <div class="combo" id="supplierCombo">
+                        <input type="text" id="supplierSearch" class="combo-input" autocomplete="off" placeholder="اكتب اسم المورد للبحث..."
+                               oninput="onSupplierSearchInput(this.value)" onfocus="renderSupplierComboList('')"
+                               onblur="onSupplierBlur()" onkeydown="supplierComboKey(event)">
+                        <span class="combo-caret" onmousedown="event.preventDefault(); toggleSupplierCombo(event)"><i class="fas fa-chevron-down"></i></span>
+                        <div id="supplierComboList" class="combo-list" style="display:none;"></div>
+                    </div>
                     <input type="hidden" id="supplierId" required>
                     <button type="button" class="btn btn-small hidden-for-guest" data-perm="suppliers:create" onclick="openSupplierModal(true)" title="المورد غير موجود في القائمة؟ أضِفه الآن وسيظهر مباشرةً للاختيار" style="margin-top:8px; width:100%; background:#eaf7ee; color:#1f7a37; border:1px solid #bfe3c9; font-size:12px; font-weight:600;"><i class="fas fa-plus-circle"></i> المورد غير موجود؟ أضِف مورداً جديداً</button>
                 </div>
@@ -798,6 +819,13 @@
                     <select id="lpoDepartment" required>
                         <option value="">-- اختر القسم / الغرض --</option>
                     </select>
+                </div>
+                <div class="form-group-item">
+                    <label><i class="fas fa-hashtag"></i> L.P.O Ref</label>
+                    <div style="display:flex; align-items:center; gap:0;">
+                        <span style="background:#f0f2f5; border:1px solid #ddd; border-right:none; padding:9px 10px; border-radius:6px 0 0 6px; font-size:13px; color:#666; white-space:nowrap; font-weight:600;">Ref-</span>
+                        <input type="text" id="lpoRef" lang="en" dir="ltr" placeholder="أدخل الرقم المرجعي..." style="border-radius:0 6px 6px 0; border-left:none; text-align:center;">
+                    </div>
                 </div>
             </div>
 
@@ -949,9 +977,9 @@
         <div class="card-header"><div class="card-title"><i class="fas fa-list-ul"></i> أوامر الشراء</div></div>
         <div class="filter-section filter-section-compact">
             <div class="filter-title"><i class="fas fa-filter"></i> فلاتر البحث</div>
-            <div class="filter-grid filter-grid-4">
+            <div class="filter-grid filter-grid-auto">
                 <div style="position:relative;">
-                    <input type="text" id="filterOrderNumber" placeholder="رقم الأمر (انقر للعرض)..." autocomplete="off" oninput="onOrderNumberInput()" onfocus="showOrderNumberDropdown()">
+                    <input type="text" id="filterOrderNumber" placeholder="رقم الأمر..." autocomplete="off" oninput="onOrderNumberInput()" onfocus="showOrderNumberDropdown()">
                     <div id="orderNumberDropdown" class="dropdown-list"></div>
                 </div>
                 <div class="ms-wrap" data-ms="msSupplier">
@@ -966,15 +994,13 @@
                     <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل المستخدمين --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
                     <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
                 </div>
-            </div>
-            <div class="filter-grid filter-grid-4">
-                <select id="filterStatus" onchange="filterLPOs()"><option value="">-- كل الحالات --</option><option value="__pending">بانتظار الاعتماد</option><option value="__approved">معتمد</option><option value="__rejected">مرفوض</option></select>
-                <input type="date" lang="en" dir="ltr" id="filterFromDate" onchange="filterLPOs()" title="من تاريخ">
-                <input type="date" lang="en" dir="ltr" id="filterToDate" onchange="filterLPOs()" title="إلى تاريخ">
                 <div class="ms-wrap" data-ms="msDepartment">
                     <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الأقسام --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
                     <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
                 </div>
+                <select id="filterStatus" onchange="filterLPOs()"><option value="">-- كل الحالات --</option><option value="__pending">بانتظار الاعتماد</option><option value="__approved">معتمد</option><option value="__rejected">مرفوض</option></select>
+                <input type="date" lang="en" dir="ltr" id="filterFromDate" onchange="filterLPOs()" title="من تاريخ">
+                <input type="date" lang="en" dir="ltr" id="filterToDate" onchange="filterLPOs()" title="إلى تاريخ">
             </div>
             <div class="filter-actions">
                 <button type="button" class="btn btn-danger btn-small" onclick="clearLPOFilters()"><i class="fas fa-eraser"></i> مسح التصفية</button>
@@ -1138,10 +1164,30 @@
         <div class="card" style="margin:0;">
             <div class="card-header"><div class="card-title"><i class="fas fa-chart-bar"></i> الإنفاق حسب التاريخ</div></div>
             <div class="chart-container"><canvas id="reportChart"></canvas></div>
+            <div class="table-responsive" style="margin-top:12px;">
+                <table id="reportDateTable">
+                    <thead><tr>
+                        <th class="sortable" data-colid="0" onclick="sortGenericTable('reportDateTable', this)">التاريخ <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="1" onclick="sortGenericTable('reportDateTable', this)">المبلغ (ر.ع) <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="2" onclick="sortGenericTable('reportDateTable', this)">النسبة <span class="sort-arrow">⇅</span></th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
         <div class="card" style="margin:0;">
             <div class="card-header"><div class="card-title"><i class="fas fa-chart-bar"></i> الإنفاق حسب المورد</div></div>
             <div class="chart-container"><canvas id="reportSupplierChart"></canvas></div>
+            <div class="table-responsive" style="margin-top:12px;">
+                <table id="reportSupplierTable">
+                    <thead><tr>
+                        <th class="sortable" data-colid="0" onclick="sortGenericTable('reportSupplierTable', this)">المورد <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="1" onclick="sortGenericTable('reportSupplierTable', this)">المبلغ (ر.ع) <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="2" onclick="sortGenericTable('reportSupplierTable', this)">النسبة <span class="sort-arrow">⇅</span></th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -1624,6 +1670,11 @@
                 <tbody id="profStatementBody"></tbody>
             </table>
         </div>
+        <!-- رسم بياني عمودي يعكس بيانات الكشف (البند × العدد) -->
+        <div style="margin-top:1.1rem;">
+            <div style="font-size:12.5px; font-weight:700; color:#0093c4; margin-bottom:8px;"><i class="fas fa-chart-column"></i> <span data-i18n="رسم بياني للنشاط">رسم بياني للنشاط</span></div>
+            <div class="chart-container" style="height:260px;"><canvas id="profileStatsChart"></canvas></div>
+        </div>
         <div style="text-align:center; margin-top:14px; padding-top:12px; border-top:1px dashed #d5dde3;">
             <a href="#" onclick="downloadProfileStatement(); return false;" class="excel-link"><i class="fas fa-file-excel"></i> تنزيل الكشف Excel</a>
         </div>
@@ -1978,6 +2029,7 @@ const ROLE_ORDER = ['new_user','requester','purchasing_officer','approver','stor
 const PERM_MODULES = [
     { key: 'dashboard',     ar: 'لوحة التحكم',       en: 'Dashboard', acts: ['view'] },
     { key: 'orders',        ar: 'أوامر الشراء',     en: 'Purchase Orders' },
+    { key: 'drafts',        ar: 'المسودات',          en: 'Drafts', acts: ['view','create','edit','delete'] },
     { key: 'suppliers',     ar: 'الموردون',         en: 'Suppliers' },
     { key: 'reports',       ar: 'التقارير',          en: 'Reports' },
     { key: 'control',       ar: 'الإدارة والتحكم',   en: 'Management & Control', acts: ['view','create','edit','delete'] },
@@ -2037,6 +2089,10 @@ Object.keys(DEFAULT_PERMISSIONS).forEach(r => {
     DEFAULT_PERMISSIONS[r].profiles = { view: (r === 'sysadmin') };
     // رؤية لوحة التحكم: متاحة افتراضياً لكل الأدوار (وقابلة للمنع من صفحة الصلاحيات)
     DEFAULT_PERMISSIONS[r].dashboard = { view: true };
+    // صلاحيات المسودات: تُشتق افتراضياً من صلاحيات أوامر الشراء لنفس الدور (دون تغيير السلوك الحالي)،
+    // وتبقى قابلة للضبط المستقل من صفحة الأدوار والصلاحيات (منها حذف المسودات).
+    const o = DEFAULT_PERMISSIONS[r].orders || {};
+    DEFAULT_PERMISSIONS[r].drafts = { view: !!o.view, create: !!o.create, edit: !!o.edit, delete: !!o.delete };
 });
 
 // المصفوفة الفعلية (تُحمَّل من السحابة؛ تبدأ بالافتراضية)
@@ -2066,7 +2122,8 @@ function rowToOrder(r) {
              tax: +r.tax, total: +r.total, notes: r.notes, staff: r.staff, status: r.status,
              department: r.department || '', lpoRef: r.lpo_ref || '', createdAt: r.created_at,
              approvalStatus: r.approval_status, approvedBy: r.approved_by, approvedAt: r.approved_at,
-             rejectionReason: r.rejection_reason, deletedAt: r.deleted_at || null };
+             rejectionReason: r.rejection_reason, deletedAt: r.deleted_at || null,
+             sourceDraftNumber: r.source_draft_number || '' };
 }
 function rowToDraft(r) {
     return { id: r.id, draftNumber: r.draft_number, date: r.order_date, supplierId: r.supplier_id,
@@ -2179,7 +2236,24 @@ function subscribeRealtime() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'suppliers' }, refreshFromRealtime)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'service_types' }, refreshFromRealtime)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'departments' }, refreshFromRealtime)
+      // مزامنة لحظية للأدوار والصلاحيات: أي تغيير على المستخدمين أو مصفوفة الصلاحيات
+      // ينعكس فوراً على جلسات المستخدمين المتأثّرين دون الحاجة لإعادة تسجيل الدخول
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'app_users' }, refreshFromRealtime)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, refreshFromRealtime)
       .subscribe();
+}
+
+// مزامنة دور المستخدم الحالي لحظياً من قائمة المستخدمين (عند تغييره من مدير النظام)
+function syncCurrentUserRoleLive() {
+    if (!currentUser || isGuest) return;
+    // المدير الافتراضي يبقى مدير نظام دائماً
+    if ((currentUser.email || '').toLowerCase() === DEFAULT_SYSADMIN_EMAIL) { currentUser.role = 'sysadmin'; }
+    else {
+        const me = registeredUsers.find(u => (u.authId && currentUser.authId && u.authId === currentUser.authId) ||
+            ((u.email || '').toLowerCase() === (currentUser.email || '').toLowerCase() && currentUser.email));
+        if (me && me.role && me.role !== currentUser.role) currentUser.role = me.role;
+    }
+    const sbr = document.getElementById('sidebarRole'); if (sbr) sbr.textContent = roleLabel(currentUser.role);
 }
 
 let realtimeTimer = null;
@@ -2187,8 +2261,10 @@ async function refreshFromRealtime() {
     // إعادة تحميل خفيفة عند أي تغيير من مستخدم آخر، مع تجميع التحديثات المتتابعة
     clearTimeout(realtimeTimer);
     realtimeTimer = setTimeout(async () => {
-        await loadAllFromCloud();
-        // إعادة رسم الصفحة النشطة حالياً
+        await loadAllFromCloud();           // يُعيد أيضاً تحميل مصفوفة الصلاحيات (loadRolePermissions)
+        syncCurrentUserRoleLive();          // مزامنة دور المستخدم الحالي إن تغيّر
+        try { applyPermissionsToUI(); } catch (e) {}  // تطبيق الصلاحيات الجديدة على عناصر الواجهة
+        // إعادة رسم الصفحة النشطة حالياً (لتظهر/تختفي أزرار الإجراءات حسب الصلاحيات الجديدة)
         const active = document.querySelector('.page.active');
         if (active) {
             const id = active.id.replace('page-', '');
@@ -2198,6 +2274,8 @@ async function refreshFromRealtime() {
             else if (id === 'reports') { populateAllFilters(); generateReport(); }
             else if (id === 'admin') { loadAdminPanel(); loadRolesPage(); }
             else if (id === 'control-panel') loadControlPanel();
+            else if (id === 'trash') loadTrash();
+            else if (id === 'profile') loadProfile();
         }
     }, 400);
 }
@@ -3052,7 +3130,9 @@ async function startApp() {
     document.getElementById('loginContainer').classList.add('hidden');
     document.getElementById('mainApp').style.display = 'flex';
     document.getElementById('sidebarUsername').textContent = currentUser.username;
-    document.getElementById('sidebarRole').textContent = roleNames[currentUser.role] || '';
+    const sbEmail = document.getElementById('sidebarEmail');
+    if (sbEmail) { const sp = sbEmail.querySelector('span'); if (sp) sp.textContent = currentUser.email || '—'; sbEmail.title = currentUser.email || ''; }
+    document.getElementById('sidebarRole').textContent = roleLabel(currentUser.role) || '';
 
     if (isGuest) {
         document.body.classList.add('guest-mode');
@@ -3375,58 +3455,138 @@ function numToWordsEn(num) {
 }
 // ===================== SUPPLIER DROPDOWN (show all on click) =====================
 function setupSupplierDropdown() {
-    // القائمة الآن منسدلة مقيدة (select)؛ نكتفي بتعبئتها
+    // قائمة المورد صارت قابلة للبحث والكتابة (combobox): نعرض المورد المختار إن وُجد
     populateSupplierSelect();
 }
 
-// تعبئة قائمة المورد المنسدلة المقيدة في نافذة أمر الشراء
+// تحديث نص حقل البحث ليعكس المورد المختار حالياً (بحسب supplierId)
 function populateSupplierSelect() {
-    const sel = document.getElementById('supplierSelect');
-    if (!sel) return;
-    const cur = document.getElementById('supplierId').value;
-    sel.innerHTML = '<option value="">-- اختر المورد --</option>' +
-        suppliers.map(s => `<option value="${s.id}">${s.name}${s.serviceType ? ' — ' + s.serviceType : ''}</option>`).join('');
-    if (cur) sel.value = cur;
-}
-
-// عند اختيار مورد من القائمة المنسدلة: تعبئة بياناته للقراءة
-function onSupplierSelected() {
-    const sel = document.getElementById('supplierSelect');
-    const s = suppliers.find(x => x.id === sel.value);
-    const ratingView = document.getElementById('supplierRatingView');
-    if (s) {
-        document.getElementById('supplierId').value = s.id;
-        document.getElementById('supplierName').value = s.name;
-        document.getElementById('supplierServiceType').value = s.serviceType || '';
-        document.getElementById('supplierPhoneView').value = s.phone || '';
-        document.getElementById('supplierTypeView').value = s.supplierType || '';
-        // إظهار التقييم الحالي للمورد كإشارة مرجعية
-        if (ratingView) {
-            document.getElementById('supplierRatingStars').innerHTML = supplierRatingLabel(s.id);
-            ratingView.style.display = 'block';
-        }
+    const inp = document.getElementById('supplierSearch');
+    if (!inp) return;
+    const id = document.getElementById('supplierId').value;
+    if (id) {
+        const s = suppliers.find(x => String(x.id) === String(id));
+        inp.value = s ? s.name : '';
     } else {
-        document.getElementById('supplierId').value = '';
-        document.getElementById('supplierName').value = '';
-        document.getElementById('supplierServiceType').value = '';
-        document.getElementById('supplierPhoneView').value = '';
-        document.getElementById('supplierTypeView').value = '';
-        if (ratingView) ratingView.style.display = 'none';
+        inp.value = '';
     }
 }
 
-// تُستخدم عند تحرير مسودة: اختيار مورد برمجياً
+// الموردون المطابقون لنص البحث (بالاسم أو نوع الخدمة أو الهاتف)
+function supplierComboMatches(filter) {
+    const f = (filter || '').trim().toLowerCase();
+    return suppliers.filter(s => !f ||
+        (s.name || '').toLowerCase().includes(f) ||
+        (s.serviceType || '').toLowerCase().includes(f) ||
+        (String(s.phone || '')).toLowerCase().includes(f));
+}
+
+let _supComboIdx = -1;
+// بناء القائمة المنسدلة للموردين (مُصفّاة بنص البحث)
+function renderSupplierComboList(filter) {
+    const list = document.getElementById('supplierComboList');
+    if (!list) return;
+    const en = currentLanguage === 'en';
+    const items = supplierComboMatches(filter);
+    _supComboIdx = -1;
+    if (!items.length) {
+        list.innerHTML = `<div class="combo-empty">${en ? 'No matching suppliers' : 'لا يوجد مورد مطابق'}</div>`;
+    } else {
+        list.innerHTML = items.slice(0, 200).map(s =>
+            `<div class="combo-item" data-id="${s.id}" onmousedown="event.preventDefault(); selectSupplierId('${s.id}')">` +
+            `<span class="combo-item-name">${escapeHtml(s.name)}</span>` +
+            (s.serviceType ? `<span class="combo-item-sub">${escapeHtml(s.serviceType)}</span>` : '') +
+            `</div>`).join('');
+    }
+    list.style.display = 'block';
+}
+
+function closeSupplierCombo() {
+    const list = document.getElementById('supplierComboList');
+    if (list) list.style.display = 'none';
+    _supComboIdx = -1;
+}
+function toggleSupplierCombo(ev) {
+    if (ev) ev.stopPropagation();
+    const list = document.getElementById('supplierComboList');
+    const inp = document.getElementById('supplierSearch');
+    if (list && list.style.display === 'block') { closeSupplierCombo(); }
+    else { if (inp) inp.focus(); renderSupplierComboList(inp ? inp.value : ''); }
+}
+// عند مغادرة الحقل: أغلق القائمة ثم زامن النص مع المورد المختار (حتى لا يبقى نص بلا اختيار)
+function onSupplierBlur() {
+    setTimeout(function () { closeSupplierCombo(); populateSupplierSelect(); }, 180);
+}
+
+// الكتابة في الحقل: تُلغي الاختيار الحالي وتُظهر النتائج المطابقة
+function onSupplierSearchInput(v) {
+    document.getElementById('supplierId').value = '';
+    clearSupplierInfo();
+    renderSupplierComboList(v);
+}
+
+// اختيار مورد بمعرّفه (من النقر على عنصر القائمة أو برمجياً)
+function selectSupplierId(id) {
+    const s = suppliers.find(x => String(x.id) === String(id));
+    if (!s) return;
+    document.getElementById('supplierId').value = s.id;
+    const inp = document.getElementById('supplierSearch'); if (inp) inp.value = s.name;
+    applySupplierInfo(s);
+    closeSupplierCombo();
+}
+
+// تعبئة بطاقة بيانات المورد للقراءة
+function applySupplierInfo(s) {
+    document.getElementById('supplierName').value = s.name || '';
+    document.getElementById('supplierServiceType').value = s.serviceType || '';
+    const ph = document.getElementById('supplierPhoneView'); if (ph) ph.value = s.phone || '';
+    const tp = document.getElementById('supplierTypeView'); if (tp) tp.value = s.supplierType || '';
+    const ratingView = document.getElementById('supplierRatingView');
+    if (ratingView) {
+        const stars = document.getElementById('supplierRatingStars');
+        if (stars) stars.innerHTML = supplierRatingLabel(s.id);
+        ratingView.style.display = 'block';
+    }
+}
+function clearSupplierInfo() {
+    document.getElementById('supplierName').value = '';
+    document.getElementById('supplierServiceType').value = '';
+    const ph = document.getElementById('supplierPhoneView'); if (ph) ph.value = '';
+    const tp = document.getElementById('supplierTypeView'); if (tp) tp.value = '';
+    const ratingView = document.getElementById('supplierRatingView'); if (ratingView) ratingView.style.display = 'none';
+}
+
+// توافق خلفي: تملأ البيانات اعتماداً على supplierId الحالي
+function onSupplierSelected() {
+    const id = document.getElementById('supplierId').value;
+    const s = suppliers.find(x => String(x.id) === String(id));
+    if (s) applySupplierInfo(s); else clearSupplierInfo();
+}
+
+// اختيار مورد برمجياً (عند تحرير مسودة أو أمر) — يقبل كائن المورد
 function selectSupplier(s) {
     if (!s) return;
-    const sel = document.getElementById('supplierSelect');
-    if (sel) sel.value = s.id;
     document.getElementById('supplierId').value = s.id;
-    document.getElementById('supplierName').value = s.name;
-    document.getElementById('supplierServiceType').value = s.serviceType || '';
-    const ph = document.getElementById('supplierPhoneView');
-    const tp = document.getElementById('supplierTypeView');
-    if (ph) ph.value = s.phone || '';
-    if (tp) tp.value = s.supplierType || '';
+    const full = suppliers.find(x => String(x.id) === String(s.id)) || s;
+    const inp = document.getElementById('supplierSearch'); if (inp) inp.value = full.name || s.name || '';
+    applySupplierInfo(full);
+}
+
+// تنقّل بلوحة المفاتيح داخل قائمة الموردين (أسهم + Enter + Esc)
+function supplierComboKey(e) {
+    const list = document.getElementById('supplierComboList');
+    const open = list && list.style.display === 'block';
+    if (e.key === 'ArrowDown' && !open) { renderSupplierComboList(e.target.value); return; }
+    if (!open) return;
+    const items = Array.prototype.slice.call(list.querySelectorAll('.combo-item'));
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); _supComboIdx = Math.min(items.length - 1, _supComboIdx + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); _supComboIdx = Math.max(0, _supComboIdx - 1); }
+    else if (e.key === 'Enter') { e.preventDefault(); const t = items[_supComboIdx] || items[0]; if (t) selectSupplierId(t.getAttribute('data-id')); return; }
+    else if (e.key === 'Escape') { closeSupplierCombo(); return; }
+    else return;
+    items.forEach((it, i) => it.classList.toggle('combo-active', i === _supComboIdx));
+    if (items[_supComboIdx]) items[_supComboIdx].scrollIntoView({ block: 'nearest' });
 }
 
 // ===================== ITEMS =====================
@@ -3445,11 +3605,11 @@ function addItemRow(data) {
     tr.innerHTML = `
         <td class="col-num"><span class="row-grip" title="${currentLanguage==='en'?'Drag to reorder':'اسحب لإعادة الترتيب'}"><i class="fas fa-grip-vertical"></i></span><span class="row-no">${n}</span></td>
         <td class="col-desc"><textarea class="item-desc" rows="2" oninput="calculateTotals()" placeholder="الوصف...">${data ? (data.desc||'') : ''}</textarea></td>
-        <td class="col-qty"><input type="number" class="item-qty" value="${data ? data.qty : 1}" min="0" step="1" oninput="calculateTotals()" onkeydown="handleTab(event)"></td>
-        <td class="col-price"><input type="number" class="item-price" value="${priceVal}" min="0" step="0.001" placeholder="0.000" oninput="calculateTotals()" onkeydown="handleTab(event)"></td>
+        <td class="col-qty"><input type="number" class="item-qty" dir="ltr" lang="en" inputmode="numeric" style="text-align:center;" value="${data ? data.qty : 1}" min="0" step="1" oninput="calculateTotals()" onkeydown="handleTab(event)"></td>
+        <td class="col-price"><input type="number" class="item-price" dir="ltr" lang="en" inputmode="decimal" style="text-align:center;" value="${priceVal}" min="0" step="0.001" placeholder="0.000" oninput="calculateTotals()" onkeydown="handleTab(event)"></td>
         <td class="col-taxchk"><div class="tax-cell">
             <input type="checkbox" class="item-tax-check" ${checked} onchange="calculateTotals()">
-            <input type="number" class="tax-pct item-tax-rate" value="${tax}" min="0" max="100" step="0.5" oninput="calculateTotals()" onkeydown="handleTab(event)">
+            <input type="number" class="tax-pct item-tax-rate" dir="ltr" lang="en" inputmode="decimal" value="${tax}" min="0" max="100" step="0.5" oninput="calculateTotals()" onkeydown="handleTab(event)">
             <span style="font-size:11px;color:#999;">%</span>
         </div></td>
         <td class="col-total"><span class="item-total">0.000</span></td>
@@ -3611,16 +3771,22 @@ async function saveOrderResilient(mode, rowData, orderId) {
     const run = async (r) => (mode === 'update')
         ? sb.from('purchase_orders').update(r).eq('id', orderId)
         : sb.from('purchase_orders').insert(r);
-    let res = await run(rowData);
-    if (res.error && /lpo_ref/i.test(res.error.message || '')) {
-        // إزالة الحقل غير الموجود وإعادة المحاولة
-        const clone = Object.assign({}, rowData);
-        delete clone.lpo_ref;
-        res = await run(clone);
-        if (!res.error && !_lpoRefColWarned) {
-            _lpoRefColWarned = true;
-            alert(msg('تم حفظ الأمر، لكن حقل "L.P.O Ref" لم يُحفظ لأن عموده غير موجود في قاعدة البيانات بعد. لتفعيله شغّل ملف SQL: تحديث_قاعدة_البيانات_9_رقم_المرجع.sql في Supabase.'));
-        }
+    // أعمدة اختيارية قد لا تكون موجودة قبل تشغيل ملفات الترقية — تُسقَط بأمان عند الحاجة
+    const OPTIONAL = ['source_draft_number', 'lpo_ref'];
+    let payload = Object.assign({}, rowData);
+    let res = await run(payload);
+    let strippedLpoRef = false, guard = 0;
+    while (res.error && guard++ < 5) {
+        const em = (res.error.message || '') + ' ' + (res.error.details || '');
+        const hit = OPTIONAL.find(c => payload.hasOwnProperty(c) && new RegExp(c, 'i').test(em));
+        if (!hit) break;
+        if (hit === 'lpo_ref') strippedLpoRef = true;
+        delete payload[hit];
+        res = await run(payload);
+    }
+    if (!res.error && strippedLpoRef && !_lpoRefColWarned) {
+        _lpoRefColWarned = true;
+        alert(msg('تم حفظ الأمر، لكن حقل "L.P.O Ref" لم يُحفظ لأن عموده غير موجود في قاعدة البيانات بعد. لتفعيله شغّل ملف SQL: تحديث_قاعدة_البيانات_9_رقم_المرجع.sql في Supabase.'));
     }
     return { error: res.error };
 }
@@ -3648,6 +3814,9 @@ async function saveLPO(event) {
         status: 'موقعة',
         approval_status: 'pending'
     };
+    // ربط الأمر بالمسودة التي حُوِّل منها (إن وُجدت) ليظهر سجل المسودة ضمن سجل عمليات الأمر.
+    // يبقى فارغاً عند إصدار أمر مباشرةً دون المرور بمسودة — فلا يتأثّر شيء في تلك الحالة.
+    if (editingDraftId && editingDraftNumber) row.source_draft_number = editingDraftNumber;
     const prevDraftId = editingDraftId; // إن كان الأمر منشأً من مسودة قيد التعديل
     const prevOrderId = editingOrderId; // إن كنا نعدّل أمراً قائماً
     let error;
@@ -3702,11 +3871,12 @@ function resetForm() {
     document.getElementById('supplierServiceType').value = '';
     const ph = document.getElementById('supplierPhoneView');
     const tp = document.getElementById('supplierTypeView');
-    const ss = document.getElementById('supplierSelect');
+    const ss = document.getElementById('supplierSearch');
     const dp = document.getElementById('lpoDepartment');
     if (ph) ph.value = '';
     if (tp) tp.value = '';
     if (ss) ss.value = '';
+    closeSupplierCombo();
     if (dp) dp.value = '';
     const refEl = document.getElementById('lpoRef');
     if (refEl) refEl.value = '';
@@ -3967,8 +4137,8 @@ function loadDrafts() {
         tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#999;">لا توجد مسودات</td></tr>';
     } else {
         filtered.forEach(d => {
-            const dEdit = can('orders','edit') ? `<button class="btn btn-small" style="background:#f0ad4e; color:#fff;" onclick="editDraft('${d.id}')" title="${currentLanguage==='en'?'Edit':'تعديل'}"><i class="fas fa-edit"></i></button>` : '';
-            const dDel = can('orders','delete') ? `<button class="btn btn-small" onclick="deleteDraft('${d.id}')" title="${currentLanguage==='en'?'Delete':'حذف'}" style="color:#e74c3c;"><i class="fas fa-trash"></i></button>` : '';
+            const dEdit = can('drafts','edit') ? `<button class="btn btn-small" style="background:#f0ad4e; color:#fff;" onclick="editDraft('${d.id}')" title="${currentLanguage==='en'?'Edit':'تعديل'}"><i class="fas fa-edit"></i></button>` : '';
+            const dDel = can('drafts','delete') ? `<button class="btn btn-small" onclick="deleteDraft('${d.id}')" title="${currentLanguage==='en'?'Delete':'حذف'}" style="color:#e74c3c;"><i class="fas fa-trash"></i></button>` : '';
             const svcLabel = escapeHtml(orderServiceType(d)) || '<span style="color:#bbb;">—</span>';
             const deptLabel = escapeHtml(d.department || '') || '<span style="color:#bbb;">—</span>';
             const row = tbody.insertRow();
@@ -3983,7 +4153,8 @@ function loadDrafts() {
 }
 
 async function editDraft(id) {
-    const d = draftSaves.find(x => x.id === id);
+    if (!can('drafts', 'edit')) { alert(msg('غير مصرّح')); return; }
+    const d = draftSaves.find(x => String(x.id) === String(id));
     if (!d) return;
     // فتح نافذة أمر شراء جديد ثم تعبئتها ببيانات المسودة (دون إعادة تعيين)
     resetForm();
@@ -4063,6 +4234,7 @@ async function hardDeleteRow(table, id) {
 }
 
 async function deleteDraft(id) {
+    if (!can('drafts', 'delete')) { alert(msg('غير مصرّح')); return; }
     if (confirm(msg('هل تريد حذف هذه المسودة؟ ستنتقل إلى سلة المهملات.'))) {
         const d = draftSaves.find(x => String(x.id) === String(id));
         const { error } = await softDeleteRow('drafts', id);
@@ -4811,7 +4983,9 @@ async function printLPOListPDF() {
     const holder = document.createElement('div');
     holder.id = '__lpoListPdf';
     holder.setAttribute('dir', en ? 'ltr' : 'rtl');
-    holder.style.cssText = "position:fixed; left:0; top:0; width:1040px; background:#fff; z-index:-1; pointer-events:none; font-family:Arial,'Segoe UI',Tahoma,sans-serif; color:#222; padding:14px;";
+    // مخفي عن المستخدم بـ opacity:0 (وليس z-index سالب الذي يُسبّب صفحة بيضاء في html2canvas)،
+    // ثم نُظهره داخل النسخة المستنسخة فقط عبر onclone لالتقاطه بشكل صحيح.
+    holder.style.cssText = "position:fixed; left:0; top:0; width:1040px; background:#fff; opacity:0; pointer-events:none; z-index:2147483647; font-family:Arial,'Segoe UI',Tahoma,sans-serif; color:#222; padding:14px;";
     holder.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:3px solid #0093c4; padding-bottom:10px; margin-bottom:12px;">
             <div style="width:90px;">${typeof LOGO_DATA !== 'undefined' ? `<img src="${LOGO_DATA}" style="width:100%;">` : ''}</div>
@@ -4848,7 +5022,9 @@ async function printLPOListPDF() {
         margin: [6, 6, 8, 6],
         filename: (en ? 'LPO-List-' : 'قائمة-أوامر-الشراء-') + now.toISOString().split('T')[0] + '.pdf',
         image: { type: 'jpeg', quality: 0.97 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        // windowWidth يضمن رسم العرض الكامل (1040px) حتى على الجوال، وonclone يُظهر النسخة للالتقاط
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 1120,
+            onclone: function (cdoc) { var el = cdoc.getElementById('__lpoListPdf'); if (el) { el.style.opacity = '1'; el.style.position = 'static'; } } },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
         pagebreak: { mode: ['css', 'legacy'] }
     };
@@ -4864,17 +5040,104 @@ async function printLPOListPDF() {
     }
 }
 
+// تصدير قائمة أوامر الشراء المُصفّاة إلى ملف Excel احترافي بورقتين
+// (ملخص الأوامر الكامل + تفاصيل البنود) مع ترويسة الشركة وتاريخ الإصدار.
 async function exportLPOList() {
-    if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
-    const list = getFilteredLPOs();
-    if (list.length === 0) { alert(msg('لا توجد بيانات للتصدير')); return; }
+    if (!(await ensureLib('exceljs')) || !excelReady()) return;
+    const list = getSortedLPOs(); // يحترم الفلترة والفرز المطبّقين في الجدول
+    if (!list.length) { alert(msg('لا توجد بيانات للتصدير')); return; }
+    const en = currentLanguage === 'en';
     try {
-        const rows = list.map(l => ({ 'رقم الأمر': l.number, 'المورد': l.supplierName, 'التاريخ': l.date, 'المبلغ': l.total, 'الحالة': l.status, 'الموظف': l.staff }));
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'الأوامر');
-        XLSX.writeFile(wb, `LPO-${new Date().toISOString().split('T')[0]}.xlsx`);
+        const statusText = (l) => {
+            if (l.approvalStatus === 'pending') return en ? 'Pending Approval' : 'بانتظار الاعتماد';
+            if (l.approvalStatus === 'rejected') return en ? 'Rejected' : 'مرفوض';
+            if (l.approvalStatus === 'approved') return en ? 'Approved' : 'معتمد';
+            return en ? (I18N[l.status] || l.status || 'Approved') : (l.status || 'معتمد');
+        };
+        const fmtDT = (iso) => iso ? new Date(iso).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : '';
+        const fmtD  = (iso) => iso ? new Date(iso).toLocaleDateString('en-GB') : '';
+
+        // ===== الورقة 1: ملخّص أوامر الشراء (أعمدة شاملة + كل التواريخ) =====
+        const columns = [
+            { header: '#', headerEn: '#', key: 'sl', width: 5, align: 'center' },
+            { header: 'رقم الأمر', headerEn: 'Order No.', key: 'number', width: 16, align: 'center' },
+            { header: 'المرجع L.P.O', headerEn: 'L.P.O Ref', key: 'ref', width: 14, align: 'center' },
+            { header: 'المورد', headerEn: 'Supplier', key: 'supplier', width: 28, align: 'right' },
+            { header: 'نوع الخدمة', headerEn: 'Service Type', key: 'service', width: 20, align: 'right' },
+            { header: 'القسم / الغرض', headerEn: 'Department / Purpose', key: 'dept', width: 22, align: 'right' },
+            { header: 'تاريخ الأمر', headerEn: 'Order Date', key: 'date', width: 13, align: 'center' },
+            { header: 'تاريخ التسجيل', headerEn: 'Record Date', key: 'recDate', width: 17, align: 'center' },
+            { header: 'الحالة', headerEn: 'Status', key: 'status', width: 16, align: 'center' },
+            { header: 'المعتمِد / الرافض', headerEn: 'Approved/Rejected By', key: 'approvedBy', width: 18, align: 'center' },
+            { header: 'تاريخ الاعتماد/الرفض', headerEn: 'Approval/Reject Date', key: 'approvedAt', width: 18, align: 'center' },
+            { header: 'سبب الرفض', headerEn: 'Rejection Reason', key: 'reason', width: 26, align: 'right' },
+            { header: 'الموظف', headerEn: 'Staff', key: 'staff', width: 16, align: 'center' },
+            { header: 'من المسودة', headerEn: 'From Draft', key: 'fromDraft', width: 14, align: 'center' },
+            { header: 'المجموع قبل الضريبة', headerEn: 'Subtotal (OMR)', key: 'subtotal', width: 17, align: 'center', numFmt: '#,##0.000' },
+            { header: 'الضريبة (ر.ع)', headerEn: 'Tax (OMR)', key: 'tax', width: 13, align: 'center', numFmt: '#,##0.000' },
+            { header: 'الإجمالي (ر.ع)', headerEn: 'Total (OMR)', key: 'total', width: 16, align: 'center', numFmt: '#,##0.000' }
+        ];
+        const rows = list.map((l, i) => ({
+            sl: i + 1, number: l.number, ref: l.lpoRef || '', supplier: l.supplierName || '',
+            service: orderServiceType(l) || '', dept: l.department || '',
+            date: l.date || '', recDate: fmtDT(l.createdAt), status: statusText(l),
+            approvedBy: l.approvedBy || '', approvedAt: fmtD(l.approvedAt), reason: l.rejectionReason || '',
+            staff: l.staff || '', fromDraft: l.sourceDraftNumber || '',
+            subtotal: +(+l.subtotal || 0).toFixed(3), tax: +(+l.tax || 0).toFixed(3), total: +(+l.total || 0).toFixed(3)
+        }));
+        const sumSub = list.reduce((s, l) => s + (+l.subtotal || 0), 0);
+        const sumTax = list.reduce((s, l) => s + (+l.tax || 0), 0);
+        const sumTot = list.reduce((s, l) => s + (+l.total || 0), 0);
+        const totalsRow = { number: en ? 'TOTAL' : 'الإجمالي', subtotal: +sumSub.toFixed(3), tax: +sumTax.toFixed(3), total: +sumTot.toFixed(3) };
+
+        const wb = new ExcelJS.Workbook();
+        wb.creator = 'Takaful Oman — LPO System'; wb.created = new Date();
+        addStyledSheet(wb, {
+            sheetName: en ? 'Orders Summary' : 'ملخص الأوامر',
+            reportTitle: en ? 'Local Purchase Orders — Summary (Filtered)' : 'أوامر الشراء المحلية — ملخّص (حسب التصفية)',
+            columns, rows, totalsRow
+        });
+
+        // ===== الورقة 2: تفاصيل بنود كل أمر =====
+        const itemCols = [
+            { header: 'رقم الأمر', headerEn: 'Order No.', key: 'onum', width: 16, align: 'center' },
+            { header: 'المورد', headerEn: 'Supplier', key: 'osup', width: 26, align: 'right' },
+            { header: 'تاريخ الأمر', headerEn: 'Order Date', key: 'odate', width: 13, align: 'center' },
+            { header: '#', headerEn: '#', key: 'sl', width: 5, align: 'center' },
+            { header: 'الوصف / التفاصيل', headerEn: 'Description', key: 'desc', width: 42, align: 'right' },
+            { header: 'الكمية', headerEn: 'Qty', key: 'qty', width: 8, align: 'center' },
+            { header: 'سعر الوحدة (ر.ع)', headerEn: 'Unit Price (OMR)', key: 'price', width: 15, align: 'center', numFmt: '#,##0.000' },
+            { header: 'ضريبة %', headerEn: 'Tax %', key: 'tax', width: 9, align: 'center' },
+            { header: 'إجمالي البند (ر.ع)', headerEn: 'Line Total (OMR)', key: 'lineTotal', width: 17, align: 'center', numFmt: '#,##0.000' }
+        ];
+        const itemRows = []; let grandItems = 0;
+        list.forEach(l => {
+            const items = l.items || [];
+            if (!items.length) {
+                itemRows.push({ onum: l.number, osup: l.supplierName, odate: l.date, sl: '', desc: en ? '(no items)' : '(لا توجد بنود)', qty: '', price: '', tax: '', lineTotal: '' });
+                return;
+            }
+            items.forEach((it, idx) => {
+                const rate = (it.price !== undefined && it.price !== null) ? +it.price : ((+it.riyal || 0) + (+it.baiza || 0) / 1000);
+                const qty = +it.qty || 0;
+                const lineTotal = qty * rate * (it.hasTax ? (1 + (+it.taxRate || 0) / 100) : 1);
+                grandItems += lineTotal;
+                itemRows.push({ onum: l.number, osup: l.supplierName, odate: l.date, sl: idx + 1,
+                    desc: it.desc || '', qty: qty, price: +rate.toFixed(3),
+                    tax: it.hasTax ? ((+it.taxRate || 0) + '%') : '—', lineTotal: +lineTotal.toFixed(3) });
+            });
+        });
+        addStyledSheet(wb, {
+            sheetName: en ? 'Line Items' : 'تفاصيل البنود',
+            reportTitle: en ? 'Purchase Orders — Line Items Details (Filtered)' : 'تفاصيل بنود أوامر الشراء (حسب التصفية)',
+            columns: itemCols, rows: itemRows, totalsRow: { onum: en ? 'TOTAL' : 'الإجمالي', lineTotal: +grandItems.toFixed(3) }
+        });
+
+        const buf = await wb.xlsx.writeBuffer();
+        triggerExcelDownload(buf, `LPO_Orders_${new Date().toISOString().split('T')[0]}.xlsx`);
+        recordAction(en ? 'Export filtered orders Excel' : 'تصدير أوامر الشراء المُصفّاة Excel', 'export');
     } catch (e) {
-        alert(msg('تعذّر تصدير الملف: ') + e.message);
+        alert((en ? 'Export failed: ' : 'تعذّر التصدير: ') + (e && e.message ? e.message : ''));
     }
 }
 
@@ -5390,7 +5653,9 @@ function editSupplier(id) {
 
 // استعراض كل بيانات وملفات المورد في نافذة عرض
 function viewSupplierDetails(id) {
-    const s = suppliers.find(x => String(x.id) === String(id));
+    // يبحث في الموردين النشطين وكذلك المحذوفين (لعرض تفاصيل مورد من سلة المهملات)
+    const s = suppliers.find(x => String(x.id) === String(id)) ||
+              deletedSuppliers.find(x => String(x.id) === String(id));
     if (!s) return;
     const en = currentLanguage === 'en';
     const esc = (t) => escapeHtml(t == null ? '' : String(t));
@@ -5418,7 +5683,8 @@ function viewSupplierDetails(id) {
         ${filesHtml}`;
     const editBtn = document.getElementById('supplierViewEditBtn');
     if (editBtn) {
-        if (can('suppliers','edit')) {
+        // لا يظهر زر التعديل لمورد محذوف (موجود في سلة المهملات)
+        if (can('suppliers','edit') && !s.deletedAt) {
             editBtn.style.display = '';
             editBtn.onclick = function(){ closeSupplierViewModal(); editSupplier(id); };
         } else {
@@ -5525,10 +5791,7 @@ async function addSupplier(event) {
     if (wasFromLPO) {
         // العودة إلى نافذة أمر الشراء: تحديث القائمة المنسدلة واختيار المورد المُضاف تلقائياً
         populateSupplierSelect();
-        if (newId != null) {
-            const selEl = document.getElementById('supplierSelect');
-            if (selEl) { selEl.value = String(newId); onSupplierSelected(); }
-        }
+        if (newId != null) { selectSupplierId(String(newId)); }
         alert(msg('تم إضافة المورد ويمكنك الآن اختياره في أمر الشراء'));
     } else {
         populateAllFilters();
@@ -5748,6 +6011,52 @@ function getReportFiltered() {
     });
 }
 
+// إضافة Chart.js لعرض نسبة كل شريحة % داخل الرسم الدائري بخط صغير متناسق
+const doughnutPercentPlugin = {
+    id: 'doughnutPercent',
+    afterDatasetsDraw(chart) {
+        const meta = chart.getDatasetMeta(0);
+        if (!meta || !meta.data || !chart.data.datasets[0]) return;
+        const ds = chart.data.datasets[0].data || [];
+        const total = ds.reduce((s, v) => s + (+v || 0), 0);
+        if (!total) return;
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.font = '700 10px Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        meta.data.forEach((arc, i) => {
+            const pct = ((+ds[i] || 0) / total) * 100;
+            if (pct < 4) return; // تجاهل الشرائح الصغيرة جداً لتفادي الازدحام
+            let pos; try { pos = arc.tooltipPosition(); } catch (e) { return; }
+            const txt = pct.toFixed(1) + '%';
+            ctx.lineWidth = 2.6; ctx.strokeStyle = 'rgba(0,0,0,0.38)';
+            ctx.strokeText(txt, pos.x, pos.y);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText(txt, pos.x, pos.y);
+        });
+        ctx.restore();
+    }
+};
+
+// تعبئة جدول ملخص إحصائي (البند + المبلغ + النسبة%) أسفل أي رسم بياني
+function fillSpendTable(tableId, items, palette) {
+    const tbody = document.querySelector('#' + tableId + ' tbody');
+    if (!tbody) return;
+    const en = currentLanguage === 'en';
+    tbody.innerHTML = '';
+    const grand = items.reduce((s, it) => s + (+it.amount || 0), 0);
+    if (!items.length) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999;">${en ? 'No data' : 'لا توجد بيانات'}</td></tr>`;
+        return;
+    }
+    items.forEach((it, i) => {
+        const pct = grand ? ((it.amount / grand) * 100).toFixed(1) : '0.0';
+        const swatch = palette ? `<span style="display:inline-block; width:10px; height:10px; border-radius:2px; background:${palette[i % palette.length]}; margin-inline-end:6px;"></span>` : '';
+        tbody.insertRow().innerHTML = `<td>${swatch}${escapeHtml(String(it.label))}</td><td style="font-weight:600;" data-sort="${it.amount}">${fmt(it.amount)}</td><td data-sort="${pct}">${pct}%</td>`;
+    });
+}
+
 function generateReport() {
     const list = getReportFiltered();
     const total = list.reduce((s, l) => s + l.total, 0);
@@ -5783,6 +6092,8 @@ function generateReport() {
         data: { labels: dates, datasets: [{ label: 'الإنفاق (ر.ع)', data: dates.map(d => +byDate[d].toFixed(3)), backgroundColor: '#0093c4', borderRadius: 6, maxBarThickness: 45 }] },
         options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
     });
+    // جدول ملخص الإنفاق حسب التاريخ (بنفس أسلوب جدول نوع الخدمة)
+    fillSpendTable('reportDateTable', dates.map(d => ({ label: d, amount: byDate[d] })), null);
 
     // chart by supplier
     const bySup = {};
@@ -5794,6 +6105,9 @@ function generateReport() {
         data: { labels: sups, datasets: [{ label: 'الإنفاق (ر.ع)', data: sups.map(s => +bySup[s].toFixed(3)), backgroundColor: '#7cb342', borderRadius: 6, maxBarThickness: 45 }] },
         options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
     });
+    // جدول ملخص الإنفاق حسب المورد (مرتّب تنازلياً حسب المبلغ)
+    const supRanked = sups.slice().sort((a, b) => bySup[b] - bySup[a]);
+    fillSpendTable('reportSupplierTable', supRanked.map(s => ({ label: s, amount: bySup[s] })), null);
 
     // ===== مؤشر أداء الموردين (VPI): فرز الموردين من الأعلى تقييماً للأقل =====
     renderVPITable(list);
@@ -5806,7 +6120,7 @@ function generateReport() {
     renderDepartmentStats(list);
 
     // تفعيل الفرز/السحب/التمديد لأعمدة جداول التقارير (مرة واحدة) ثم تطبيق الترتيب والفرز المحفوظ
-    ['reportServiceTable', 'top5Table', 'topSuppliersTable', 'deptStatsTable', 'vpiTable'].forEach(tid => {
+    ['reportServiceTable', 'reportDateTable', 'reportSupplierTable', 'top5Table', 'topSuppliersTable', 'deptStatsTable', 'vpiTable'].forEach(tid => {
         initColumnDrag(tid, function () { applyColumnOrder(tid); applyGenericSort(tid); });
         applyColumnOrder(tid);
         applyGenericSort(tid);
@@ -5852,7 +6166,8 @@ function renderServiceTypeChart(list) {
     chartInstances.reportService = new Chart(document.getElementById('reportServiceChart').getContext('2d'), {
         type: 'doughnut',
         data: { labels: labels, datasets: [{ data: labels.map(s => +byService[s].toFixed(3)), backgroundColor: labels.map((_, i) => palette[i % palette.length]) }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+        plugins: [doughnutPercentPlugin]
     });
 
     // جدول البيانات الملخص أسفل الرسم الدائري مباشرةً
@@ -6703,13 +7018,17 @@ function renderTrashOrders() {
     tbody.innerHTML = '';
     if (!deletedOrders.length) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999; padding:20px;">${en ? 'No deleted orders' : 'لا توجد أوامر شراء محذوفة'}</td></tr>`; return; }
     deletedOrders.slice().sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt)).forEach(o => {
-        tbody.insertRow().innerHTML =
+        const row = tbody.insertRow();
+        row.style.cursor = 'pointer';
+        row.title = en ? 'Click to preview the order' : 'انقر لمعاينة الأمر';
+        row.setAttribute('onclick', `viewDeletedOrder('${o.id}')`);
+        row.innerHTML =
             `<td style="font-weight:700; white-space:nowrap;">${escapeHtml(o.number || '—')}</td>` +
             `<td>${escapeHtml(o.supplierName || '—')}</td>` +
             `<td style="white-space:nowrap;">${escapeHtml(o.date || '—')}</td>` +
             `<td style="font-weight:600; white-space:nowrap;" data-sort="${o.total}">${fmt(o.total)}</td>` +
             `<td data-sort="${o.deletedAt || ''}">${fmtRecordDate(o.deletedAt)}</td>` +
-            `<td style="white-space:nowrap;">${trashActionBtns('orders', o.id)}</td>`;
+            `<td style="white-space:nowrap;" onclick="event.stopPropagation();">${trashActionBtns('orders', o.id)}</td>`;
     });
 }
 
@@ -6719,13 +7038,17 @@ function renderTrashDrafts() {
     tbody.innerHTML = '';
     if (!deletedDrafts.length) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999; padding:20px;">${en ? 'No deleted drafts' : 'لا توجد مسودات محذوفة'}</td></tr>`; return; }
     deletedDrafts.slice().sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt)).forEach(d => {
-        tbody.insertRow().innerHTML =
+        const row = tbody.insertRow();
+        row.style.cursor = 'pointer';
+        row.title = en ? 'Click to preview the draft' : 'انقر لمعاينة المسودة';
+        row.setAttribute('onclick', `viewDeletedDraft('${d.id}')`);
+        row.innerHTML =
             `<td style="font-weight:700; white-space:nowrap;">${escapeHtml(d.draftNumber || '—')}</td>` +
             `<td>${escapeHtml(d.supplierName || '—')}</td>` +
             `<td style="white-space:nowrap;">${escapeHtml(d.date || '—')}</td>` +
             `<td style="font-weight:600; white-space:nowrap;" data-sort="${d.total}">${fmt(d.total)}</td>` +
             `<td data-sort="${d.deletedAt || ''}">${fmtRecordDate(d.deletedAt)}</td>` +
-            `<td style="white-space:nowrap;">${trashActionBtns('drafts', d.id)}</td>`;
+            `<td style="white-space:nowrap;" onclick="event.stopPropagation();">${trashActionBtns('drafts', d.id)}</td>`;
     });
 }
 
@@ -6735,14 +7058,47 @@ function renderTrashSuppliers() {
     tbody.innerHTML = '';
     if (!deletedSuppliers.length) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999; padding:20px;">${en ? 'No deleted suppliers' : 'لا يوجد موردون محذوفون'}</td></tr>`; return; }
     deletedSuppliers.slice().sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt)).forEach(s => {
-        tbody.insertRow().innerHTML =
+        const row = tbody.insertRow();
+        row.style.cursor = 'pointer';
+        row.title = en ? 'Click to view supplier details' : 'انقر لعرض بيانات المورد';
+        row.setAttribute('onclick', `viewSupplierDetails('${s.id}')`);
+        row.innerHTML =
             `<td style="font-weight:700;">${escapeHtml(s.name || '—')}</td>` +
             `<td style="font-size:12px;">${escapeHtml(s.serviceType || '—')}</td>` +
             `<td style="white-space:nowrap;" dir="ltr">${escapeHtml(s.phone || '—')}</td>` +
             `<td style="font-size:12px;">${escapeHtml(s.createdBy || '—')}</td>` +
             `<td data-sort="${s.deletedAt || ''}">${fmtRecordDate(s.deletedAt)}</td>` +
-            `<td style="white-space:nowrap;">${trashActionBtns('suppliers', s.id)}</td>`;
+            `<td style="white-space:nowrap;" onclick="event.stopPropagation();">${trashActionBtns('suppliers', s.id)}</td>`;
     });
+}
+
+// معاينة أمر شراء محذوف من سلة المهملات (قراءة فقط — بلا أزرار إجراءات ولا محادثة)
+function viewDeletedOrder(id) {
+    const l = deletedOrders.find(x => String(x.id) === String(id));
+    if (!l) return;
+    previewLPOData = l;
+    previewIsDraft = false;
+    document.getElementById('previewContent').innerHTML = buildLPOHtml(l, false);
+    renderPreviewOpsLog(l, false, false);
+    const bar = document.getElementById('previewActionBar'); if (bar) bar.style.display = 'none';
+    document.getElementById('previewModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    try { closeChatPanel(); } catch (e) {}
+}
+// معاينة مسودة محذوفة من سلة المهملات
+function viewDeletedDraft(id) {
+    const d = deletedDrafts.find(x => String(x.id) === String(id));
+    if (!d) return;
+    previewLPOData = { number: d.draftNumber, date: d.date, supplierId: d.supplierId, supplierName: d.supplierName,
+        items: d.items || [], subtotal: d.subtotal, tax: d.tax, total: d.total, department: d.department,
+        lpoRef: d.lpoRef || '', notes: d.notes, staff: d.staff };
+    previewIsDraft = true;
+    document.getElementById('previewContent').innerHTML = buildLPOHtml(previewLPOData, true);
+    renderPreviewOpsLog(d, true, false);
+    const bar = document.getElementById('previewActionBar'); if (bar) bar.style.display = 'none';
+    document.getElementById('previewModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    try { closeChatPanel(); } catch (e) {}
 }
 
 const _TRASH_TABLE = { orders: 'purchase_orders', drafts: 'drafts', suppliers: 'suppliers' };
@@ -6942,6 +7298,27 @@ function renderProfileStats(uname) {
     tbody.innerHTML = rows.map(r =>
         `<td style="font-weight:600;">${r.label}</td><td style="font-weight:700; color:#0093c4;">${r.val}</td><td style="font-size:12.5px; color:#667;">${r.det}</td>`
     ).map(html => `<tr>${html}</tr>`).join('');
+
+    // رسم بياني عمودي يعكس بنود الكشف وأعدادها (Item × Count)
+    drawProfileStatsChart(rows);
+}
+
+// رسم بياني عمودي لإحصائيات نشاط المستخدم في الملف الشخصي
+function drawProfileStatsChart(rows) {
+    const el = document.getElementById('profileStatsChart');
+    if (!el || typeof Chart === 'undefined') return;
+    const colors = ['#0093c4', '#2e7d32', '#f39c12', '#e74c3c', '#9b59b6', '#7cb342'];
+    destroyChart('profileStats');
+    chartInstances.profileStats = new Chart(el.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: rows.map(r => r.label),
+            datasets: [{ label: currentLanguage === 'en' ? 'Count' : 'العدد', data: rows.map(r => +r.val || 0),
+                backgroundColor: rows.map((_, i) => colors[i % colors.length]), borderRadius: 6, maxBarThickness: 46 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { ticks: { font: { size: 10 } } } } }
+    });
 }
 
 // عمليات مستخدم مُحدّد (للسجل والتصدير) — افتراضياً المستخدم الحالي
@@ -7474,6 +7851,22 @@ function getOrderHistory(data, isDraft) {
         matched = getActivityEntries().filter(e => e.details && re.test(String(e.details) + ' '));
         matched.forEach(e => events.push({ createdAt: e.createdAt, actionType: e.actionType, username: e.username, details: e.details }));
     }
+    // 1ب) إن كان أمر الشراء منشأً من مسودة: نُدرج أحداث تلك المسودة (بحسب رقمها المخزَّن)
+    //      ليبدأ سجل عمليات الأمر من مرحلة المسودة. الأوامر المُصدَرة مباشرةً (بلا مسودة)
+    //      ليس لها sourceDraftNumber فلا يتغيّر سجلها.
+    if (!isDraft && data.sourceDraftNumber) {
+        const dnum = data.sourceDraftNumber;
+        const dre = new RegExp(_escRe(dnum) + '(\\D|$)');
+        const draftMatched = getActivityEntries().filter(e => e.details && dre.test(String(e.details) + ' '));
+        if (draftMatched.length) {
+            draftMatched.forEach(e => events.push({ createdAt: e.createdAt, actionType: e.actionType, username: e.username, details: e.details }));
+        } else {
+            // لا يوجد سجل نشاط للمسودة (قبل تفعيل جدول السجل) — نُضيف حدثاً تعريفياً للمسودة
+            const draftTs = data.createdAt ? new Date(new Date(data.createdAt).getTime() - 1000).toISOString() : data.createdAt;
+            events.push({ createdAt: draftTs, actionType: 'draft', username: data.staff || '—',
+                details: (en ? 'Originated from draft: ' : 'منشأ من المسودة: ') + dnum });
+        }
+    }
     const hasType = (t) => matched.some(e => e.actionType === t);
     // 2) أحداث مبنية من كائن الأمر (تُكمّل السجل إن لم تكن مُسجّلة مسبقاً)
     if (data.createdAt && !hasType(isDraft ? 'draft' : 'create')) {
@@ -7608,7 +8001,7 @@ function closePreview() {
 }
 
 function viewLPO(id) {
-    const l = lpoDrafts.find(x => x.id === id);
+    const l = lpoDrafts.find(x => String(x.id) === String(id));
     if (!l) return;
     previewLPOData = l;
     previewIsDraft = false;  // أمر محفوظ نهائي → بلا علامة مائية
@@ -7645,7 +8038,7 @@ function buildPreviewActionBar(l) {
 
 // معاينة مسودة (مع المحادثة)
 function previewDraft(id) {
-    const d = draftSaves.find(x => x.id === id);
+    const d = draftSaves.find(x => String(x.id) === String(id));
     if (!d) return;
     // بناء بيانات المعاينة من المسودة
     previewLPOData = {
@@ -8067,7 +8460,9 @@ async function quickPrintLPO(id) {
     // بناء منطقة الطباعة في حاوية ضمن الصفحة (إحداثيات موجبة) خلف المحتوى —
     // استخدام top/left سالبة كبيرة (‎-9999px) كان يُربك html2canvas ويُسبّب تعليق المتصفح.
     const holder = document.createElement('div');
-    holder.style.cssText = 'position:fixed; left:0; top:0; width:794px; background:#ffffff; z-index:-1; pointer-events:none;';
+    holder.id = '__quickPdfHolder';
+    // مخفي عن المستخدم بـ opacity:0 (لا z-index سالب الذي يُسبّب صفحة بيضاء)، ويُظهَر داخل النسخة عبر onclone
+    holder.style.cssText = 'position:fixed; left:0; top:0; width:794px; background:#ffffff; opacity:0; pointer-events:none; z-index:2147483647;';
     holder.setAttribute('aria-hidden', 'true');
     holder.innerHTML = buildLPOHtml(l, false);
     document.body.appendChild(holder);
@@ -8080,7 +8475,8 @@ async function quickPrintLPO(id) {
             margin: 4,
             filename: (l.number || 'LPO') + '.pdf',
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 860,
+                onclone: function (cdoc) { var h = cdoc.getElementById('__quickPdfHolder'); if (h) { h.style.opacity = '1'; h.style.position = 'static'; } } },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         }).from(el).save();
     } catch (e) {
