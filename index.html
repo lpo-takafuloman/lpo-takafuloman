@@ -1013,6 +1013,7 @@
                 <thead>
                     <tr>
                         <th class="sortable" data-col="9" onclick="sortLPOTable(9)">تاريخ التسجيل <span class="sort-arrow">⇅</span></th>
+                        <th class="col-actions" style="width:46px; text-align:center;">الإجراء</th>
                         <th class="sortable" data-col="0" onclick="sortLPOTable(0)">الرقم <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="1" onclick="sortLPOTable(1)">المورد <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="2" onclick="sortLPOTable(2)">نوع الخدمة <span class="sort-arrow">⇅</span></th>
@@ -1022,7 +1023,6 @@
                         <th class="sortable" data-col="5" onclick="sortLPOTable(5)">الحالة <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="6" onclick="sortLPOTable(6)">الموظف <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="10" onclick="sortLPOTable(10)">آخر تعديل <span class="sort-arrow">⇅</span></th>
-                        <th class="col-actions" style="width:46px; text-align:center;">الإجراء</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -2256,6 +2256,21 @@ function syncCurrentUserRoleLive() {
     const sbr = document.getElementById('sidebarRole'); if (sbr) sbr.textContent = roleLabel(currentUser.role);
 }
 
+// إعادة رسم الصفحة النشطة حالياً (تُستخدم بعد تغيّر البيانات أو الصلاحيات)
+function rerenderActivePage() {
+    const active = document.querySelector('.page.active');
+    if (!active) return;
+    const id = active.id.replace('page-', '');
+    if (id === 'dashboard') loadDashboard();
+    else if (id === 'lpo-management') { loadDrafts(); loadLPOList(); }
+    else if (id === 'suppliers') loadSuppliersList();
+    else if (id === 'reports') { populateAllFilters(); generateReport(); }
+    else if (id === 'admin') { loadAdminPanel(); loadRolesPage(); }
+    else if (id === 'control-panel') loadControlPanel();
+    else if (id === 'trash') loadTrash();
+    else if (id === 'profile') loadProfile();
+}
+
 let realtimeTimer = null;
 async function refreshFromRealtime() {
     // إعادة تحميل خفيفة عند أي تغيير من مستخدم آخر، مع تجميع التحديثات المتتابعة
@@ -2264,20 +2279,36 @@ async function refreshFromRealtime() {
         await loadAllFromCloud();           // يُعيد أيضاً تحميل مصفوفة الصلاحيات (loadRolePermissions)
         syncCurrentUserRoleLive();          // مزامنة دور المستخدم الحالي إن تغيّر
         try { applyPermissionsToUI(); } catch (e) {}  // تطبيق الصلاحيات الجديدة على عناصر الواجهة
-        // إعادة رسم الصفحة النشطة حالياً (لتظهر/تختفي أزرار الإجراءات حسب الصلاحيات الجديدة)
-        const active = document.querySelector('.page.active');
-        if (active) {
-            const id = active.id.replace('page-', '');
-            if (id === 'dashboard') loadDashboard();
-            else if (id === 'lpo-management') { loadDrafts(); loadLPOList(); }
-            else if (id === 'suppliers') loadSuppliersList();
-            else if (id === 'reports') { populateAllFilters(); generateReport(); }
-            else if (id === 'admin') { loadAdminPanel(); loadRolesPage(); }
-            else if (id === 'control-panel') loadControlPanel();
-            else if (id === 'trash') loadTrash();
-            else if (id === 'profile') loadProfile();
-        }
+        rerenderActivePage();               // لتظهر/تختفي أزرار الإجراءات حسب الصلاحيات الجديدة
     }, 400);
+}
+
+// تحديث دور المستخدم الحالي وصلاحياته من السحابة (مستقل عن الـ Realtime) — يُستدعى عند التنقّل
+// بين الصفحات، فتسري أي صلاحية أو دور جديد يمنحه مدير النظام فور انتقال المستخدم لأي صفحة
+// دون الحاجة لإعادة تسجيل الدخول. يُعاد الرسم فقط عند حدوث تغيير فعلي.
+let _lastAccessRefresh = 0, _accessRefreshing = false;
+async function refreshMyAccess(force) {
+    if (!sb || isGuest || !currentUser || _accessRefreshing) return;
+    const now = Date.now();
+    if (!force && (now - _lastAccessRefresh) < 4000) return;  // لا نُكثر الطلبات
+    _lastAccessRefresh = now; _accessRefreshing = true;
+    let changed = false;
+    try {
+        // 1) دور المستخدم الحالي (قد يكون مُنح/غُيّر من مدير النظام)
+        if (currentUser.authId && (currentUser.email || '').toLowerCase() !== DEFAULT_SYSADMIN_EMAIL) {
+            const { data } = await sb.from('app_users').select('role').eq('auth_id', currentUser.authId).maybeSingle();
+            if (data && data.role && data.role !== currentUser.role) {
+                currentUser.role = data.role;
+                const sbr = document.getElementById('sidebarRole'); if (sbr) sbr.textContent = roleLabel(currentUser.role);
+                changed = true;
+            }
+        }
+        // 2) مصفوفة الصلاحيات (قد تكون عُدّلت لدور المستخدم)
+        const before = JSON.stringify(rolePermissions[currentUser.role] || {});
+        await loadRolePermissions();
+        if (before !== JSON.stringify(rolePermissions[currentUser.role] || {})) changed = true;
+        if (changed) { applyPermissionsToUI(); rerenderActivePage(); }
+    } catch (e) { /* تجاهل */ } finally { _accessRefreshing = false; }
 }
 
 // حساب بصمة SHA-256 (مُبقاة للتوافق، غير مستخدمة مع مصادقة Supabase)
@@ -3095,22 +3126,27 @@ async function handleLogin(event) {
     }
 
     // جلب ملف المستخدم (الصلاحية) من جدول app_users
-    let role = 'new_user', username = emailVal;
+    const metaName = (data.user && data.user.user_metadata && (data.user.user_metadata.full_name || data.user.user_metadata.name)) || '';
+    let role = 'new_user', username = metaName || emailVal, profileExists = false;
     try {
         const { data: profile } = await sb.from('app_users').select('*').eq('auth_id', data.user.id).maybeSingle();
-        if (profile) { role = profile.role; username = profile.username || emailVal; }
+        if (profile) { role = profile.role; username = profile.username || metaName || emailVal; profileExists = true; }
     } catch (e) {}
 
     // ضمان أن المدير الافتراضي للنظام يبقى مدير نظام دائماً (مزامنة ذاتية — يُنشئ الصف إن لم يوجد)
     if (emailVal === DEFAULT_SYSADMIN_EMAIL) {
         role = 'sysadmin';
         try {
-            const { data: existing } = await sb.from('app_users').select('id').eq('auth_id', data.user.id).maybeSingle();
-            if (existing) {
-                await sb.from('app_users').update({ role: 'sysadmin' }).eq('auth_id', data.user.id);
-            } else {
-                await sb.from('app_users').insert({ auth_id: data.user.id, username: username, email: emailVal, role: 'sysadmin' });
-            }
+            if (profileExists) await sb.from('app_users').update({ role: 'sysadmin' }).eq('auth_id', data.user.id);
+            else { await sb.from('app_users').insert({ auth_id: data.user.id, username: username, email: emailVal, role: 'sysadmin' }); profileExists = true; }
+        } catch (e) {}
+    } else if (!profileExists) {
+        // إنشاء صف المستخدم إن لم يوجد — يحدث غالباً لأن إنشاء الصف وقت التسجيل يفشل
+        // (المستخدم غير مُصادَق قبل تفعيل البريد). نُنشئه الآن بعد الدخول (مُصادَق) حتى يظهر
+        // مباشرةً في "إدارة المستخدمين" ويستطيع مدير النظام منحه دوراً وصلاحيات.
+        try {
+            await sb.from('app_users').insert({ auth_id: data.user.id, username: username, email: emailVal, role: 'new_user' });
+            profileExists = true;
         } catch (e) {}
     }
 
@@ -3145,6 +3181,8 @@ async function startApp() {
     // تحميل كل البيانات من السحابة + الاشتراك في التحديث اللحظي
     await loadAllFromCloud();
     subscribeRealtime();
+    // مزامنة دورية لدور المستخدم وصلاحياته كل 45 ثانية (احتياط إضافي مستقل عن الـ Realtime)
+    if (!window._accessPollStarted) { window._accessPollStarted = true; setInterval(function () { refreshMyAccess(); }, 45000); }
 
     // تسجيل آخر دخول للمستخدم (غير الزائر)
     recordLogin();
@@ -3265,6 +3303,8 @@ function showPage(pageId, navItem) {
     const pageEl = document.getElementById('page-' + pageId);
     pageEl.classList.add('active');
     if (navItem) navItem.classList.add('active');
+    // تحديث دور المستخدم وصلاحياته من السحابة عند كل تنقّل (تسري الصلاحيات الجديدة فوراً)
+    refreshMyAccess();
 
     const titles = {
         'dashboard': 'لوحة التحكم', 'lpo-management': 'إدارة أوامر الشراء',
@@ -4844,10 +4884,11 @@ function renderLPOList() {
             row.setAttribute('onclick', `viewLPO('${l.id}')`);
             // إبراز أوامر اليوم (تسجيلاً أو إصداراً) بخط عريض في عمودي رقم الأمر وتاريخ التسجيل
             const bwL = (isTodayDate(l.createdAt) || isTodayDate(l.date)) ? ' style="font-weight:800;"' : '';
-            row.innerHTML = `<td${bwL}>${fmtRecordDate(l.createdAt)}</td><td${bwL}>${l.number}</td><td>${l.supplierName}</td><td>${escapeHtml(orderServiceType(l)) || '<span style="color:#bbb;">—</span>'}</td><td>${deptLabel}</td><td>${l.date}</td><td>${fmt(l.total)}</td>
-            <td>${approvalBadge(l)}${reasonLine}</td><td>${l.staff}</td>
-            <td>${lastModifiedCell(l, actEntries)}</td>
-            <td class="col-actions" style="text-align:center; white-space:nowrap;" onclick="event.stopPropagation();">${kebab}</td>`;
+            row.innerHTML = `<td${bwL}>${fmtRecordDate(l.createdAt)}</td>`
+            + `<td class="col-actions" style="text-align:center; white-space:nowrap;" onclick="event.stopPropagation();">${kebab}</td>`
+            + `<td${bwL}>${l.number}</td><td>${l.supplierName}</td><td>${escapeHtml(orderServiceType(l)) || '<span style="color:#bbb;">—</span>'}</td><td>${deptLabel}</td><td>${l.date}</td><td>${fmt(l.total)}</td>`
+            + `<td>${approvalBadge(l)}${reasonLine}</td><td>${l.staff}</td>`
+            + `<td>${lastModifiedCell(l, actEntries)}</td>`;
         });
     }
     updateSortArrows();
