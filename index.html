@@ -20,10 +20,26 @@
     <!-- محمِّل كسول للمكتبات الثقيلة (XLSX ~1MB، ExcelJS ~1MB، html2pdf) — تُحمَّل عند الحاجة فقط لتسريع فتح الصفحة -->
     <script>
     (function(){
+        // لكل مكتبة عدة مصادر بديلة (CDN) تُجرَّب بالترتيب حتى ينجح أحدها —
+        // حتى لو حُجب أو تعطّل أحد مزوّدي الـ CDN في بلد المستخدم، يعمل التصدير/الاستيراد.
         var LIB_SRC = {
-            xlsx:     'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js',
-            exceljs:  'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js',
-            html2pdf: 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'
+            xlsx: [
+                'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+                'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js',
+                'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js'
+            ],
+            exceljs: [
+                'https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js',
+                'https://unpkg.com/exceljs@4.4.0/dist/exceljs.min.js'
+            ],
+            html2pdf: [
+                'https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js',
+                'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js',
+                'https://unpkg.com/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js'
+            ]
         };
         var LIB_READY = {
             xlsx:     function(){ return typeof XLSX !== 'undefined'; },
@@ -31,16 +47,36 @@
             html2pdf: function(){ return typeof html2pdf !== 'undefined'; }
         };
         var cache = {};
-        // يُحمِّل المكتبة مرة واحدة ويُعيد Promise يُحلّ بنجاح/فشل التحميل
+        // تحميل سكربت واحد ويُعيد Promise(boolean) — مع مهلة زمنية حتى لا يتعلّق الانتظار
+        function loadScript(url){
+            return new Promise(function(resolve){
+                var done = false;
+                var s = document.createElement('script');
+                s.src = url; s.async = true;
+                var to = setTimeout(function(){ if(!done){ done = true; try{ s.remove(); }catch(e){} resolve(false); } }, 15000);
+                s.onload  = function(){ if(!done){ done = true; clearTimeout(to); resolve(true); } };
+                s.onerror = function(){ if(!done){ done = true; clearTimeout(to); try{ s.remove(); }catch(e){} resolve(false); } };
+                document.head.appendChild(s);
+            });
+        }
+        // يُحمِّل المكتبة مرة واحدة مجرّباً كل المصادر بالترتيب؛ يُعيد Promise(boolean)
         window.ensureLib = function(name){
             if (LIB_READY[name] && LIB_READY[name]()) return Promise.resolve(true);
             if (cache[name]) return cache[name];
-            cache[name] = new Promise(function(resolve){
-                var s = document.createElement('script');
-                s.src = LIB_SRC[name]; s.async = true;
-                s.onload = function(){ resolve(true); };
-                s.onerror = function(){ cache[name] = null; resolve(false); };
-                document.head.appendChild(s);
+            var sources = LIB_SRC[name] || [];
+            cache[name] = (function(){
+                return sources.reduce(function(chain, url){
+                    return chain.then(function(ok){
+                        if (ok) return true;
+                        return loadScript(url).then(function(loaded){
+                            // نتأكد أن الكائن العالمي أصبح متاحاً فعلاً بعد التحميل
+                            return loaded && LIB_READY[name] && LIB_READY[name]() ? true : (loaded ? !!(LIB_READY[name] && LIB_READY[name]()) : false);
+                        });
+                    });
+                }, Promise.resolve(false));
+            })().then(function(ok){
+                if (!ok) cache[name] = null; // اسمح بإعادة المحاولة لاحقاً
+                return ok;
             });
             return cache[name];
         };
@@ -151,14 +187,17 @@
 
         /* Main */
         .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-        .topbar { background: white; border-bottom: 2px solid #e8eef5; padding: 0.4rem 2rem; display: flex; align-items: center; justify-content: space-between; }
-        .topbar-left { display: flex; align-items: center; gap: 1rem; }
+        .topbar { background: white; border-bottom: 2px solid #e8eef5; padding: 0.4rem 2rem; display: flex; align-items: center; gap: 1rem; }
+        /* الشريط العلوي: الشعار يميناً، عنوان الصفحة في المنتصف تماماً، الجرس يساراً — دون تغيير ارتفاع/عرض الشريط */
+        .topbar-left { flex: 1 1 0; display: flex; align-items: center; gap: 1rem; min-width: 0; }
+        .topbar-center { flex: 0 1 auto; display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; }
+        .topbar-right { flex: 1 1 0; display: flex; align-items: center; justify-content: flex-end; gap: 18px; }
         .topbar-logo { display: flex; align-items: center; }
         .topbar-logo img { height: 38px; width: auto; display: block; }
         .topbar-titles { display: flex; flex-direction: column; gap: 1px; }
         .topbar-main-title { font-size: 15px; font-weight: 700; color: #0093c4; line-height: 1.2; }
         .topbar-sub-title { font-size: 11px; color: #7cb342; font-weight: 600; line-height: 1.2; }
-        .topbar-page-title { font-size: 14px; font-weight: 600; color: #0093c4; display: flex; align-items: center; gap: 8px; }
+        .topbar-page-title { font-size: 15.5px; font-weight: 700; color: #0093c4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; letter-spacing: 0.2px; }
         /* جرس الإشعارات */
         .notif-wrap { position: relative; }
         .notif-bell { position: relative; background: #f1f6f9; border: 1px solid #e0e9ef; color: #0093c4; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
@@ -199,9 +238,9 @@
         #lpoListTable tbody tr, #draftsTable tbody tr { cursor: pointer; }
         #lpoListTable td .btn-small, #draftsTable td .btn-small { padding: 4px 7px; font-size: 11px; }
         /* سحب/إزاحة الأعمدة من صف العنوان */
-        #lpoListTable thead th, #suppliersTable thead th, #draftsTable thead th { -webkit-user-select: none; user-select: none; position: relative; }
-        #lpoListTable thead th.col-dragging, #suppliersTable thead th.col-dragging, #draftsTable thead th.col-dragging { opacity: 0.4; }
-        #lpoListTable thead th.col-drag-over, #suppliersTable thead th.col-drag-over, #draftsTable thead th.col-drag-over { background: #dff1fb; box-shadow: inset 3px 0 0 #0093c4, inset -3px 0 0 #0093c4; }
+        #lpoListTable thead th, #suppliersTable thead th, #draftsTable thead th, #usersTable thead th, #trashOrdersTable thead th, #trashDraftsTable thead th, #trashSuppliersTable thead th { -webkit-user-select: none; user-select: none; position: relative; }
+        #lpoListTable thead th.col-dragging, #suppliersTable thead th.col-dragging, #draftsTable thead th.col-dragging, #usersTable thead th.col-dragging, #trashOrdersTable thead th.col-dragging, #trashDraftsTable thead th.col-dragging, #trashSuppliersTable thead th.col-dragging { opacity: 0.4; }
+        #lpoListTable thead th.col-drag-over, #suppliersTable thead th.col-drag-over, #draftsTable thead th.col-drag-over, #usersTable thead th.col-drag-over, #trashOrdersTable thead th.col-drag-over, #trashDraftsTable thead th.col-drag-over, #trashSuppliersTable thead th.col-drag-over { background: #dff1fb; box-shadow: inset 3px 0 0 #0093c4, inset -3px 0 0 #0093c4; }
         /* مقبض تمديد/تحجيم عرض العمود عند الحافة */
         .col-resize-handle { position: absolute; inset-inline-end: 0; top: 0; height: 100%; width: 8px; cursor: col-resize; z-index: 4; }
         .col-resize-handle:hover { background: rgba(0,147,196,0.3); }
@@ -210,6 +249,8 @@
         #reportPrintArea.pdf-exporting .card, #reportPrintArea.pdf-exporting .stat-card,
         #reportPrintArea.pdf-exporting table, #reportPrintArea.pdf-exporting canvas { page-break-inside: avoid; break-inside: avoid; }
         #reportPrintArea.pdf-exporting .card { box-shadow: none; }
+        #reportPrintArea.pdf-exporting .sort-arrow { display: none; }
+        #reportPrintArea.pdf-exporting .col-resize-handle { display: none; }
         /* صف المورد قابل للنقر لاستعراض البيانات */
         #suppliersTable tbody tr { cursor: pointer; }
         /* نافذة استعراض بيانات المورد */
@@ -269,10 +310,10 @@
         /* Tables */
         .table-responsive { overflow-x: auto; border-radius: 8px; border: 1px solid #e8eef5; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { background: #f8fafc; padding: 13px; text-align: right; font-weight: 700; color: #0093c4; border-bottom: 2px solid #e8eef5; }
+        th { background: #f8fafc; padding: 13px; text-align: start; font-weight: 700; color: #0093c4; border-bottom: 2px solid #e8eef5; }
         th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
         th.sortable:hover { background: #eef5f8; }
-        th.sortable .sort-arrow { font-size: 10px; opacity: 0.4; margin-right: 3px; }
+        th.sortable .sort-arrow { font-size: 10px; opacity: 0.4; margin-inline-start: 3px; }
         th.sortable.sorted-asc .sort-arrow, th.sortable.sorted-desc .sort-arrow { opacity: 1; color: #0093c4; }
         td { padding: 12px 13px; border-bottom: 1px solid #f0f2f5; }
         tr:hover td { background: #f9fbfc; }
@@ -300,6 +341,106 @@
         .stat-icon { font-size: 28px; margin-bottom: 6px; }
         .stat-label { font-size: 12px; color: #999; margin-bottom: 6px; }
         .stat-value { font-size: 26px; font-weight: 700; color: #0093c4; }
+        /* صف بطاقات إحصائيات التقارير: كل البطاقات في سطر واحد مضغوط (دون تصغير النصوص) */
+        .report-stats-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.65rem; margin-bottom: 1.5rem; }
+        .report-stats-row .stat-card { padding: 0.8rem 0.45rem; min-width: 0; }
+        .report-stats-row .stat-card:nth-child(2) { border-top-color: #7cb342; }
+        .report-stats-row .stat-card:nth-child(3) { border-top-color: #f39c12; }
+        .report-stats-row .stat-card:nth-child(4) { border-top-color: #9b59b6; }
+        .report-stats-row .stat-icon { font-size: 22px; margin-bottom: 4px; }
+        @media (max-width: 1150px) { .report-stats-row { grid-template-columns: repeat(4, 1fr); } }
+        @media (max-width: 680px)  { .report-stats-row { grid-template-columns: repeat(2, 1fr); } }
+        /* بطاقات إحصائيات مضغوطة أفقياً (الأيقونة بجانب النص) دون تغيير حجم الخط */
+        .stats-grid-slim { gap: 0.8rem; margin-bottom: 1rem; }
+        .stats-grid-slim .stat-card { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0 12px; text-align: start; padding: 0.65rem 1rem; }
+        .stats-grid-slim .stat-icon { grid-row: 1 / span 2; font-size: 30px; margin: 0; align-self: center; line-height: 1; }
+        .stats-grid-slim .stat-label { grid-column: 2; margin: 0 0 1px; }
+        .stats-grid-slim .stat-value { grid-column: 2; line-height: 1.1; }
+        /* قسم فلاتر مضغوط: قوائم أنحف ومسافات أقل بين الصفوف */
+        .filter-grid-4 { grid-template-columns: repeat(4, 1fr); }
+        .filter-section-compact { padding: 1rem 1.1rem; margin-bottom: 1rem; }
+        .filter-section-compact .filter-title { margin-bottom: 0.6rem; }
+        .filter-section-compact .filter-grid { gap: 0.6rem; margin-bottom: 0.6rem; }
+        .filter-section-compact .filter-grid:last-of-type { margin-bottom: 0; }
+        .filter-section-compact .ms-control { min-height: 34px; padding: 3px 8px; }
+        .filter-section-compact .filter-grid input, .filter-section-compact .filter-grid select { padding: 7px 10px; }
+        .filter-section-compact .filter-actions { margin-top: 0.7rem; }
+        @media (max-width: 900px) { .filter-grid-4 { grid-template-columns: repeat(2, 1fr); } }
+
+        /* ===== الملف الشخصي (Profile) ===== */
+        .profile-hero { background: linear-gradient(135deg, #0093c4 0%, #00698f 100%); color: #fff; border: none; }
+        .profile-hero .card-title, .profile-hero * { color: #fff; }
+        .profile-hero-inner { display: flex; align-items: center; gap: 1.4rem; flex-wrap: wrap; }
+        .profile-avatar { font-size: 72px; line-height: 1; opacity: 0.95; }
+        .profile-hero-info { min-width: 0; }
+        .profile-name { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+        .profile-role { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+        .profile-role .role-badge { background: rgba(255,255,255,0.22); border: 1px solid rgba(255,255,255,0.5); border-radius: 20px; padding: 3px 14px; font-size: 13px; font-weight: 700; }
+        .profile-jobtitle { font-size: 14px; opacity: 0.95; font-weight: 600; }
+        .profile-contact { display: flex; gap: 20px; flex-wrap: wrap; font-size: 13.5px; opacity: 0.97; }
+        .profile-contact span { display: inline-flex; align-items: center; gap: 7px; }
+        .profile-contact i { opacity: 0.85; }
+        /* أداة تصفّح الملفات (كتابة وبحث) داخل ترويسة الملف الزرقاء */
+        .profile-switch { margin-inline-start: auto; min-width: 240px; }
+        .profile-switch > label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 6px; opacity: 0.95; }
+        .profile-switch-box { position: relative; display: flex; align-items: center; background: rgba(255,255,255,0.95); border-radius: 9px; padding: 0 10px; }
+        .profile-switch-box > i { color: #0093c4; font-size: 13px; }
+        .profile-switch-box input { flex: 1; border: none; outline: none; background: transparent; padding: 9px 8px; font-size: 13px; font-family: inherit; color: #334; }
+        .profile-switch-list { position: absolute; top: calc(100% + 4px); inset-inline-start: 0; inset-inline-end: 0; background: #fff; border: 1px solid #e3eaf0; border-radius: 9px; box-shadow: 0 12px 30px rgba(0,0,0,0.18); max-height: 260px; overflow-y: auto; z-index: 1500; }
+        .psw-item { display: flex; align-items: center; gap: 8px; padding: 8px 11px; cursor: pointer; color: #334; font-size: 13px; }
+        .psw-item:hover { background: #eef5f9; }
+        .psw-item i { color: #0093c4; }
+        .psw-item small { color: #8aa2b0; margin-inline-start: auto; font-size: 11px; }
+        .psw-empty { padding: 12px; text-align: center; color: #9fb0bc; font-size: 12.5px; }
+        .profile-viewing-banner { margin-top: 14px; background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.4); border-radius: 9px; padding: 9px 13px; font-size: 13px; }
+        .profile-viewing-banner a { color: #fff; font-weight: 700; text-decoration: underline; }
+        .profile-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.3rem; }
+        .profile-form-grid label { display: block; font-size: 12.5px; font-weight: 600; color: #667; margin-bottom: 6px; }
+        .profile-form-grid input { width: 100%; padding: 10px 13px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 14px; font-family: inherit; box-sizing: border-box; }
+        .profile-form-grid input:focus { border-color: #0093c4; outline: none; }
+        .profile-form-grid input[readonly] { background: #f4f7fa; color: #8a97a3; cursor: not-allowed; }
+        .perm-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+        .perm-module { border: 1px solid #e8eef5; border-radius: 10px; padding: 0.7rem 0.9rem; background: #f8fafc; min-width: 180px; flex: 1 1 200px; }
+        .perm-module-title { font-size: 13px; font-weight: 700; color: #0093c4; margin-bottom: 8px; display: flex; align-items: center; gap: 7px; }
+        .perm-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+        .perm-tag { font-size: 11px; font-weight: 700; border-radius: 12px; padding: 2px 10px; }
+        .perm-tag.on { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+        .perm-tag.off { background: #f3f4f6; color: #bbb; border: 1px solid #e3e6ea; text-decoration: line-through; }
+        /* ===== سلة المهملات (Trash) ===== */
+        .trash-note { background: #fff3f0; border: 1px solid #f5c6b8; border-radius: 8px; padding: 0.9rem 1rem; font-size: 13px; color: #9a4a38; line-height: 1.8; }
+        .btn-restore { background: #27ae60; color: #fff; border-color: #27ae60; }
+        .btn-restore:hover { background: #1f9b55; }
+        .btn-purge { background: #fff; color: #c0392b; border: 1.5px solid #e9a79f; }
+        .btn-purge:hover { background: #fdecea; }
+        @media (max-width: 760px) { .profile-form-grid { grid-template-columns: 1fr; } .profile-hero-inner { justify-content: center; text-align: center; } }
+
+        /* ===== سجل العمليات (Operations Log / Timeline) ===== */
+        .ops-log-box { margin-top: 1.2rem; border: 1px solid #e8eef5; border-radius: 12px; background: #fcfdfe; overflow: hidden; }
+        .ops-log-head { background: linear-gradient(135deg, #0093c4 0%, #00698f 100%); color: #fff; padding: 0.7rem 1rem; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .ops-log-head .ops-count { margin-inline-start: auto; background: rgba(255,255,255,0.25); border-radius: 20px; padding: 1px 11px; font-size: 12px; font-weight: 700; }
+        .ops-timeline { list-style: none; margin: 0; padding: 0.9rem 1rem 0.9rem 1rem; max-height: 340px; overflow-y: auto; }
+        .ops-item { position: relative; padding-inline-start: 26px; padding-bottom: 1rem; }
+        .ops-item:last-child { padding-bottom: 0; }
+        .ops-item::before { content: ''; position: absolute; inset-inline-start: 6px; top: 16px; bottom: -2px; width: 2px; background: #e3eaf0; }
+        .ops-item:last-child::before { display: none; }
+        .ops-dot { position: absolute; inset-inline-start: 0; top: 2px; width: 14px; height: 14px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1px #cdd8e0; }
+        .ops-row1 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .ops-badge { font-size: 11px; font-weight: 700; border-radius: 12px; padding: 2px 10px; }
+        .ops-when { font-size: 11.5px; color: #8aa2b0; white-space: nowrap; }
+        .ops-user { font-size: 12px; color: #55606a; font-weight: 600; }
+        .ops-user i { color: #9fb0bc; margin-inline-end: 3px; }
+        .ops-detail { font-size: 12.5px; color: #44525c; margin-top: 3px; line-height: 1.6; }
+        .ops-empty { padding: 1.4rem; text-align: center; color: #9fb0bc; font-size: 13px; }
+
+        /* ===== زر النقاط + قائمة إجراءات الصف ===== */
+        #lpoListTable .col-actions { width: 46px; }
+        .kebab-btn { background: #f1f5f8; border: 1px solid #e1e8ee; color: #5a6b7a; width: 30px; height: 30px; border-radius: 7px; cursor: pointer; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; transition: background 0.15s, color 0.15s; }
+        .kebab-btn:hover { background: #0093c4; color: #fff; border-color: #0093c4; }
+        .row-action-menu { position: fixed; background: #fff; border: 1px solid #e3eaf0; border-radius: 10px; box-shadow: 0 12px 34px rgba(0,0,0,0.17); padding: 6px; z-index: 3000; animation: ramIn 0.14s ease-out; }
+        @keyframes ramIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: none; } }
+        .ram-item { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: none; text-align: start; padding: 9px 12px; border-radius: 7px; font-size: 13px; font-family: inherit; color: #3a4651; cursor: pointer; font-weight: 600; }
+        .ram-item:hover { background: #eef5f9; }
+        .ram-item i { width: 16px; text-align: center; }
 
         .chart-container { position: relative; height: 320px; width: 100%; max-width: 100%; min-width: 0; }
         .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
@@ -475,12 +616,14 @@
             <div class="sidebar-user"><i class="fas fa-user-circle"></i> <span id="sidebarUsername">مستخدم</span><br><span id="sidebarRole"></span></div>
         </div>
         <div class="sidebar-nav">
-            <div class="nav-item active" onclick="showPage('dashboard', this)"><i class="fas fa-chart-line"></i> لوحة التحكم</div>
+            <div class="nav-item active" data-perm="dashboard:view" onclick="showPage('dashboard', this)"><i class="fas fa-chart-line"></i> لوحة التحكم</div>
             <div class="nav-item" data-perm="orders:view" onclick="showPage('lpo-management', this)"><i class="fas fa-clipboard-list"></i> إدارة أوامر الشراء</div>
             <div class="nav-item" data-perm="suppliers:view" onclick="showPage('suppliers', this)"><i class="fas fa-building"></i> إدارة الموردون</div>
             <div class="nav-item hidden-for-guest perm-hidden" id="controlNav" data-perm="control:view" onclick="showPage('control-panel', this)"><i class="fas fa-sliders-h"></i> الإدارة والتحكم</div>
             <div class="nav-item" data-perm="reports:view" onclick="showPage('reports', this)"><i class="fas fa-chart-bar"></i> التقارير</div>
             <div class="nav-item hidden-for-guest perm-hidden" id="adminNav" onclick="showPage('admin', this)"><i class="fas fa-cog"></i> مدير النظام</div>
+            <div class="nav-item hidden-for-guest perm-hidden" id="trashNav" data-perm="trash:view" onclick="showPage('trash', this)"><i class="fas fa-trash-restore"></i> سلة المهملات</div>
+            <div class="nav-item hidden-for-guest" id="profileNav" onclick="_profileViewUserId=null; showPage('profile', this)"><i class="fas fa-id-badge"></i> الملف الشخصي</div>
             <div class="nav-item" onclick="showPage('about', this)"><i class="fas fa-info-circle"></i> حول البرنامج</div>
         </div>
         <div class="sidebar-footer">
@@ -502,11 +645,12 @@
                     <div class="topbar-sub-title">تكافل عمان للتأمين</div>
                 </div>
             </div>
-            <div style="display:flex; align-items:center; gap:18px;">
-                <div class="topbar-page-title">
-                    <span id="guestBadge" class="guest-badge" style="display:none;"><i class="fas fa-eye"></i> وضع الزائر</span>
-                    <span id="pageTitle">لوحة التحكم</span>
-                </div>
+            <!-- عنوان الصفحة المختارة — في منتصف الشريط العلوي بنفس مستوى سطر الشعار -->
+            <div class="topbar-center">
+                <span id="guestBadge" class="guest-badge" style="display:none;"><i class="fas fa-eye"></i> وضع الزائر</span>
+                <span id="pageTitle" class="topbar-page-title">لوحة التحكم</span>
+            </div>
+            <div class="topbar-right">
                 <!-- جرس الإشعارات (انتهاء السجل التجاري) -->
                 <div id="notifWrap" class="notif-wrap" data-perm="notifications:view" style="display:none;">
                     <button type="button" id="notifBell" class="notif-bell" onclick="event.stopPropagation(); toggleNotifPanel()" title="الإشعارات">
@@ -741,7 +885,6 @@
     <!-- تبويب: المسودات -->
     <div class="tab-content" id="tab-drafts">
     <div class="card">
-        <button type="button" class="big-new-btn" data-perm="orders:create" onclick="goToNewLPO()"><i class="fas fa-plus-circle"></i> New L.P.O — إنشاء أمر شراء جديد</button>
         <div class="card-header"><div class="card-title"><i class="fas fa-file-alt"></i> إدارة المسودات</div></div>
         <div class="filter-section">
             <div class="filter-title"><i class="fas fa-filter"></i> فلاتر البحث</div>
@@ -778,9 +921,8 @@
 
     <!-- تبويب: أوامر الشراء -->
     <div class="tab-content active" id="tab-list">
-    <button type="button" class="big-new-btn" onclick="goToNewLPO()"><i class="fas fa-plus-circle"></i> New L.P.O — إنشاء أمر شراء جديد</button>
     <!-- Stats -->
-    <div class="stats-grid">
+    <div class="stats-grid stats-grid-slim">
         <div class="stat-card">
             <div class="stat-icon">📋</div>
             <div class="stat-label">عدد الأوامر</div>
@@ -805,9 +947,9 @@
 
     <div class="card">
         <div class="card-header"><div class="card-title"><i class="fas fa-list-ul"></i> أوامر الشراء</div></div>
-        <div class="filter-section">
+        <div class="filter-section filter-section-compact">
             <div class="filter-title"><i class="fas fa-filter"></i> فلاتر البحث</div>
-            <div class="filter-grid">
+            <div class="filter-grid filter-grid-4">
                 <div style="position:relative;">
                     <input type="text" id="filterOrderNumber" placeholder="رقم الأمر (انقر للعرض)..." autocomplete="off" oninput="onOrderNumberInput()" onfocus="showOrderNumberDropdown()">
                     <div id="orderNumberDropdown" class="dropdown-list"></div>
@@ -820,16 +962,14 @@
                     <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل أنواع الخدمات --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
                     <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
                 </div>
-            </div>
-            <div class="filter-grid">
                 <div class="ms-wrap" data-ms="msUser">
                     <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل المستخدمين --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
                     <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
                 </div>
+            </div>
+            <div class="filter-grid filter-grid-4">
                 <select id="filterStatus" onchange="filterLPOs()"><option value="">-- كل الحالات --</option><option value="__pending">بانتظار الاعتماد</option><option value="__approved">معتمد</option><option value="__rejected">مرفوض</option></select>
                 <input type="date" lang="en" dir="ltr" id="filterFromDate" onchange="filterLPOs()" title="من تاريخ">
-            </div>
-            <div class="filter-grid">
                 <input type="date" lang="en" dir="ltr" id="filterToDate" onchange="filterLPOs()" title="إلى تاريخ">
                 <div class="ms-wrap" data-ms="msDepartment">
                     <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الأقسام --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
@@ -839,6 +979,7 @@
             <div class="filter-actions">
                 <button type="button" class="btn btn-danger btn-small" onclick="clearLPOFilters()"><i class="fas fa-eraser"></i> مسح التصفية</button>
                 <button type="button" class="btn btn-success btn-small" onclick="exportLPOList()"><i class="fas fa-file-excel"></i> تصدير Excel</button>
+                <button type="button" class="btn btn-small" style="background:#c0392b; color:#fff;" onclick="printLPOListPDF()"><i class="fas fa-file-pdf"></i> طباعة PDF</button>
             </div>
         </div>
         <div class="table-responsive">
@@ -854,7 +995,8 @@
                         <th class="sortable" data-col="4" onclick="sortLPOTable(4)">المبلغ (ر.ع) <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="5" onclick="sortLPOTable(5)">الحالة <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="6" onclick="sortLPOTable(6)">الموظف <span class="sort-arrow">⇅</span></th>
-                        <th>الإجراء</th>
+                        <th class="sortable" data-col="10" onclick="sortLPOTable(10)">آخر تعديل <span class="sort-arrow">⇅</span></th>
+                        <th class="col-actions" style="width:46px; text-align:center;">الإجراء</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -949,8 +1091,8 @@
     <!-- منطقة الطباعة: كل ما بداخلها يُصدّر إلى PDF -->
     <div id="reportPrintArea">
 
-    <!-- (2) الإحصائيات أسفل الفلاتر -->
-    <div class="stats-grid">
+    <!-- (2) بطاقات الإحصائيات المختصرة في سطر واحد (الإجماليات + حسب حالة الأوامر) -->
+    <div class="report-stats-row">
         <div class="stat-card">
             <div class="stat-icon">📋</div>
             <div class="stat-label">إجمالي الأوامر</div>
@@ -971,30 +1113,23 @@
             <div class="stat-label">متوسط الأمر (ر.ع)</div>
             <div class="stat-value" id="repStatAvg">0</div>
         </div>
-    </div>
-
-    <!-- إحصائية حسب حالة الأوامر -->
-    <div class="card" style="margin-bottom:1.5rem;">
-        <div class="card-header"><div class="card-title"><i class="fas fa-tasks"></i> إحصائية حسب حالة الأوامر</div></div>
-        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr); margin-bottom:0;">
-            <div class="stat-card" style="border-top-color:#f39c12;">
-                <div class="stat-icon">⏳</div>
-                <div class="stat-label">بانتظار الاعتماد</div>
-                <div class="stat-value" id="repStatPending" style="color:#f39c12;">0</div>
-                <div style="font-size:11px; color:#999;" id="repStatPendingAmt">0 ر.ع</div>
-            </div>
-            <div class="stat-card" style="border-top-color:#2e7d32;">
-                <div class="stat-icon">✅</div>
-                <div class="stat-label">معتمدة</div>
-                <div class="stat-value" id="repStatApproved" style="color:#2e7d32;">0</div>
-                <div style="font-size:11px; color:#999;" id="repStatApprovedAmt">0 ر.ع</div>
-            </div>
-            <div class="stat-card" style="border-top-color:#c0392b;">
-                <div class="stat-icon">❌</div>
-                <div class="stat-label">مرفوضة</div>
-                <div class="stat-value" id="repStatRejected" style="color:#c0392b;">0</div>
-                <div style="font-size:11px; color:#999;" id="repStatRejectedAmt">0 ر.ع</div>
-            </div>
+        <div class="stat-card" style="border-top-color:#f39c12;">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-label">بانتظار الاعتماد</div>
+            <div class="stat-value" id="repStatPending" style="color:#f39c12;">0</div>
+            <div style="font-size:11px; color:#999;" id="repStatPendingAmt">0 ر.ع</div>
+        </div>
+        <div class="stat-card" style="border-top-color:#2e7d32;">
+            <div class="stat-icon">✅</div>
+            <div class="stat-label">معتمدة</div>
+            <div class="stat-value" id="repStatApproved" style="color:#2e7d32;">0</div>
+            <div style="font-size:11px; color:#999;" id="repStatApprovedAmt">0 ر.ع</div>
+        </div>
+        <div class="stat-card" style="border-top-color:#c0392b;">
+            <div class="stat-icon">❌</div>
+            <div class="stat-label">مرفوضة</div>
+            <div class="stat-value" id="repStatRejected" style="color:#c0392b;">0</div>
+            <div style="font-size:11px; color:#999;" id="repStatRejectedAmt">0 ر.ع</div>
         </div>
     </div>
 
@@ -1017,7 +1152,11 @@
             <div class="chart-container"><canvas id="reportServiceChart"></canvas></div>
             <div class="table-responsive" style="margin-top:12px;">
                 <table id="reportServiceTable">
-                    <thead><tr><th>نوع الخدمة</th><th>المبلغ (ر.ع)</th><th>النسبة</th></tr></thead>
+                    <thead><tr>
+                        <th class="sortable" data-colid="0" onclick="sortGenericTable('reportServiceTable', this)">نوع الخدمة <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="1" onclick="sortGenericTable('reportServiceTable', this)">المبلغ (ر.ع) <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="2" onclick="sortGenericTable('reportServiceTable', this)">النسبة <span class="sort-arrow">⇅</span></th>
+                    </tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -1033,7 +1172,13 @@
         <div class="card-header"><div class="card-title"><i class="fas fa-trophy"></i> أكبر 10 أوامر شراء (Top 10)</div></div>
         <div class="table-responsive">
             <table id="top5Table">
-                <thead><tr><th>#</th><th>رقم الأمر</th><th>المورد</th><th>القيمة الإجمالية (ر.ع)</th></tr></thead>
+                <thead><tr>
+                    <th data-colid="0">#</th>
+                    <th class="sortable" data-colid="1" onclick="sortGenericTable('top5Table', this)">رقم الأمر <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="2" onclick="sortGenericTable('top5Table', this)">المورد <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="3" onclick="sortGenericTable('top5Table', this)">القسم المعني <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="4" onclick="sortGenericTable('top5Table', this)">القيمة الإجمالية (ر.ع) <span class="sort-arrow">⇅</span></th>
+                </tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -1044,7 +1189,12 @@
         <div class="card-header"><div class="card-title"><i class="fas fa-medal"></i> أفضل 10 موردين (الأعلى إنفاقاً)</div></div>
         <div class="table-responsive">
             <table id="topSuppliersTable">
-                <thead><tr><th>#</th><th>المورد</th><th>عدد الأوامر</th><th>إجمالي الإنفاق (ر.ع)</th></tr></thead>
+                <thead><tr>
+                    <th data-colid="0">#</th>
+                    <th class="sortable" data-colid="1" onclick="sortGenericTable('topSuppliersTable', this)">المورد <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="2" onclick="sortGenericTable('topSuppliersTable', this)">عدد الأوامر <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="3" onclick="sortGenericTable('topSuppliersTable', this)">إجمالي الإنفاق (ر.ع) <span class="sort-arrow">⇅</span></th>
+                </tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -1057,7 +1207,11 @@
         <div class="chart-container" style="margin-bottom:1rem;"><canvas id="reportDeptChart"></canvas></div>
         <div class="table-responsive">
             <table id="deptStatsTable">
-                <thead><tr><th>القسم / الغرض</th><th>عدد الأوامر</th><th>إجمالي المبلغ (ر.ع)</th></tr></thead>
+                <thead><tr>
+                    <th class="sortable" data-colid="0" onclick="sortGenericTable('deptStatsTable', this)">القسم / الغرض <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="1" onclick="sortGenericTable('deptStatsTable', this)">عدد الأوامر <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="2" onclick="sortGenericTable('deptStatsTable', this)">إجمالي المبلغ (ر.ع) <span class="sort-arrow">⇅</span></th>
+                </tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -1068,18 +1222,14 @@
         <div class="card-header"><div class="card-title"><i class="fas fa-award"></i> مؤشر أداء الموردين (Vendor Performance Index)</div></div>
         <div class="table-responsive">
             <table id="vpiTable">
-                <thead><tr><th>#</th><th>المورد</th><th>التقييم العام</th><th>عدد التقييمات</th><th>عدد الأوامر</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- جدول التفاصيل -->
-    <div class="card" style="margin-top:1.5rem;">
-        <div class="card-header"><div class="card-title"><i class="fas fa-table"></i> تفاصيل الأوامر</div></div>
-        <div class="table-responsive">
-            <table id="reportTable">
-                <thead><tr><th>رقم الأمر</th><th>المورد</th><th>التاريخ</th><th>المبلغ (ر.ع)</th><th>الحالة</th><th>الموظف</th></tr></thead>
+                <thead><tr>
+                    <th data-colid="0">#</th>
+                    <th class="sortable" data-colid="1" onclick="sortGenericTable('vpiTable', this)">المورد <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="2" onclick="sortGenericTable('vpiTable', this)">التقييم العام <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="3" onclick="sortGenericTable('vpiTable', this)">عدد التقييمات <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="4" onclick="sortGenericTable('vpiTable', this)">عدد الأوامر <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="5" onclick="sortGenericTable('vpiTable', this)">المبلغ (ر.ع) <span class="sort-arrow">⇅</span></th>
+                </tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -1151,50 +1301,8 @@
         </div>
     </div>
 
-    <!-- رابط تنزيل بيانات الصفحة (أنواع الخدمات + الأقسام) كملف إكسل -->
-    <div style="text-align:center; margin-top:1.5rem; padding-top:12px; border-top:1px dashed #d5dde3;">
-        <a href="#" onclick="downloadControlPanelExcel(); return false;" class="excel-link"><i class="fas fa-file-excel"></i> Download Data (Excel)</a>
-    </div>
-</div>
-
-<!-- ============ ROLES & PERMISSIONS (RBAC) ============ -->
-<!-- ============ ADMIN (مدير النظام — تتضمّن إدارة الأدوار والصلاحيات) ============ -->
-<div class="page" id="page-admin">
-    <div class="card">
-        <div class="card-header"><div class="card-title"><i class="fas fa-users-cog"></i> إدارة المستخدمين</div>
-            <button type="button" class="btn btn-primary btn-small" data-perm="users:create" onclick="openUserModal()"><i class="fas fa-user-plus"></i> إضافة مستخدم</button>
-        </div>
-        <div class="table-responsive">
-            <table id="usersTable">
-                <thead><tr><th>اسم المستخدم</th><th>البريد</th><th>الصلاحية</th><th>تاريخ الإضافة</th><th></th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- إدارة الأدوار والصلاحيات (مدمجة ضمن صفحة مدير النظام) -->
-    <div class="card">
-        <div class="card-header">
-            <div class="card-title"><i class="fas fa-user-shield"></i> إدارة الأدوار والصلاحيات</div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <button type="button" class="btn btn-small" style="background:#e67e22; color:white;" onclick="resetPermissionsDefault()"><i class="fas fa-undo"></i> استعادة الافتراضي</button>
-                <button type="button" class="btn btn-success btn-small" onclick="savePermissionsMatrix()"><i class="fas fa-save"></i> حفظ الصلاحيات</button>
-            </div>
-        </div>
-        <div style="margin-bottom:1rem;">
-            <label style="font-size:13px; font-weight:600; margin-left:8px;">اختر الدور:</label>
-            <select id="roleSelector" onchange="renderPermissionsMatrix()" style="padding:9px 12px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-family:inherit; min-width:220px;"></select>
-        </div>
-        <div class="table-responsive">
-            <table id="permMatrixTable">
-                <thead></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- سجل نشاط المستخدمين والنظام -->
-    <div class="card">
+    <!-- سجل نشاط المستخدمين والنظام (منقول من صفحة مدير النظام) -->
+    <div class="card" style="margin-top:1.5rem;">
         <div class="card-header"><div class="card-title"><i class="fas fa-history"></i> سجل نشاط المستخدمين والنظام</div></div>
 
         <!-- خريطة استخدام النظام (اليوم × الساعة) -->
@@ -1226,6 +1334,56 @@
             <a href="#" onclick="downloadActivityExcel(); return false;" class="excel-link"><i class="fas fa-file-excel"></i> تنزيل البيانات Excel</a>
         </div>
     </div>
+
+    <!-- رابط تنزيل بيانات الصفحة (أنواع الخدمات + الأقسام) كملف إكسل -->
+    <div style="text-align:center; margin-top:1.5rem; padding-top:12px; border-top:1px dashed #d5dde3;">
+        <a href="#" onclick="downloadControlPanelExcel(); return false;" class="excel-link"><i class="fas fa-file-excel"></i> Download Data (Excel)</a>
+    </div>
+</div>
+
+<!-- ============ ROLES & PERMISSIONS (RBAC) ============ -->
+<!-- ============ ADMIN (مدير النظام — تتضمّن إدارة الأدوار والصلاحيات) ============ -->
+<div class="page" id="page-admin">
+    <div class="card">
+        <div class="card-header"><div class="card-title"><i class="fas fa-users-cog"></i> إدارة المستخدمين</div>
+            <button type="button" class="btn btn-primary btn-small" data-perm="users:create" onclick="openUserModal()"><i class="fas fa-user-plus"></i> إضافة مستخدم</button>
+        </div>
+        <div class="table-responsive">
+            <table id="usersTable">
+                <thead><tr>
+                    <th class="sortable" data-colid="0" onclick="sortGenericTable('usersTable', this)">اسم المستخدم <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="1" onclick="sortGenericTable('usersTable', this)">البريد <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="2" onclick="sortGenericTable('usersTable', this)">الصلاحية <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="3" onclick="sortGenericTable('usersTable', this)">تاريخ الإضافة <span class="sort-arrow">⇅</span></th>
+                    <th data-colid="4"></th>
+                </tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- إدارة الأدوار والصلاحيات (مدمجة ضمن صفحة مدير النظام) -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-user-shield"></i> إدارة الأدوار والصلاحيات</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <button type="button" class="btn btn-small" style="background:#e67e22; color:white;" onclick="resetPermissionsDefault()"><i class="fas fa-undo"></i> استعادة الافتراضي</button>
+                <button type="button" class="btn btn-success btn-small" onclick="savePermissionsMatrix()"><i class="fas fa-save"></i> حفظ الصلاحيات</button>
+            </div>
+        </div>
+        <div style="margin-bottom:1rem;">
+            <label style="font-size:13px; font-weight:600; margin-left:8px;">اختر الدور:</label>
+            <select id="roleSelector" onchange="renderPermissionsMatrix()" style="padding:9px 12px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-family:inherit; min-width:220px;"></select>
+        </div>
+        <div class="table-responsive">
+            <table id="permMatrixTable">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- (نُقل "سجل نشاط المستخدمين والنظام" إلى صفحة الإدارة والتحكم) -->
 
     <div class="card">
         <div class="card-header"><div class="card-title"><i class="fas fa-cloud"></i> الاتصال السحابي (Supabase)</div></div>
@@ -1316,6 +1474,169 @@
         </div>
     </div>
 </div>
+
+<!-- ============ TRASH / RECYCLE BIN (سلة المهملات) ============ -->
+<div class="page" id="page-trash">
+    <div class="card" style="border-top:3px solid #e74c3c;">
+        <div class="card-header"><div class="card-title"><i class="fas fa-trash-restore"></i> سلة المهملات</div></div>
+        <div class="trash-note">
+            <i class="fas fa-info-circle"></i> <span data-i18n="تضم هذه الصفحة كل أوامر الشراء والمسودات والموردين المحذوفين. يستطيع مدير النظام وحده التراجع عن الحذف أو إتمام الحذف نهائياً.">تضم هذه الصفحة كل أوامر الشراء والمسودات والموردين المحذوفين. يستطيع مدير النظام وحده التراجع عن الحذف أو إتمام الحذف نهائياً.</span>
+        </div>
+    </div>
+
+    <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card"><div class="stat-icon">🗂️</div><div class="stat-label">أوامر شراء محذوفة</div><div class="stat-value" id="trashOrdersCount">0</div></div>
+        <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-label">مسودات محذوفة</div><div class="stat-value" id="trashDraftsCount">0</div></div>
+        <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-label">موردون محذوفون</div><div class="stat-value" id="trashSuppliersCount">0</div></div>
+    </div>
+
+    <div class="card">
+        <div class="tabs-bar">
+            <button type="button" class="tab-btn active" onclick="showTrashTab('orders', this)"><i class="fas fa-clipboard-list"></i> أوامر الشراء المحذوفة</button>
+            <button type="button" class="tab-btn" onclick="showTrashTab('drafts', this)"><i class="fas fa-file-alt"></i> المسودات المحذوفة</button>
+            <button type="button" class="tab-btn" onclick="showTrashTab('suppliers', this)"><i class="fas fa-building"></i> الموردون المحذوفون</button>
+        </div>
+
+        <div class="tab-content active" id="trash-tab-orders">
+            <div class="table-responsive">
+                <table id="trashOrdersTable">
+                    <thead><tr>
+                        <th class="sortable" data-colid="0" onclick="sortGenericTable('trashOrdersTable', this)">رقم الأمر <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="1" onclick="sortGenericTable('trashOrdersTable', this)">المورد <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="2" onclick="sortGenericTable('trashOrdersTable', this)">تاريخ الأمر <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="3" onclick="sortGenericTable('trashOrdersTable', this)">الإجمالي (ر.ع) <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="4" onclick="sortGenericTable('trashOrdersTable', this)">تاريخ الحذف <span class="sort-arrow">⇅</span></th>
+                        <th data-colid="5">الإجراءات</th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="tab-content" id="trash-tab-drafts">
+            <div class="table-responsive">
+                <table id="trashDraftsTable">
+                    <thead><tr>
+                        <th class="sortable" data-colid="0" onclick="sortGenericTable('trashDraftsTable', this)">رقم المسودة <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="1" onclick="sortGenericTable('trashDraftsTable', this)">المورد <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="2" onclick="sortGenericTable('trashDraftsTable', this)">تاريخ المسودة <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="3" onclick="sortGenericTable('trashDraftsTable', this)">الإجمالي (ر.ع) <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="4" onclick="sortGenericTable('trashDraftsTable', this)">تاريخ الحذف <span class="sort-arrow">⇅</span></th>
+                        <th data-colid="5">الإجراءات</th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="tab-content" id="trash-tab-suppliers">
+            <div class="table-responsive">
+                <table id="trashSuppliersTable">
+                    <thead><tr>
+                        <th class="sortable" data-colid="0" onclick="sortGenericTable('trashSuppliersTable', this)">اسم المورد <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="1" onclick="sortGenericTable('trashSuppliersTable', this)">نوع الخدمة <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="2" onclick="sortGenericTable('trashSuppliersTable', this)">الهاتف <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="3" onclick="sortGenericTable('trashSuppliersTable', this)">سجّله <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="4" onclick="sortGenericTable('trashSuppliersTable', this)">تاريخ الحذف <span class="sort-arrow">⇅</span></th>
+                        <th data-colid="5">الإجراءات</th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ PROFILE (الملف الشخصي) ============ -->
+<div class="page" id="page-profile">
+    <div class="card profile-hero">
+        <div class="profile-hero-inner">
+            <div class="profile-avatar"><i class="fas fa-user-circle"></i></div>
+            <div class="profile-hero-info">
+                <div class="profile-name" id="profileHeroName">—</div>
+                <div class="profile-role">
+                    <span class="role-badge" id="profileHeroRole">—</span>
+                    <span class="profile-jobtitle" id="profileHeroJob"></span>
+                </div>
+                <div class="profile-contact">
+                    <span><i class="fas fa-envelope"></i> <span id="profileHeroEmail">—</span></span>
+                    <span><i class="fas fa-phone"></i> <span id="profileHeroPhone" dir="ltr">—</span></span>
+                    <span><i class="fas fa-calendar-check"></i> <span data-i18n="عضو منذ">عضو منذ</span> <span id="profileHeroSince">—</span></span>
+                </div>
+            </div>
+            <!-- تصفّح ملف شخصي لأي مستخدم (يظهر فقط لمن يملك صلاحية profiles:view) -->
+            <div class="profile-switch" id="profileSwitchWrap" style="display:none;">
+                <label data-i18n="تصفّح ملف مستخدم">تصفّح ملف مستخدم</label>
+                <div class="profile-switch-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="profileSwitchInput" autocomplete="off" placeholder="اكتب اسم المستخدم أو البريد..."
+                           oninput="renderProfileSwitchList(this.value)" onfocus="renderProfileSwitchList(this.value)"
+                           onblur="setTimeout(function(){var l=document.getElementById('profileSwitchList'); if(l) l.style.display='none';},200)">
+                    <div id="profileSwitchList" class="profile-switch-list" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+        <div id="profileViewingBanner" class="profile-viewing-banner" style="display:none;"></div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><div class="card-title"><i class="fas fa-id-card"></i> البيانات الشخصية</div></div>
+        <div class="profile-form-grid">
+            <div><label>اسم العرض</label><input type="text" id="profileNameInput" placeholder="اسم العرض"></div>
+            <div><label>البريد الإلكتروني</label><input type="email" id="profileEmailInput" dir="ltr" readonly></div>
+            <div><label>رقم الهاتف</label><input type="tel" id="profilePhoneInput" dir="ltr" placeholder="رقم الهاتف"></div>
+            <div><label>المسمى الوظيفي</label><input type="text" id="profileJobInput" placeholder="المسمى الوظيفي (مثال: أخصائي مشتريات)"></div>
+        </div>
+        <div style="margin-top:1.1rem;">
+            <button class="btn btn-success" id="profileSaveBtn" onclick="saveProfile()"><i class="fas fa-save"></i> حفظ البيانات</button>
+            <span id="profileSaveMsg" style="font-size:12.5px; margin-inline-start:12px;"></span>
+        </div>
+    </div>
+
+    <!-- الحماية والأمان -->
+    <div class="card" id="profileSecurityCard">
+        <div class="card-header"><div class="card-title"><i class="fas fa-shield-alt"></i> الحماية والأمان</div></div>
+        <p style="font-size:12.5px; color:#667; line-height:1.7; margin-bottom:1rem;">لحماية حسابك، يُنصح باستخدام كلمة سر قوية (٦ أحرف على الأقل) وتغييرها بشكل دوري وعدم مشاركتها مع أي شخص.</p>
+        <div class="profile-form-grid" id="profileSecurityGrid">
+            <div><label>كلمة السر الجديدة</label><input type="password" id="profileNewPassword" dir="ltr" placeholder="••••••"></div>
+            <div><label>تأكيد كلمة السر</label><input type="password" id="profileConfirmPassword" dir="ltr" placeholder="••••••"></div>
+        </div>
+        <div style="margin-top:1.1rem;">
+            <button class="btn" style="background:#7cb342; color:#fff; border-color:#7cb342;" onclick="changeProfilePassword()"><i class="fas fa-key"></i> تغيير كلمة السر</button>
+            <span id="profilePwMsg" style="font-size:12.5px; margin-inline-start:12px;"></span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><div class="card-title"><i class="fas fa-user-shield"></i> الصلاحيات المتاحة</div></div>
+        <div id="profilePermissions" class="perm-chips"></div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><div class="card-title"><i class="fas fa-file-invoice"></i> كشف إحصائي بالنشاط</div></div>
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-icon">📄</div><div class="stat-label">أوامر الشراء المُنشأة</div><div class="stat-value" id="profOrdersCount">0</div></div>
+            <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-label">المسودات المُنشأة</div><div class="stat-value" id="profDraftsCount">0</div></div>
+            <div class="stat-card"><div class="stat-icon">🏢</div><div class="stat-label">الموردون المُسجّلون</div><div class="stat-value" id="profSuppliersCount">0</div></div>
+            <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label">إجمالي قيمة الأوامر (ر.ع)</div><div class="stat-value" id="profTotalAmount">0</div></div>
+        </div>
+        <div class="table-responsive" style="margin-top:0.3rem;">
+            <table>
+                <thead><tr><th>البند</th><th>العدد / القيمة</th><th>تفاصيل</th></tr></thead>
+                <tbody id="profStatementBody"></tbody>
+            </table>
+        </div>
+        <div style="text-align:center; margin-top:14px; padding-top:12px; border-top:1px dashed #d5dde3;">
+            <a href="#" onclick="downloadProfileStatement(); return false;" class="excel-link"><i class="fas fa-file-excel"></i> تنزيل الكشف Excel</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><div class="card-title"><i class="fas fa-stream"></i> سجل العمليات والأنشطة</div>
+            <a href="#" onclick="downloadProfileActivity(); return false;" class="excel-link"><i class="fas fa-file-excel"></i> تنزيل السجل Excel</a>
+        </div>
+        <div id="profileOpsLog"></div>
+        <small style="color:#999; margin-top:10px; display:block;"><i class="fas fa-info-circle"></i> كشف مفصّل بكل العمليات والأنشطة، مرتّبةً من الأحدث إلى الأقدم.</small>
+    </div>
+</div>
         </div><!-- /content -->
     </div><!-- /main -->
 </div><!-- /app -->
@@ -1338,6 +1659,8 @@
         </div>
         <div class="modal-body">
             <div id="previewContent"></div>
+            <!-- سجل العمليات (كشف كل الإجراءات على أمر الشراء) — يظهر للجميع ولا يدخل في ملف الـ PDF -->
+            <div id="previewOpsLog" style="display:none;"></div>
         </div>
     </div>
 </div>
@@ -1620,6 +1943,9 @@ let serviceTypes = [];   // أنواع الخدمات (من صفحة الإدا�
 let departments = [];    // الأقسام / الغرض (من صفحة الإدارة والتحكم)
 let evaluations = [];    // تقييمات الموردين
 let activityLog = [];    // سجل نشاط النظام (كل العمليات)
+let deletedOrders = [];   // أوامر الشراء المحذوفة (سلة المهملات)
+let deletedDrafts = [];   // المسودات المحذوفة
+let deletedSuppliers = []; // الموردون المحذوفون
 let defaultTaxRate = 5;
 let chartInstances = {};
 let lpoSortState = {};
@@ -1632,37 +1958,45 @@ const roleNames = {
     // الأدوار الجديدة (RBAC)
     requester: 'طالب الشراء', purchasing_officer: 'مسؤول المشتريات',
     approver: 'المعتمد المالي', storekeeper: 'أمين المستودع',
-    finance: 'المحاسب', auditor: 'الزائر / المدقق'
+    finance: 'المحاسب', auditor: 'الزائر / المدقق',
+    new_user: 'مستخدم جديد'
 };
 const roleNamesEn = {
     staff: 'Purchasing Staff', manager: 'Purchasing Manager', sysadmin: 'System Admin', guest: 'Guest',
     requester: 'Requester', purchasing_officer: 'Purchasing Officer',
     approver: 'Approver', storekeeper: 'Storekeeper',
-    finance: 'Finance', auditor: 'Guest / Auditor'
+    finance: 'Finance', auditor: 'Guest / Auditor',
+    new_user: 'New User'
 };
 function roleLabel(r) { return (currentLanguage === 'en' ? roleNamesEn[r] : roleNames[r]) || r; }
 // البريد الرسمي لمدير النظام الافتراضي — يبقى مدير نظام دائماً ولا يمكن حذفه أو إنزال صلاحيته
 const DEFAULT_SYSADMIN_EMAIL = 'ismailt@takafuloman.om';
 // ترتيب الأدوار الموحّد المستخدم في كل قوائم الاختيار
-const ROLE_ORDER = ['requester','purchasing_officer','approver','storekeeper','finance','sysadmin','auditor','manager','staff','guest'];
+const ROLE_ORDER = ['new_user','requester','purchasing_officer','approver','storekeeper','finance','sysadmin','auditor','manager','staff','guest'];
 
-// الوحدات (الموارد) التي تُضبط صلاحياتها
+// الوحدات (الموارد) التي تُضبط صلاحياتها — يمكن لكل وحدة تحديد الإجراءات المطبّقة عليها عبر acts
 const PERM_MODULES = [
+    { key: 'dashboard',     ar: 'لوحة التحكم',       en: 'Dashboard', acts: ['view'] },
     { key: 'orders',        ar: 'أوامر الشراء',     en: 'Purchase Orders' },
     { key: 'suppliers',     ar: 'الموردون',         en: 'Suppliers' },
     { key: 'reports',       ar: 'التقارير',          en: 'Reports' },
-    { key: 'control',       ar: 'الإدارة والتحكم',   en: 'Control Panel' },
+    { key: 'control',       ar: 'الإدارة والتحكم',   en: 'Management & Control', acts: ['view','create','edit','delete'] },
     { key: 'notifications', ar: 'الإشعارات',         en: 'Notifications' },
-    { key: 'users',         ar: 'إدارة المستخدمين',  en: 'User Management' }
+    { key: 'users',         ar: 'إدارة المستخدمين',  en: 'User Management' },
+    { key: 'trash',         ar: 'سلة المهملات',      en: 'Recycle Bin', acts: ['view','restore','delete'] },
+    { key: 'profiles',      ar: 'تصفّح الملفات الشخصية', en: 'Browse Profiles', acts: ['view'] }
 ];
-// الإجراءات (CRUD + Approve)
+// الإجراءات (CRUD + استرجاع + اعتماد)
 const PERM_ACTIONS = [
-    { key: 'view',    ar: 'رؤية',   en: 'View' },
-    { key: 'create',  ar: 'إنشاء',  en: 'Create' },
-    { key: 'edit',    ar: 'تعديل',  en: 'Edit' },
-    { key: 'delete',  ar: 'حذف',    en: 'Delete' },
-    { key: 'approve', ar: 'اعتماد', en: 'Approve' }
+    { key: 'view',    ar: 'رؤية',    en: 'View' },
+    { key: 'create',  ar: 'إنشاء',   en: 'Create' },
+    { key: 'edit',    ar: 'تعديل',   en: 'Edit' },
+    { key: 'delete',  ar: 'حذف',     en: 'Delete' },
+    { key: 'restore', ar: 'استرجاع', en: 'Restore' },
+    { key: 'approve', ar: 'اعتماد',  en: 'Approve' }
 ];
+// الإجراءات الافتراضية المطبّقة على الوحدات التي لا تحدّد acts
+const DEFAULT_PERM_ACTS = ['view','create','edit','delete','approve'];
 
 // مصفوفة الصلاحيات الافتراضية لكل دور (true = مسموح)
 // البنية: DEFAULT_PERMISSIONS[role][module][action]
@@ -1689,8 +2023,21 @@ const DEFAULT_PERMISSIONS = {
     // المحاسب: رؤية + تقارير كاملة
     finance: { orders:viewOnly(), suppliers:viewOnly(), reports:fullPerm(), control:noPerm(), notifications:viewOnly(), users:noPerm() },
     // الزائر/المدقق: رؤية فقط
-    auditor: { orders:viewOnly(), suppliers:viewOnly(), reports:viewOnly(), control:noPerm(), notifications:viewOnly(), users:noPerm() }
+    auditor: { orders:viewOnly(), suppliers:viewOnly(), reports:viewOnly(), control:noPerm(), notifications:viewOnly(), users:noPerm() },
+    // مستخدم جديد: الدور الافتراضي لأي حساب جديد — رؤية فقط لأوامر الشراء والموردين والتقارير والإشعارات
+    new_user: { orders:viewOnly(), suppliers:viewOnly(), reports:viewOnly(), control:noPerm(), notifications:viewOnly(), users:noPerm() }
 };
+
+// صلاحيات "سلة المهملات" (استرجاع/حذف نهائي/رؤية الصفحة) و"تصفّح الملفات الشخصية":
+// افتراضياً لمدير النظام فقط، وقابلة للمنح لأي دور من صفحة الأدوار والصلاحيات
+Object.keys(DEFAULT_PERMISSIONS).forEach(r => {
+    DEFAULT_PERMISSIONS[r].trash = (r === 'sysadmin')
+        ? { view: true, restore: true, delete: true }
+        : { view: false, restore: false, delete: false };
+    DEFAULT_PERMISSIONS[r].profiles = { view: (r === 'sysadmin') };
+    // رؤية لوحة التحكم: متاحة افتراضياً لكل الأدوار (وقابلة للمنع من صفحة الصلاحيات)
+    DEFAULT_PERMISSIONS[r].dashboard = { view: true };
+});
 
 // المصفوفة الفعلية (تُحمَّل من السحابة؛ تبدأ بالافتراضية)
 let rolePermissions = JSON.parse(JSON.stringify(DEFAULT_PERMISSIONS));
@@ -1719,23 +2066,26 @@ function rowToOrder(r) {
              tax: +r.tax, total: +r.total, notes: r.notes, staff: r.staff, status: r.status,
              department: r.department || '', lpoRef: r.lpo_ref || '', createdAt: r.created_at,
              approvalStatus: r.approval_status, approvedBy: r.approved_by, approvedAt: r.approved_at,
-             rejectionReason: r.rejection_reason };
+             rejectionReason: r.rejection_reason, deletedAt: r.deleted_at || null };
 }
 function rowToDraft(r) {
     return { id: r.id, draftNumber: r.draft_number, date: r.order_date, supplierId: r.supplier_id,
              supplierName: r.supplier_name, items: r.items || [], subtotal: +r.subtotal,
              tax: +r.tax, total: +r.total, notes: r.notes, staff: r.staff,
-             department: r.department || '', lpoRef: r.lpo_ref || '', createdAt: r.created_at };
+             department: r.department || '', lpoRef: r.lpo_ref || '', createdAt: r.created_at,
+             deletedAt: r.deleted_at || null };
 }
 function rowToSupplier(r) {
     return { id: r.id, name: r.name, serviceType: r.service_type, phone: r.phone,
              email: r.email, city: r.city, vatNo: r.vat_no || '', crNo: r.cr_no || '',
              crExpiry: r.cr_expiry || '', notes: r.notes || '', createdAt: r.created_at,
+             createdBy: r.created_by || '', deletedAt: r.deleted_at || null,
              supplierType: r.supplier_type || 'Local Supplier',
              taxCardUrl: r.tax_card_url || '', crCertUrl: r.cr_cert_url || '', otherFilesUrl: r.other_files_url || '' };
 }
 function rowToUser(r) {
     return { id: r.id, username: r.username, email: r.email, role: r.role, createdAt: r.created_at,
+             authId: r.auth_id || '', phone: r.phone || '', jobTitle: r.job_title || '',
              lastLogin: r.last_login, lastAction: r.last_action, lastActionDesc: r.last_action_desc };
 }
 function rowToEval(r) {
@@ -1758,9 +2108,16 @@ async function loadAllFromCloud() {
             sb.from('departments').select('*').order('created_at', { ascending: true }),
             sb.from('supplier_evaluations').select('*').order('created_at', { ascending: true })
         ]);
-        lpoDrafts = (ordersRes.data || []).map(rowToOrder);
-        draftSaves = (draftsRes.data || []).map(rowToDraft);
-        suppliers = (supRes.data || []).map(rowToSupplier);
+        // تقسيم السجلات إلى نشطة ومحذوفة (حذف ناعم عبر العمود deleted_at)
+        const allOrders    = (ordersRes.data || []).map(rowToOrder);
+        const allDrafts    = (draftsRes.data || []).map(rowToDraft);
+        const allSuppliers = (supRes.data  || []).map(rowToSupplier);
+        lpoDrafts       = allOrders.filter(o => !o.deletedAt);
+        deletedOrders   = allOrders.filter(o =>  o.deletedAt);
+        draftSaves      = allDrafts.filter(d => !d.deletedAt);
+        deletedDrafts   = allDrafts.filter(d =>  d.deletedAt);
+        suppliers       = allSuppliers.filter(s => !s.deletedAt);
+        deletedSuppliers= allSuppliers.filter(s =>  s.deletedAt);
         registeredUsers = (usersRes.data || []).map(rowToUser);
         serviceTypes = (svcRes.data || []).map(r => ({ id: r.id, name: r.name }));
         departments = (deptRes.data || []).map(r => ({ id: r.id, name: r.name }));
@@ -2107,6 +2464,11 @@ const I18N = {
     'القيمة الإجمالية (ر.ع)': 'Total Value (OMR)',
     'التقييم العام': 'Overall Rating',
     'عدد التقييمات': 'No. of Ratings',
+    'القسم المعني': 'Concerned Department',
+    'أكبر 10 أوامر شراء (Top 10)': 'Top 10 Purchase Orders',
+    'أفضل 10 موردين (الأعلى إنفاقاً)': 'Top 10 Suppliers (by spending)',
+    'النسبة': 'Percentage',
+    'طباعة PDF': 'Print PDF',
     // التقييم
     'تقييم المورد': 'Supplier Evaluation',
     'جودة المنتجات / الخدمات (Quality)': 'Quality of Products / Services',
@@ -2177,6 +2539,51 @@ const I18N = {
     'نوع العملية': 'Operation Type',
     'التفاصيل': 'Details',
     'مرتّب حسب الأحدث أولاً. يسجّل النظام كل عملية (إضافة، تعديل، حذف، اعتماد، رفض، استيراد، تصدير، دخول...) تلقائياً.': 'Sorted newest first. The system automatically logs every operation (create, update, delete, approve, reject, import, export, login...).',
+    // ===== سلة المهملات + الملف الشخصي + سجل العمليات (المرحلة 13) =====
+    'سلة المهملات': 'Recycle Bin',
+    'الملف الشخصي': 'My Profile',
+    'تضم هذه الصفحة كل أوامر الشراء والمسودات والموردين المحذوفين. يستطيع مدير النظام وحده التراجع عن الحذف أو إتمام الحذف نهائياً.': 'This page contains all deleted purchase orders, drafts and suppliers. Only the system administrator can undo the deletion (restore) or delete permanently.',
+    'أوامر شراء محذوفة': 'Deleted Orders',
+    'مسودات محذوفة': 'Deleted Drafts',
+    'موردون محذوفون': 'Deleted Suppliers',
+    'أوامر الشراء المحذوفة': 'Deleted Purchase Orders',
+    'المسودات المحذوفة': 'Deleted Drafts',
+    'الموردون المحذوفون': 'Deleted Suppliers',
+    'رقم الأمر': 'Order No.',
+    'تاريخ الأمر': 'Order Date',
+    'الإجمالي (ر.ع)': 'Total (OMR)',
+    'تاريخ الحذف': 'Deletion Date',
+    'الإجراءات': 'Actions',
+    'رقم المسودة': 'Draft No.',
+    'تاريخ المسودة': 'Draft Date',
+    'سجّله': 'Registered By',
+    'آخر تعديل': 'Last Modified',
+    'سجل العمليات': 'Operations Log',
+    'سجل العمليات والأنشطة': 'Operations & Activity Log',
+    'البيانات الشخصية': 'Personal Information',
+    'الحماية والأمان': 'Security & Safety',
+    'الصلاحيات المتاحة': 'Available Permissions',
+    'كشف إحصائي بالنشاط': 'Activity Statistics Statement',
+    'تصفّح ملف مستخدم': 'Browse a user profile',
+    'اكتب اسم المستخدم أو البريد...': 'Type a username or email...',
+    'عضو منذ': 'Member since',
+    'اسم العرض': 'Display Name',
+    'رقم الهاتف': 'Phone Number',
+    'المسمى الوظيفي': 'Job Title',
+    'المسمى الوظيفي (مثال: أخصائي مشتريات)': 'Job title (e.g., Procurement Specialist)',
+    'حفظ البيانات': 'Save Data',
+    'لحماية حسابك، يُنصح باستخدام كلمة سر قوية (٦ أحرف على الأقل) وتغييرها بشكل دوري وعدم مشاركتها مع أي شخص.': 'To protect your account, use a strong password (at least 6 characters), change it periodically, and never share it with anyone.',
+    'كلمة السر الجديدة': 'New Password',
+    'تأكيد كلمة السر': 'Confirm Password',
+    'أوامر الشراء المُنشأة': 'Purchase Orders Created',
+    'المسودات المُنشأة': 'Drafts Created',
+    'الموردون المُسجّلون': 'Suppliers Registered',
+    'إجمالي قيمة الأوامر (ر.ع)': 'Total Orders Value (OMR)',
+    'البند': 'Item',
+    'العدد / القيمة': 'Count / Value',
+    'تنزيل الكشف Excel': 'Download Statement (Excel)',
+    'تنزيل السجل Excel': 'Download Log (Excel)',
+    'كشف مفصّل بكل العمليات والأنشطة، مرتّبةً من الأحدث إلى الأقدم.': 'A detailed statement of all operations and activities, sorted newest first.',
     'إدارة قواعد البيانات': 'Database Management',
     'النسخ الاحتياطي لبيانات النظام': 'System Data Backup',
     'تنزيل نسخة احتياطية كاملة من جميع بيانات النظام (أوامر الشراء، المسودات، الموردون، المستخدمون، أنواع الخدمات، الأقسام، التقييمات) في ملف واحد يُحفظ لديك كأرشيف آمن.': 'Download a full backup of all system data (purchase orders, drafts, suppliers, users, service types, departments, evaluations) in a single secure archive file.',
@@ -2311,6 +2718,9 @@ function changeLanguage(lang, ev) {
             else if (id === 'page-reports') generateReport();
             else if (id === 'page-suppliers') filterSuppliers();
             else if (id === 'page-lpo-management') { renderLPOList(); loadDrafts(); }
+            else if (id === 'page-control-panel') loadControlPanel();
+            else if (id === 'page-trash') loadTrash();
+            else if (id === 'page-profile') loadProfile();
         }
     } catch (e) {}
 }
@@ -2399,6 +2809,7 @@ const ACTIVITY_TYPES = {
     create:      { ar: 'إضافة',      en: 'Create',           color: '#2e7d32' },
     update:      { ar: 'تعديل',      en: 'Update',           color: '#f0ad4e' },
     delete:      { ar: 'حذف',        en: 'Delete',           color: '#c0392b' },
+    restore:     { ar: 'استرجاع',    en: 'Restore',          color: '#27ae60' },
     approve:     { ar: 'اعتماد',     en: 'Approve',          color: '#1e8449' },
     reject:      { ar: 'رفض',        en: 'Reject',           color: '#e74c3c' },
     draft:       { ar: 'مسودة',      en: 'Draft',            color: '#9b59b6' },
@@ -2418,9 +2829,10 @@ function inferActivityTypeKey(desc) {
     if (/رفض|reject/i.test(d)) return 'reject';
     if (/مسودة|draft/i.test(d)) return 'draft';
     if (/صلاحي|permission|role/i.test(d)) return 'permissions';
+    if (/استرجاع|استعادة|restore/i.test(d)) return 'restore';
     if (/حذف|delete|remove/i.test(d)) return 'delete';
     if (/تعديل|تحديث|update|edit/i.test(d)) return 'update';
-    if (/إضافة|اضافة|إنشاء|انشاء|add|create|new/i.test(d)) return 'create';
+    if (/إضافة|اضافة|إنشاء|انشاء|حفظ|add|create|new|save/i.test(d)) return 'create';
     return 'other';
 }
 
@@ -2554,7 +2966,7 @@ async function handleSignup(event) {
                 auth_id: data.user.id,
                 username: name || email,
                 email: email,
-                role: 'staff'
+                role: 'new_user'
             });
         }
     } catch (e) {}
@@ -2605,7 +3017,7 @@ async function handleLogin(event) {
     }
 
     // جلب ملف المستخدم (الصلاحية) من جدول app_users
-    let role = 'staff', username = emailVal;
+    let role = 'new_user', username = emailVal;
     try {
         const { data: profile } = await sb.from('app_users').select('*').eq('auth_id', data.user.id).maybeSingle();
         if (profile) { role = profile.role; username = profile.username || emailVal; }
@@ -2777,7 +3189,7 @@ function showPage(pageId, navItem) {
     const titles = {
         'dashboard': 'لوحة التحكم', 'lpo-management': 'إدارة أوامر الشراء',
         'suppliers': 'إدارة الموردون', 'control-panel': 'الإدارة والتحكم', 'reports': 'التقارير',
-        'admin': 'مدير النظام', 'about': 'حول البرنامج'
+        'admin': 'مدير النظام', 'trash': 'سلة المهملات', 'profile': 'الملف الشخصي', 'about': 'حول البرنامج'
     };
     let pageTitle = titles[pageId] || '';
     if (currentLanguage === 'en' && I18N[pageTitle]) pageTitle = I18N[pageTitle];
@@ -2794,6 +3206,8 @@ function showPage(pageId, navItem) {
     if (pageId === 'control-panel') loadControlPanel();
     if (pageId === 'admin') { loadAdminPanel(); loadRolesPage(); }
     if (pageId === 'reports') { populateAllFilters(); generateReport(); }
+    if (pageId === 'trash') loadTrash();
+    if (pageId === 'profile') loadProfile();
 
     // إعادة تطبيق الترجمة على المحتوى الذي أُعيد بناؤه
     if (currentLanguage === 'en') applyTranslations('en');
@@ -3182,7 +3596,7 @@ async function saveDraft() {
     // عند تعديل مسودة قائمة: تُحذف النسخة القديمة بعد نجاح الحفظ فقط
     if (prevDraftId) { await sb.from('drafts').delete().eq('id', prevDraftId); }
     await loadAllFromCloud();
-    recordAction('حفظ مسودة');
+    recordAction((prevDraftId ? 'تعديل مسودة ' : 'حفظ مسودة ') + row.draft_number, 'draft');
     alert(msg('تم حفظ المسودة بنجاح في السحابة'));
     resetForm();
     closeNewLPO();
@@ -3517,6 +3931,15 @@ function drawStatusChart() {
 }
 
 // ===================== DRAFTS =====================
+// هل التاريخ المُعطى هو تاريخ اليوم (بالتوقيت المحلي)؟ — يُستخدم لإبراز أوامر/مسودات اليوم
+function isTodayDate(d) {
+    if (!d) return false;
+    const dt = new Date(d);
+    if (isNaN(dt.getTime())) return false;
+    const now = new Date();
+    return dt.getFullYear() === now.getFullYear() && dt.getMonth() === now.getMonth() && dt.getDate() === now.getDate();
+}
+
 function loadDrafts() {
     initColumnDrag('draftsTable', loadDrafts);
     const numF = (document.getElementById('filterDraftNumber').value || '').toLowerCase();
@@ -3551,7 +3974,8 @@ function loadDrafts() {
             const row = tbody.insertRow();
             row.style.cursor = 'pointer';
             row.setAttribute('onclick', `previewDraft('${d.id}')`);
-            row.innerHTML = `<td>${fmtRecordDate(d.createdAt)}</td><td>${d.draftNumber}</td><td>${d.supplierName}</td><td>${svcLabel}</td><td>${deptLabel}</td><td>${d.date}</td><td>${fmt(d.total)}</td><td>${d.staff}</td>
+            const bwD = (isTodayDate(d.createdAt) || isTodayDate(d.date)) ? ' style="font-weight:800;"' : '';
+            row.innerHTML = `<td${bwD}>${fmtRecordDate(d.createdAt)}</td><td${bwD}>${d.draftNumber}</td><td>${d.supplierName}</td><td>${svcLabel}</td><td>${deptLabel}</td><td>${d.date}</td><td>${fmt(d.total)}</td><td>${d.staff}</td>
             <td style="white-space:nowrap;" onclick="event.stopPropagation();"><button class="btn btn-small" onclick="previewDraft('${d.id}')" title="${currentLanguage==='en'?'Preview':'معاينة'}"><i class="fas fa-eye"></i></button>${dEdit}${dDel}</td>`;
         });
     }
@@ -3612,11 +4036,39 @@ async function editLPO(id) {
     editingOrderId = id; // عند الحفظ: تحديث هذا الأمر بدل إنشاء جديد
 }
 
+// ===================== سلة المهملات (الحذف الناعم / Soft Delete) =====================
+// حذف ناعم: يضع طابع deleted_at بدل الحذف الفعلي، حتى يظهر السجل في سلة المهملات.
+// عند غياب العمود deleted_at (قبل تشغيل ملف الترقية 13) يرجع {missing:true} فيتم
+// اللجوء إلى الحذف الفعلي حتى يبقى النظام يعمل.
+async function softDeleteRow(table, id) {
+    const res = await sb.from(table).update({ deleted_at: new Date().toISOString() }).eq('id', id);
+    if (res.error) {
+        const em = (res.error.message || '') + ' ' + (res.error.details || '');
+        if (/deleted_at/i.test(em) || /schema cache/i.test(em) || res.error.code === 'PGRST204' || res.error.code === '42703') {
+            // العمود غير موجود بعد → حذف فعلي كحل احتياطي
+            const del = await sb.from(table).delete().eq('id', id);
+            return { error: del.error, hard: true };
+        }
+        return { error: res.error };
+    }
+    return { error: null };
+}
+// استرجاع سجل محذوف (مدير النظام فقط): يمسح طابع deleted_at
+async function restoreRow(table, id) {
+    return await sb.from(table).update({ deleted_at: null }).eq('id', id);
+}
+// حذف نهائي فعلي من قاعدة البيانات (مدير النظام فقط)
+async function hardDeleteRow(table, id) {
+    return await sb.from(table).delete().eq('id', id);
+}
+
 async function deleteDraft(id) {
-    if (confirm(msg('هل تريد حذف هذه المسودة؟'))) {
-        const { error } = await sb.from('drafts').delete().eq('id', id);
+    if (confirm(msg('هل تريد حذف هذه المسودة؟ ستنتقل إلى سلة المهملات.'))) {
+        const d = draftSaves.find(x => String(x.id) === String(id));
+        const { error } = await softDeleteRow('drafts', id);
         if (error) { alert(msg('تعذّر الحذف: ') + error.message); return; }
         await loadAllFromCloud();
+        recordAction('حذف مسودة ' + ((d && d.draftNumber) || id));
         loadDrafts();
     }
 }
@@ -3734,19 +4186,19 @@ async function deleteLPO(id) {
     if (!l) return;
     const en = currentLanguage === 'en';
     let q = en
-        ? `Delete order ${l.number}?\nThis action is permanent and cannot be undone.`
-        : `حذف الأمر ${l.number}؟\nهذا الإجراء نهائي ولا يمكن التراجع عنه.`;
+        ? `Move order ${l.number} to the Recycle Bin?\nOnly the system administrator can restore it.`
+        : `نقل الأمر ${l.number} إلى سلة المهملات؟\nيستطيع مدير النظام فقط استرجاعه.`;
     if (l.approvalStatus === 'approved') {
         q = en
-            ? `⚠ Order ${l.number} is APPROVED.\nAre you sure you want to permanently delete this approved order?\nThis cannot be undone.`
-            : `⚠ الأمر ${l.number} معتمد.\nهل أنت متأكد من حذف هذا الأمر المعتمد نهائياً؟\nلا يمكن التراجع عن هذا الإجراء.`;
+            ? `⚠ Order ${l.number} is APPROVED.\nMove this approved order to the Recycle Bin?\nOnly the system administrator can restore it.`
+            : `⚠ الأمر ${l.number} معتمد.\nهل تريد نقل هذا الأمر المعتمد إلى سلة المهملات؟\nيستطيع مدير النظام فقط استرجاعه.`;
     }
     if (!confirm(q)) return;
-    const { error } = await sb.from('purchase_orders').delete().eq('id', id);
+    const { error } = await softDeleteRow('purchase_orders', id);
     if (error) { alert(msg('تعذّر حذف الأمر: ') + error.message); return; }
     await loadAllFromCloud();
     recordAction('حذف أمر ' + l.number);
-    alert(msg('تم حذف الأمر بنجاح.'));
+    alert(msg('تم نقل الأمر إلى سلة المهملات.'));
     renderLPOList();
     loadDashboard();
 }
@@ -3845,6 +4297,58 @@ function applyColumnOrder(tableId) {
     });
     applyColumnWidths(tableId);   // الحفاظ على عروض الأعمدة المخصّصة
 }
+
+// ===================== فرز عام لأي جدول (User Management / Recycle Bin ...) =====================
+// يعتمد على DOM: يفرز الصفوف حسب محتوى العمود (أو السمة data-sort إن وُجدت) مع حفظ الحالة لكل جدول
+const _genSortState = {}; // tableId -> { colid, asc }
+function sortGenericTable(tableId, th) {
+    const colid = th.getAttribute('data-colid');
+    if (colid == null) return;
+    const st = _genSortState[tableId] || { colid: null, asc: true };
+    if (st.colid === colid) st.asc = !st.asc; else { st.colid = colid; st.asc = true; }
+    _genSortState[tableId] = st;
+    applyGenericSort(tableId);
+}
+function applyGenericSort(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table || !table.tHead || !table.tBodies[0]) return;
+    const headRow = table.tHead.rows[0];
+    const st = _genSortState[tableId];
+    // تحديث أسهم الرؤوس
+    Array.from(headRow.cells).forEach(c => {
+        const arrow = c.querySelector('.sort-arrow');
+        c.classList.remove('sorted-asc', 'sorted-desc');
+        if (!arrow) return;
+        if (st && c.getAttribute('data-colid') === st.colid) {
+            c.classList.add(st.asc ? 'sorted-asc' : 'sorted-desc');
+            arrow.textContent = st.asc ? '▲' : '▼';
+        } else { arrow.textContent = '⇅'; }
+    });
+    if (!st || st.colid == null) return;
+    const th = Array.from(headRow.cells).find(c => c.getAttribute('data-colid') === st.colid);
+    if (!th) return;
+    const idx = th.cellIndex;
+    const tbody = table.tBodies[0];
+    const colCount = headRow.cells.length;
+    const rows = Array.from(tbody.rows).filter(r => r.cells.length === colCount); // تجاهل صف "لا نتائج"
+    if (rows.length < 2) return;
+    const cellVal = (r) => {
+        const c = r.cells[idx]; if (!c) return '';
+        const ds = c.getAttribute('data-sort');
+        return (ds != null) ? ds : (c.textContent || '').trim();
+    };
+    const isNum = (s) => /^-?\d+(\.\d+)?$/.test(String(s).trim());
+    const locale = (currentLanguage === 'en') ? 'en' : 'ar';
+    rows.sort((a, b) => {
+        const va = cellVal(a), vb = cellVal(b);
+        let c;
+        if (isNum(va) && isNum(vb)) c = parseFloat(va) - parseFloat(vb);
+        else c = String(va).localeCompare(String(vb), locale, { numeric: true, sensitivity: 'base' });
+        return st.asc ? c : -c;
+    });
+    rows.forEach(r => tbody.appendChild(r));
+}
+
 // تهيئة السحب على رؤوس أعمدة جدول (مرة واحدة لكل جدول)
 function initColumnDrag(tableId, rerenderFn) {
     const table = document.getElementById(tableId);
@@ -4065,9 +4569,17 @@ function getSortedLPOs() {
         });
         return list;
     }
-    const keys = ['number', 'supplierName', 'serviceType', 'date', 'total', 'status', 'staff', null, 'department', 'createdAt'];
+    const keys = ['number', 'supplierName', 'serviceType', 'date', 'total', 'status', 'staff', null, 'department', 'createdAt', 'lastModified'];
     const key = keys[lpoSortCol];
     if (!key) return list;
+    // الترتيب حسب "آخر تعديل": نحسب الطابع الزمني مرة واحدة لكل أمر (تفادياً لمسح السجل مراراً)
+    if (key === 'lastModified') {
+        const actEntries = getActivityEntries();
+        const tmap = new Map();
+        const tOf = (o) => { if (!tmap.has(o.id)) { const la = getOrderLastAction(o, actEntries); tmap.set(o.id, la ? new Date(la.createdAt).getTime() : 0); } return tmap.get(o.id); };
+        list.sort((a, b) => lpoSortAsc ? tOf(a) - tOf(b) : tOf(b) - tOf(a));
+        return list;
+    }
     list.sort((a, b) => {
         let av = (key === 'serviceType') ? orderServiceType(a) : a[key];
         let bv = (key === 'serviceType') ? orderServiceType(b) : b[key];
@@ -4075,6 +4587,60 @@ function getSortedLPOs() {
         return lpoSortAsc ? String(av).localeCompare(String(bv), 'ar') : String(bv).localeCompare(String(av), 'ar');
     });
     return list;
+}
+
+// ===================== قائمة إجراءات الصف المنسدلة (Kebab Actions Menu) =====================
+let _rowMenuEl = null;
+function closeRowMenu() {
+    if (_rowMenuEl && _rowMenuEl.parentNode) _rowMenuEl.parentNode.removeChild(_rowMenuEl);
+    _rowMenuEl = null;
+    document.removeEventListener('keydown', _rowMenuKey, true);
+}
+function _rowMenuKey(e) { if (e.key === 'Escape') closeRowMenu(); }
+function buildRowActionItems(l) {
+    const en = currentLanguage === 'en';
+    const items = [];
+    items.push({ icon: 'fa-eye',   color: '#0093c4', label: en ? 'Preview' : 'معاينة',        fn: `viewLPO('${l.id}')` });
+    items.push({ icon: 'fa-print', color: '#6c757d', label: en ? 'Download PDF' : 'تحميل PDF', fn: `quickPrintLPO('${l.id}')` });
+    if (can('orders', 'edit'))
+        items.push({ icon: 'fa-edit', color: '#f0ad4e', label: en ? 'Edit' : 'تعديل', fn: `editLPO('${l.id}')` });
+    if ((l.approvalStatus === 'pending') && can('orders', 'approve')) {
+        items.push({ icon: 'fa-check', color: '#2e7d32', label: en ? 'Approve' : 'اعتماد', fn: `approveOrder('${l.id}')` });
+        items.push({ icon: 'fa-times', color: '#c0392b', label: en ? 'Reject' : 'رفض',     fn: `rejectOrder('${l.id}')` });
+    }
+    if (can('orders', 'delete'))
+        items.push({ icon: 'fa-trash', color: '#c0392b', label: en ? 'Delete' : 'حذف', fn: `deleteLPO('${l.id}')` });
+    return items;
+}
+function openRowMenu(ev, id) {
+    ev.stopPropagation();
+    const sameBtn = _rowMenuEl && _rowMenuEl.getAttribute('data-for') === String(id);
+    closeRowMenu();
+    if (sameBtn) return; // النقر على نفس الزر وقائمته مفتوحة ⇒ إغلاق (تبديل)
+    const l = lpoDrafts.find(x => String(x.id) === String(id));
+    if (!l) return;
+    const items = buildRowActionItems(l);
+    const menu = document.createElement('div');
+    menu.className = 'row-action-menu';
+    menu.setAttribute('data-for', String(id));
+    menu.innerHTML = items.map(it => `<button class="ram-item" onclick="closeRowMenu(); ${it.fn}"><i class="fas ${it.icon}" style="color:${it.color};"></i> <span>${it.label}</span></button>`).join('');
+    document.body.appendChild(menu);
+    _rowMenuEl = menu;
+    const btn = ev.currentTarget;
+    const r = btn.getBoundingClientRect();
+    const mw = 196;
+    menu.style.width = mw + 'px';
+    let left = r.right - mw;                       // محاذاة يمين الزر (مناسب للـ RTL)
+    if (left < 8) left = 8;
+    if (left + mw > window.innerWidth - 8) left = window.innerWidth - mw - 8;
+    menu.style.left = left + 'px';
+    const h = menu.offsetHeight;
+    let top = r.bottom + 4;
+    if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 4); // يفتح لأعلى إن لم تكفِ المساحة
+    menu.style.top = top + 'px';
+    setTimeout(() => { document.addEventListener('click', closeRowMenu, { once: true }); }, 0);
+    window.addEventListener('scroll', closeRowMenu, { once: true, capture: true });
+    document.addEventListener('keydown', _rowMenuKey, true);
 }
 
 function renderLPOList() {
@@ -4091,33 +4657,25 @@ function renderLPOList() {
     const tbody = document.querySelector('#lpoListTable tbody');
     tbody.innerHTML = '';
     if (list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; color:#999;">لا توجد أوامر مطابقة</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; color:#999;">لا توجد أوامر مطابقة</td></tr>';
     } else {
+        const en = currentLanguage === 'en';
+        const actEntries = getActivityEntries(); // تُحسب مرة واحدة لكل الصفوف (أداء)
         list.forEach(l => {
-            const canApprove = (l.approvalStatus === 'pending') && can('orders', 'approve');
-            const approveBtn = canApprove
-                ? `<button class="btn btn-small" style="background:#2e7d32; color:#fff;" onclick="approveOrder('${l.id}')" title="${currentLanguage === 'en' ? 'Approve' : 'اعتماد'}"><i class="fas fa-check"></i></button>`
-                : '';
-            const rejectBtn = canApprove
-                ? `<button class="btn btn-small" style="background:#c0392b; color:#fff;" onclick="rejectOrder('${l.id}')" title="${currentLanguage === 'en' ? 'Reject' : 'رفض'}"><i class="fas fa-times"></i></button>`
-                : '';
-            const editBtn = can('orders', 'edit')
-                ? `<button class="btn btn-small" style="background:#f0ad4e; color:#fff;" onclick="editLPO('${l.id}')" title="${currentLanguage === 'en' ? 'Edit order' : 'تعديل الأمر'}"><i class="fas fa-edit"></i></button>`
-                : '';
-            const delBtn = can('orders', 'delete')
-                ? `<button class="btn btn-small" style="background:#c0392b; color:#fff;" onclick="deleteLPO('${l.id}')" title="${currentLanguage === 'en' ? 'Delete order' : 'حذف الأمر'}"><i class="fas fa-trash"></i></button>`
-                : '';
             const reasonLine = (l.approvalStatus === 'rejected' && l.rejectionReason)
                 ? `<div style="font-size:10px; color:#c0392b; margin-top:3px; max-width:230px; white-space:normal;" title="${escapeHtml(l.rejectionReason)}"><i class="fas fa-comment-dots"></i> ${escapeHtml(l.rejectionReason)}</div>`
                 : '';
             const deptLabel = escapeHtml(l.department || '') || '<span style="color:#bbb;">—</span>';
-            const printBtn = `<button class="btn btn-small" style="background:#6c757d; color:#fff;" onclick="quickPrintLPO('${l.id}')" title="${currentLanguage === 'en' ? 'Download PDF' : 'تحميل PDF'}"><i class="fas fa-print"></i></button>`;
+            const kebab = `<button class="kebab-btn" title="${en ? 'Actions' : 'إجراءات'}" onclick="event.stopPropagation(); openRowMenu(event, '${l.id}')"><i class="fas fa-ellipsis-v"></i></button>`;
             const row = tbody.insertRow();
             row.style.cursor = 'pointer';
             row.setAttribute('onclick', `viewLPO('${l.id}')`);
-            row.innerHTML = `<td>${fmtRecordDate(l.createdAt)}</td><td>${l.number}</td><td>${l.supplierName}</td><td>${escapeHtml(orderServiceType(l)) || '<span style="color:#bbb;">—</span>'}</td><td>${deptLabel}</td><td>${l.date}</td><td>${fmt(l.total)}</td>
+            // إبراز أوامر اليوم (تسجيلاً أو إصداراً) بخط عريض في عمودي رقم الأمر وتاريخ التسجيل
+            const bwL = (isTodayDate(l.createdAt) || isTodayDate(l.date)) ? ' style="font-weight:800;"' : '';
+            row.innerHTML = `<td${bwL}>${fmtRecordDate(l.createdAt)}</td><td${bwL}>${l.number}</td><td>${l.supplierName}</td><td>${escapeHtml(orderServiceType(l)) || '<span style="color:#bbb;">—</span>'}</td><td>${deptLabel}</td><td>${l.date}</td><td>${fmt(l.total)}</td>
             <td>${approvalBadge(l)}${reasonLine}</td><td>${l.staff}</td>
-            <td style="white-space:nowrap;" onclick="event.stopPropagation();"><button class="btn btn-small" onclick="viewLPO('${l.id}')" title="${currentLanguage === 'en' ? 'Preview' : 'معاينة'}"><i class="fas fa-eye"></i></button> ${printBtn} ${editBtn} ${approveBtn} ${rejectBtn} ${delBtn}</td>`;
+            <td>${lastModifiedCell(l, actEntries)}</td>
+            <td class="col-actions" style="text-align:center; white-space:nowrap;" onclick="event.stopPropagation();">${kebab}</td>`;
         });
     }
     updateSortArrows();
@@ -4208,6 +4766,103 @@ document.addEventListener('click', function(e) {
         dropdown.classList.remove('active');
     }
 });
+
+// طباعة قائمة أوامر الشراء المعروضة (حسب الفلترة والفرز) كتقرير A4 أفقي احترافي
+async function printLPOListPDF() {
+    if (!(await ensureLib('html2pdf'))) { alert(msg('تعذّر تحميل مكتبة الطباعة. تأكد من اتصالك بالإنترنت وأعد المحاولة.')); return; }
+    const en = currentLanguage === 'en';
+    const list = getSortedLPOs(); // يحترم الفلترة والفرز المطبّقين في الجدول
+    if (!list.length) { alert(msg('لا توجد أوامر لطباعتها')); return; }
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+    // ملخّص الفلاتر المطبّقة
+    const parts = [];
+    const numV = (document.getElementById('filterOrderNumber') || {}).value;
+    if (numV) parts.push((en ? 'Order No: ' : 'رقم الأمر: ') + numV);
+    const supSel = msGet('msSupplier'); if (supSel && supSel.length) parts.push((en ? 'Supplier: ' : 'المورد: ') + supSel.map(id => { const s = suppliers.find(x => x.id === id); return s ? s.name : id; }).join('، '));
+    const svcSel = msGet('msService'); if (svcSel && svcSel.length) parts.push((en ? 'Service: ' : 'الخدمة: ') + svcSel.join('، '));
+    const usrSel = msGet('msUser'); if (usrSel && usrSel.length) parts.push((en ? 'Employee: ' : 'الموظف: ') + usrSel.join('، '));
+    const depSel = msGet('msDepartment'); if (depSel && depSel.length) parts.push((en ? 'Department: ' : 'القسم: ') + depSel.join('، '));
+    const stV = (document.getElementById('filterStatus') || {}).value;
+    if (stV) { const m = { '__pending': en ? 'Pending' : 'بانتظار الاعتماد', '__approved': en ? 'Approved' : 'معتمد', '__rejected': en ? 'Rejected' : 'مرفوض' }; parts.push((en ? 'Status: ' : 'الحالة: ') + (m[stV] || stV)); }
+    const fromD = (document.getElementById('filterFromDate') || {}).value, toD = (document.getElementById('filterToDate') || {}).value;
+    if (fromD || toD) parts.push((en ? 'Date: ' : 'التاريخ: ') + (fromD || '…') + ' → ' + (toD || '…'));
+    const filterSummary = parts.length ? parts.join('  •  ') : (en ? 'All data (no filters applied)' : 'كل البيانات (بدون تصفية)');
+
+    const grand = list.reduce((s, l) => s + (parseFloat(l.total) || 0), 0);
+    const statusText = (l) => l.approvalStatus === 'pending' ? (en ? 'Pending' : 'بانتظار الاعتماد')
+        : l.approvalStatus === 'rejected' ? (en ? 'Rejected' : 'مرفوض') : (en ? 'Approved' : 'معتمد');
+
+    const rowsHtml = list.map((l, i) => `<tr>
+        <td style="text-align:center;">${i + 1}</td>
+        <td>${escapeHtml(l.number || '')}</td>
+        <td>${escapeHtml(l.supplierName || '')}</td>
+        <td>${escapeHtml(orderServiceType(l) || '')}</td>
+        <td>${escapeHtml(l.department || '')}</td>
+        <td style="text-align:center; white-space:nowrap;">${escapeHtml(l.date || '')}</td>
+        <td style="text-align:center;">${statusText(l)}</td>
+        <td>${escapeHtml(l.staff || '')}</td>
+        <td style="text-align:center; white-space:nowrap;">${l.createdAt ? new Date(l.createdAt).toLocaleDateString('en-GB') : ''}</td>
+        <td style="text-align:left; font-weight:700; white-space:nowrap;">${fmt(l.total)}</td>
+    </tr>`).join('');
+
+    const th = (t) => `<th style="padding:7px 5px; border:1px solid #cfe0ea;">${t}</th>`;
+    const holder = document.createElement('div');
+    holder.id = '__lpoListPdf';
+    holder.setAttribute('dir', en ? 'ltr' : 'rtl');
+    holder.style.cssText = "position:fixed; left:0; top:0; width:1040px; background:#fff; z-index:-1; pointer-events:none; font-family:Arial,'Segoe UI',Tahoma,sans-serif; color:#222; padding:14px;";
+    holder.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:3px solid #0093c4; padding-bottom:10px; margin-bottom:12px;">
+            <div style="width:90px;">${typeof LOGO_DATA !== 'undefined' ? `<img src="${LOGO_DATA}" style="width:100%;">` : ''}</div>
+            <div style="text-align:center; flex:1;">
+                <div style="font-size:21px; font-weight:800; color:#0093c4;">${en ? 'Purchase Orders Report' : 'تقرير أوامر الشراء المحلية'}</div>
+                <div style="font-size:12px; color:#555; margin-top:2px;">${en ? 'Takaful Oman Insurance' : 'تكافل عمان للتأمين'}</div>
+            </div>
+            <div style="width:180px; text-align:${en ? 'right' : 'left'}; font-size:11px; color:#555; line-height:1.7;">
+                <div><strong>${en ? 'Printed:' : 'تاريخ الطباعة:'}</strong> ${dateStr}</div>
+                <div><strong>${en ? 'Count:' : 'عدد الأوامر:'}</strong> ${list.length}</div>
+            </div>
+        </div>
+        <div style="font-size:11px; color:#444; background:#eef7fb; border:1px solid #cfe7f3; border-radius:6px; padding:6px 10px; margin-bottom:10px;">
+            <strong>${en ? 'Filters:' : 'الفلاتر:'}</strong> ${escapeHtml(filterSummary)}
+        </div>
+        <table style="width:100%; border-collapse:collapse; font-size:11px;">
+            <thead><tr style="background:#0093c4; color:#fff;">
+                ${th('#')}${th(en ? 'Order No.' : 'رقم الأمر')}${th(en ? 'Supplier' : 'المورد')}${th(en ? 'Service' : 'نوع الخدمة')}${th(en ? 'Department' : 'القسم / الغرض')}${th(en ? 'Date' : 'التاريخ')}${th(en ? 'Status' : 'الحالة')}${th(en ? 'Employee' : 'الموظف')}${th(en ? 'Record Date' : 'تاريخ التسجيل')}${th(en ? 'Total (OMR)' : 'المبلغ (ر.ع)')}
+            </tr></thead>
+            <tbody>${rowsHtml}</tbody>
+            <tfoot><tr style="background:#f1f6f9; font-weight:800;">
+                <td colspan="9" style="padding:8px 6px; border:1px solid #cfe0ea; text-align:${en ? 'right' : 'left'};">${en ? 'Grand Total (OMR)' : 'الإجمالي الكلي (ر.ع)'}</td>
+                <td style="padding:8px 6px; border:1px solid #cfe0ea; text-align:left; color:#0093c4;">${fmt(grand)}</td>
+            </tr></tfoot>
+        </table>
+        <div style="margin-top:10px; font-size:9.5px; color:#8aa2b0; text-align:center;">${en ? 'Generated by the LPO Management System — Takaful Oman Insurance' : 'صادر عن نظام إدارة أوامر الشراء المحلية — تكافل عمان للتأمين'}</div>`;
+    const style = document.createElement('style');
+    style.id = '__lpoListPdfStyle';
+    style.textContent = "#__lpoListPdf tbody td{border:1px solid #e1e8ee; padding:5px 5px;} #__lpoListPdf tbody tr:nth-child(even){background:#f7fafc;}";
+    document.body.appendChild(style);
+    document.body.appendChild(holder);
+
+    const opt = {
+        margin: [6, 6, 8, 6],
+        filename: (en ? 'LPO-List-' : 'قائمة-أوامر-الشراء-') + now.toISOString().split('T')[0] + '.pdf',
+        image: { type: 'jpeg', quality: 0.97 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+        pagebreak: { mode: ['css', 'legacy'] }
+    };
+    try {
+        await new Promise(r => setTimeout(r, 120));
+        await html2pdf().set(opt).from(holder).save();
+        recordAction(en ? 'Print orders list PDF' : 'طباعة قائمة أوامر الشراء PDF', 'export');
+    } catch (e) {
+        alert(msg('تعذّر إنشاء ملف الطباعة: ') + (e && e.message ? e.message : ''));
+    } finally {
+        if (holder.parentNode) holder.parentNode.removeChild(holder);
+        if (style.parentNode) style.parentNode.removeChild(style);
+    }
+}
 
 async function exportLPOList() {
     if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
@@ -4824,15 +5479,16 @@ async function addSupplier(event) {
         cr_no: document.getElementById('newSupplierCr').value,
         cr_expiry: document.getElementById('newSupplierCrExpiry').value || null,
         notes: document.getElementById('newSupplierNotes').value || null,
+        created_by: (currentUser && currentUser.username) || null,
         tax_card_url: taxUrl || null,
         cr_cert_url: crUrl || null,
         other_files_url: otherUrl || null
     };
-    // إسقاط أي عمود غير موجود بعد في قاعدة البيانات (cr_expiry / notes) بأمان ثم إعادة المحاولة
+    // إسقاط أي عمود غير موجود بعد في قاعدة البيانات (cr_expiry / notes / created_by) بأمان ثم إعادة المحاولة
     const stripUnknownCols = (obj, errMsg) => {
         const clone = Object.assign({}, obj);
         let stripped = false;
-        ['cr_expiry', 'notes'].forEach(c => { if (new RegExp(c, 'i').test(errMsg || '')) { delete clone[c]; stripped = true; } });
+        ['cr_expiry', 'notes', 'created_by'].forEach(c => { if (new RegExp(c, 'i').test(errMsg || '')) { delete clone[c]; stripped = true; } });
         return stripped ? clone : null;
     };
     // وضع التعديل: تحديث بيانات مورد قائم بدل إضافة مورد جديد
@@ -4882,10 +5538,12 @@ async function addSupplier(event) {
 }
 
 async function deleteSupplier(id) {
-    if (confirm(msg('هل تريد حذف هذا المورد؟'))) {
-        const { error } = await sb.from('suppliers').delete().eq('id', id);
+    if (confirm(msg('هل تريد حذف هذا المورد؟ سينتقل إلى سلة المهملات.'))) {
+        const s = suppliers.find(x => String(x.id) === String(id));
+        const { error } = await softDeleteRow('suppliers', id);
         if (error) { alert(msg('تعذّر الحذف: ') + error.message); return; }
         await loadAllFromCloud();
+        recordAction('حذف مورد ' + ((s && s.name) || id));
         populateAllFilters();
         loadSuppliersList();
     }
@@ -5115,17 +5773,6 @@ function generateReport() {
     setStat('repStatApproved', 'repStatApprovedAmt', 'approved');
     setStat('repStatRejected', 'repStatRejectedAmt', 'rejected');
 
-    // table
-    const tbody = document.querySelector('#reportTable tbody');
-    tbody.innerHTML = '';
-    if (list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#999;">لا توجد بيانات مطابقة</td></tr>';
-    } else {
-        list.forEach(l => {
-            tbody.insertRow().innerHTML = `<td>${l.number}</td><td>${l.supplierName}</td><td>${l.date}</td><td>${fmt(l.total)}</td><td>${approvalBadge(l)}</td><td>${l.staff}</td>`;
-        });
-    }
-
     // chart by date
     const byDate = {};
     list.forEach(l => { byDate[l.date] = (byDate[l.date] || 0) + l.total; });
@@ -5157,6 +5804,13 @@ function generateReport() {
     renderTop5(list);
     renderTopSuppliers(list);
     renderDepartmentStats(list);
+
+    // تفعيل الفرز/السحب/التمديد لأعمدة جداول التقارير (مرة واحدة) ثم تطبيق الترتيب والفرز المحفوظ
+    ['reportServiceTable', 'top5Table', 'topSuppliersTable', 'deptStatsTable', 'vpiTable'].forEach(tid => {
+        initColumnDrag(tid, function () { applyColumnOrder(tid); applyGenericSort(tid); });
+        applyColumnOrder(tid);
+        applyGenericSort(tid);
+    });
 }
 
 // أفضل 10 موردين حسب إجمالي الإنفاق ضمن النتائج المصفّاة
@@ -5178,7 +5832,7 @@ function renderTopSuppliers(list) {
     }
     ranked.forEach((r, i) => {
         const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
-        tbody.insertRow().innerHTML = `<td style="text-align:center; font-weight:700;">${medal}</td><td>${escapeHtml(r.name)}</td><td style="text-align:center;">${r.count}</td><td style="font-weight:700; color:#0093c4;">${fmt(r.total)}</td>`;
+        tbody.insertRow().innerHTML = `<td style="text-align:center; font-weight:700;">${medal}</td><td>${escapeHtml(r.name)}</td><td style="text-align:center;" data-sort="${r.count}">${r.count}</td><td style="font-weight:700; color:#0093c4;" data-sort="${r.total}">${fmt(r.total)}</td>`;
     });
 }
 
@@ -5211,7 +5865,7 @@ function renderServiceTypeChart(list) {
         } else {
             labels.forEach((k, i) => {
                 const pct = grand ? ((byService[k] / grand) * 100).toFixed(1) : '0.0';
-                svcTbody.insertRow().innerHTML = `<td><span style="display:inline-block; width:10px; height:10px; border-radius:2px; background:${palette[i % palette.length]}; margin-inline-end:6px;"></span>${escapeHtml(k)}</td><td style="font-weight:600;">${fmt(byService[k])}</td><td>${pct}%</td>`;
+                svcTbody.insertRow().innerHTML = `<td><span style="display:inline-block; width:10px; height:10px; border-radius:2px; background:${palette[i % palette.length]}; margin-inline-end:6px;"></span>${escapeHtml(k)}</td><td style="font-weight:600;" data-sort="${byService[k]}">${fmt(byService[k])}</td><td data-sort="${pct}">${pct}%</td>`;
             });
         }
     }
@@ -5244,12 +5898,13 @@ function renderTop5(list) {
     tbody.innerHTML = '';
     const top = list.slice().sort((a, b) => b.total - a.total).slice(0, 10);
     if (top.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#999;">لا توجد بيانات</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999;">لا توجد بيانات</td></tr>';
         return;
     }
+    const dash = '<span style="color:#bbb;">—</span>';
     top.forEach((l, i) => {
         const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
-        tbody.insertRow().innerHTML = `<td style="text-align:center; font-weight:700;">${medal}</td><td>${l.number}</td><td>${l.supplierName}</td><td style="font-weight:700; color:#0093c4;">${fmt(l.total)}</td>`;
+        tbody.insertRow().innerHTML = `<td style="text-align:center; font-weight:700;">${medal}</td><td>${l.number}</td><td>${l.supplierName}</td><td>${escapeHtml(l.department || '') || dash}</td><td style="font-weight:700; color:#0093c4;" data-sort="${l.total}">${fmt(l.total)}</td>`;
     });
 }
 
@@ -5296,7 +5951,7 @@ function renderDepartmentStats(list) {
             tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">لا توجد بيانات</td></tr>';
         } else {
             depts.forEach(d => {
-                tbody.insertRow().innerHTML = `<td>${d}</td><td style="text-align:center;">${byDept[d].count}</td><td style="font-weight:700; color:#0093c4;">${fmt(byDept[d].total)}</td>`;
+                tbody.insertRow().innerHTML = `<td>${d}</td><td style="text-align:center;" data-sort="${byDept[d].count}">${byDept[d].count}</td><td style="font-weight:700; color:#0093c4;" data-sort="${byDept[d].total}">${fmt(byDept[d].total)}</td>`;
             });
         }
     }
@@ -5395,10 +6050,14 @@ function renderVPITable(filteredOrders) {
     if (!vpiBody) return;
     vpiBody.innerHTML = '';
 
-    // عدد الأوامر لكل مورد ضمن النتائج المصفّاة الحالية
+    // عدد الأوامر وإجمالي المبلغ لكل مورد ضمن النتائج المصفّاة الحالية
     const orderCountBySupplier = {};
+    const amountBySupplier = {};
     (filteredOrders || []).forEach(l => {
-        if (l.supplierId) orderCountBySupplier[l.supplierId] = (orderCountBySupplier[l.supplierId] || 0) + 1;
+        if (l.supplierId) {
+            orderCountBySupplier[l.supplierId] = (orderCountBySupplier[l.supplierId] || 0) + 1;
+            amountBySupplier[l.supplierId] = (amountBySupplier[l.supplierId] || 0) + (parseFloat(l.total) || 0);
+        }
     });
 
     // بناء قائمة الموردين مع متوسط تقييمهم
@@ -5408,6 +6067,7 @@ function renderVPITable(filteredOrders) {
             name: s.name,
             avg: r.avg,
             count: r.count,
+            amount: amountBySupplier[s.id] || 0,
             orders: orderCountBySupplier[s.id] || 0
         };
     });
@@ -5423,7 +6083,7 @@ function renderVPITable(filteredOrders) {
     const finalList = toShow.length > 0 ? toShow : ranked;
 
     if (finalList.length === 0) {
-        vpiBody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999;">' + (currentLanguage === 'en' ? 'No suppliers yet' : 'لا يوجد موردون بعد') + '</td></tr>';
+        vpiBody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#999;">' + (currentLanguage === 'en' ? 'No suppliers yet' : 'لا يوجد موردون بعد') + '</td></tr>';
         return;
     }
 
@@ -5432,7 +6092,7 @@ function renderVPITable(filteredOrders) {
             ? renderStarsDisplay(r.avg) + ` <span style="font-size:11px; color:#666;">${r.avg.toFixed(1)}</span>`
             : '<span style="font-size:11px; color:#999;">' + (currentLanguage === 'en' ? 'No ratings' : 'لا تقييم') + '</span>';
         const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
-        vpiBody.insertRow().innerHTML = `<td style="text-align:center; font-weight:700;">${medal}</td><td>${r.name}</td><td>${ratingCell}</td><td style="text-align:center;">${r.count}</td><td style="text-align:center;">${r.orders}</td>`;
+        vpiBody.insertRow().innerHTML = `<td style="text-align:center; font-weight:700;">${medal}</td><td>${r.name}</td><td data-sort="${r.avg}">${ratingCell}</td><td style="text-align:center;" data-sort="${r.count}">${r.count}</td><td style="text-align:center;" data-sort="${r.orders}">${r.orders}</td><td style="font-weight:700; color:#0093c4;" data-sort="${r.amount}">${fmt(r.amount)}</td>`;
     });
 }
 
@@ -5735,6 +6395,7 @@ function applyPermissionsToUI() {
     // قائمة "مدير النظام": لمدير النظام فقط (غير مرتبطة بوحدة واحدة)
     const adminNav = document.getElementById('adminNav');
     if (adminNav) adminNav.classList.toggle('perm-hidden', !(currentUser && currentUser.role === 'sysadmin'));
+    // قائمة "سلة المهملات" تُدار عبر صلاحية trash:view ضمن حلقة [data-perm] أعلاه
 }
 
 // ===================== صفحة إدارة الأدوار والصلاحيات =====================
@@ -5761,18 +6422,25 @@ function renderPermissionsMatrix() {
     const thead = document.querySelector('#permMatrixTable thead');
     const tbody = document.querySelector('#permMatrixTable tbody');
     // رأس الجدول: الوحدة + الإجراءات
-    thead.innerHTML = '<tr><th style="text-align:right;">' + (en ? 'Module' : 'الوحدة') + '</th>' +
+    thead.innerHTML = `<tr><th style="text-align:${en ? 'left' : 'right'};">` + (en ? 'Module' : 'الوحدة') + '</th>' +
         PERM_ACTIONS.map(a => `<th style="text-align:center;">${en ? a.en : a.ar}</th>`).join('') + '</tr>';
     // صفوف الوحدات
     tbody.innerHTML = '';
     const isSysadmin = (role === 'sysadmin');
+    const startAlign = (currentLanguage === 'en') ? 'left' : 'right';
     PERM_MODULES.forEach(mod => {
-        if (!rolePermissions[role][mod.key]) rolePermissions[role][mod.key] = { view:false, create:false, edit:false, delete:false, approve:false };
+        if (!rolePermissions[role][mod.key]) rolePermissions[role][mod.key] = {};
+        const applicable = mod.acts || DEFAULT_PERM_ACTS;
         const tr = document.createElement('tr');
-        let cells = `<td style="text-align:right; font-weight:600;">${en ? mod.en : mod.ar}</td>`;
+        let cells = `<td style="text-align:${startAlign}; font-weight:600;">${en ? mod.en : mod.ar}</td>`;
         PERM_ACTIONS.forEach(act => {
-            const checked = rolePermissions[role][mod.key][act.key] ? 'checked' : '';
-            // مدير النظام: صلاحياته ثابتة (كل شيء) وغير قابلة للتعديل لتفادي قفل النظام
+            if (applicable.indexOf(act.key) === -1) {
+                // إجراء غير مطبّق على هذه الوحدة
+                cells += `<td style="text-align:center; color:#d2dae0;">—</td>`;
+                return;
+            }
+            // مدير النظام يملك كل الصلاحيات دائماً (محدّدة ومقفلة)
+            const checked = (isSysadmin || rolePermissions[role][mod.key][act.key]) ? 'checked' : '';
             const disabled = isSysadmin ? 'disabled' : '';
             cells += `<td style="text-align:center;"><input type="checkbox" ${checked} ${disabled} onchange="togglePerm('${role}','${mod.key}','${act.key}',this.checked)" style="width:17px; height:17px; cursor:pointer;"></td>`;
         });
@@ -5792,7 +6460,7 @@ function togglePerm(role, mod, act, val) {
     rolePermissions[role][mod][act] = val;
     // قاعدة منطقية: إلغاء الرؤية يُلغي بقية الصلاحيات (لا تحرير بلا رؤية)
     if (act === 'view' && !val) {
-        ['create','edit','delete','approve'].forEach(a => rolePermissions[role][mod][a] = false);
+        ['create','edit','delete','approve','restore'].forEach(a => rolePermissions[role][mod][a] = false);
         renderPermissionsMatrix();
     }
     // تفعيل أي إجراء يفعّل الرؤية تلقائياً
@@ -5839,11 +6507,14 @@ function loadAdminPanel() {
             const delCell = isDefaultAdmin
                 ? `<button class="btn btn-small" disabled style="opacity:.4; cursor:not-allowed;" title="${currentLanguage==='en'?'Cannot delete default admin':'لا يمكن حذف المدير الافتراضي'}"><i class="fas fa-lock"></i></button>`
                 : `<button class="btn btn-small" onclick="deleteUser('${u.id}')" style="color:#e74c3c;"><i class="fas fa-trash"></i></button>`;
-            tbody.insertRow().innerHTML = `<td>${u.username}</td><td>${u.email}</td><td>${roleCell}</td><td>${created}</td><td>${delCell}</td>`;
+            tbody.insertRow().innerHTML = `<td>${u.username}</td><td>${u.email}</td><td>${roleCell}</td><td data-sort="${u.createdAt || ''}">${created}</td><td>${delCell}</td>`;
         });
     }
-    renderActivityLog();
     updateLastBackupInfo();
+    // تفعيل الفرز/السحب/التمديد للأعمدة (مرة واحدة) ثم تطبيق الترتيب والفرز المحفوظ
+    initColumnDrag('usersTable', loadAdminPanel);
+    applyColumnOrder('usersTable');
+    applyGenericSort('usersTable');
 }
 
 // تغيير صلاحية مستخدم قائم (المدير فقط) — تشمل الترقية إلى مدير نظام
@@ -5985,6 +6656,437 @@ async function downloadActivityExcel() {
     }
 }
 
+// ======================================================================
+// ===================== سلة المهملات (Trash / Recycle Bin) =============
+// ======================================================================
+function loadTrash() {
+    const oc = document.getElementById('trashOrdersCount');    if (oc) oc.textContent = deletedOrders.length;
+    const dc = document.getElementById('trashDraftsCount');    if (dc) dc.textContent = deletedDrafts.length;
+    const sc = document.getElementById('trashSuppliersCount'); if (sc) sc.textContent = deletedSuppliers.length;
+    renderTrashOrders();
+    renderTrashDrafts();
+    renderTrashSuppliers();
+    // تفعيل الفرز/السحب/التمديد لأعمدة جداول سلة المهملات (مرة واحدة) ثم تطبيق الترتيب والفرز المحفوظ
+    ['trashOrdersTable', 'trashDraftsTable', 'trashSuppliersTable'].forEach(tid => {
+        initColumnDrag(tid, loadTrash);
+        applyColumnOrder(tid);
+        applyGenericSort(tid);
+    });
+    if (currentLanguage === 'en') applyTranslations('en');
+}
+
+function showTrashTab(tab, btn) {
+    document.querySelectorAll('#page-trash .tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#page-trash .tabs-bar .tab-btn').forEach(b => b.classList.remove('active'));
+    const map = { orders: 'trash-tab-orders', drafts: 'trash-tab-drafts', suppliers: 'trash-tab-suppliers' };
+    const el = document.getElementById(map[tab]);
+    if (el) el.classList.add('active');
+    if (btn) btn.classList.add('active');
+    if (el) { try { mAnimate(el, { opacity: [0, 1], transform: ['translateY(8px)', 'translateY(0)'] }, { duration: 0.25, easing: 'ease-out' }); } catch (e) {} }
+}
+
+// أزرار الإجراءات — كلٌّ حسب صلاحيته (استرجاع: trash:restore، حذف نهائي: trash:delete)
+function trashActionBtns(type, id) {
+    const en = currentLanguage === 'en';
+    const canRestore = can('trash', 'restore');
+    const canPurge = can('trash', 'delete');
+    let html = '';
+    if (canRestore) html += `<button class="btn btn-small btn-restore" onclick="restoreTrashItem('${type}','${id}')"><i class="fas fa-trash-restore"></i> ${en ? 'Restore' : 'استرجاع'}</button> `;
+    if (canPurge) html += `<button class="btn btn-small btn-purge" onclick="purgeTrashItem('${type}','${id}')"><i class="fas fa-times-circle"></i> ${en ? 'Delete permanently' : 'حذف نهائي'}</button>`;
+    if (!html) html = `<span style="font-size:11.5px; color:#b0b8bf;"><i class="fas fa-eye"></i> ${en ? 'View only' : 'عرض فقط'}</span>`;
+    return html;
+}
+
+function renderTrashOrders() {
+    const tbody = document.querySelector('#trashOrdersTable tbody'); if (!tbody) return;
+    const en = currentLanguage === 'en';
+    tbody.innerHTML = '';
+    if (!deletedOrders.length) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999; padding:20px;">${en ? 'No deleted orders' : 'لا توجد أوامر شراء محذوفة'}</td></tr>`; return; }
+    deletedOrders.slice().sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt)).forEach(o => {
+        tbody.insertRow().innerHTML =
+            `<td style="font-weight:700; white-space:nowrap;">${escapeHtml(o.number || '—')}</td>` +
+            `<td>${escapeHtml(o.supplierName || '—')}</td>` +
+            `<td style="white-space:nowrap;">${escapeHtml(o.date || '—')}</td>` +
+            `<td style="font-weight:600; white-space:nowrap;" data-sort="${o.total}">${fmt(o.total)}</td>` +
+            `<td data-sort="${o.deletedAt || ''}">${fmtRecordDate(o.deletedAt)}</td>` +
+            `<td style="white-space:nowrap;">${trashActionBtns('orders', o.id)}</td>`;
+    });
+}
+
+function renderTrashDrafts() {
+    const tbody = document.querySelector('#trashDraftsTable tbody'); if (!tbody) return;
+    const en = currentLanguage === 'en';
+    tbody.innerHTML = '';
+    if (!deletedDrafts.length) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999; padding:20px;">${en ? 'No deleted drafts' : 'لا توجد مسودات محذوفة'}</td></tr>`; return; }
+    deletedDrafts.slice().sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt)).forEach(d => {
+        tbody.insertRow().innerHTML =
+            `<td style="font-weight:700; white-space:nowrap;">${escapeHtml(d.draftNumber || '—')}</td>` +
+            `<td>${escapeHtml(d.supplierName || '—')}</td>` +
+            `<td style="white-space:nowrap;">${escapeHtml(d.date || '—')}</td>` +
+            `<td style="font-weight:600; white-space:nowrap;" data-sort="${d.total}">${fmt(d.total)}</td>` +
+            `<td data-sort="${d.deletedAt || ''}">${fmtRecordDate(d.deletedAt)}</td>` +
+            `<td style="white-space:nowrap;">${trashActionBtns('drafts', d.id)}</td>`;
+    });
+}
+
+function renderTrashSuppliers() {
+    const tbody = document.querySelector('#trashSuppliersTable tbody'); if (!tbody) return;
+    const en = currentLanguage === 'en';
+    tbody.innerHTML = '';
+    if (!deletedSuppliers.length) { tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999; padding:20px;">${en ? 'No deleted suppliers' : 'لا يوجد موردون محذوفون'}</td></tr>`; return; }
+    deletedSuppliers.slice().sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt)).forEach(s => {
+        tbody.insertRow().innerHTML =
+            `<td style="font-weight:700;">${escapeHtml(s.name || '—')}</td>` +
+            `<td style="font-size:12px;">${escapeHtml(s.serviceType || '—')}</td>` +
+            `<td style="white-space:nowrap;" dir="ltr">${escapeHtml(s.phone || '—')}</td>` +
+            `<td style="font-size:12px;">${escapeHtml(s.createdBy || '—')}</td>` +
+            `<td data-sort="${s.deletedAt || ''}">${fmtRecordDate(s.deletedAt)}</td>` +
+            `<td style="white-space:nowrap;">${trashActionBtns('suppliers', s.id)}</td>`;
+    });
+}
+
+const _TRASH_TABLE = { orders: 'purchase_orders', drafts: 'drafts', suppliers: 'suppliers' };
+
+async function restoreTrashItem(type, id) {
+    if (!can('trash', 'restore')) { alert(msg('ليست لديك صلاحية استرجاع المحذوفات.')); return; }
+    const table = _TRASH_TABLE[type]; if (!table) return;
+    if (!confirm(msg('هل تريد استرجاع هذا العنصر من سلة المهملات؟'))) return;
+    const { error } = await restoreRow(table, id);
+    if (error) { alert(msg('تعذّر الاسترجاع: ') + error.message); return; }
+    await loadAllFromCloud();
+    recordAction('استرجاع عنصر محذوف من سلة المهملات', 'restore');
+    loadTrash();
+    try { populateAllFilters(); } catch (e) {}
+    alert(msg('تم استرجاع العنصر بنجاح ✅'));
+}
+
+async function purgeTrashItem(type, id) {
+    if (!can('trash', 'delete')) { alert(msg('ليست لديك صلاحية الحذف النهائي.')); return; }
+    const table = _TRASH_TABLE[type]; if (!table) return;
+    const en = currentLanguage === 'en';
+    if (!confirm(en ? '⚠ Permanently delete this item?\nThis cannot be undone.' : '⚠ حذف هذا العنصر نهائياً؟\nلا يمكن التراجع عن الحذف النهائي إطلاقاً.')) return;
+    const { error } = await hardDeleteRow(table, id);
+    if (error) { alert(msg('تعذّر الحذف النهائي: ') + error.message); return; }
+    await loadAllFromCloud();
+    recordAction('حذف نهائي لعنصر من سلة المهملات', 'delete');
+    loadTrash();
+    alert(msg('تم الحذف النهائي.'));
+}
+
+// ======================================================================
+// ===================== الملف الشخصي (Profile) =========================
+// ======================================================================
+// العثور على سجل المستخدم الحالي ضمن قائمة المستخدمين (للهاتف والمسمى الوظيفي)
+function currentUserRecord() {
+    if (!currentUser) return null;
+    const em = (currentUser.email || '').toLowerCase();
+    return registeredUsers.find(u => (u.authId && currentUser.authId && u.authId === currentUser.authId) ||
+                                     ((u.email || '').toLowerCase() === em && em)) || null;
+}
+
+// فحص صلاحية دور مُحدّد (يُستخدم لعرض صلاحيات مستخدم آخر في ملفه الشخصي)
+function roleCan(role, module, action) {
+    if (role === 'sysadmin') return true;
+    const rp = rolePermissions[role] || DEFAULT_PERMISSIONS[role];
+    if (!rp) return false;
+    let m = rp[module];
+    if (!m && DEFAULT_PERMISSIONS[role]) m = DEFAULT_PERMISSIONS[role][module];
+    return !!(m && m[action]);
+}
+
+// الملف المعروض حالياً: نفسي افتراضياً، أو مستخدم آخر لمن يملك صلاحية profiles:view
+let _profileViewUserId = null;
+function profileTarget() {
+    const myRec = currentUserRecord();
+    const myId = myRec ? String(myRec.id) : null;
+    if (_profileViewUserId && String(_profileViewUserId) !== myId) {
+        const rec = registeredUsers.find(u => String(u.id) === String(_profileViewUserId));
+        if (rec) return { isSelf: false, username: rec.username || '—', email: rec.email || '—',
+            role: rec.role || 'guest', phone: rec.phone || '', jobTitle: rec.jobTitle || '',
+            createdAt: rec.createdAt, id: rec.id };
+    }
+    return { isSelf: true,
+        username: (myRec && myRec.username) || (currentUser && currentUser.username) || '—',
+        email: (currentUser && currentUser.email) || (myRec && myRec.email) || '—',
+        role: (currentUser && currentUser.role) || (myRec && myRec.role) || 'guest',
+        phone: (myRec && myRec.phone) || '', jobTitle: (myRec && myRec.jobTitle) || '',
+        createdAt: myRec && myRec.createdAt, id: myRec && myRec.id };
+}
+
+function loadProfile() {
+    const en = currentLanguage === 'en';
+    const t = profileTarget();
+    const since = t.createdAt ? new Date(t.createdAt).toLocaleDateString('en-GB') : '—';
+
+    // بطاقة الهوية
+    const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setTxt('profileHeroName', t.username);
+    setTxt('profileHeroRole', roleLabel(t.role));
+    setTxt('profileHeroJob', t.jobTitle ? ('• ' + t.jobTitle) : '');
+    setTxt('profileHeroEmail', t.email);
+    setTxt('profileHeroPhone', t.phone || (en ? 'Not set' : 'غير مُسجّل'));
+    setTxt('profileHeroSince', since);
+
+    // نموذج البيانات
+    const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+    setVal('profileNameInput', t.username === '—' ? '' : t.username);
+    setVal('profileEmailInput', t.email === '—' ? '' : t.email);
+    setVal('profilePhoneInput', t.phone);
+    setVal('profileJobInput', t.jobTitle);
+    const sm = document.getElementById('profileSaveMsg'); if (sm) sm.textContent = '';
+
+    // التحرير متاح فقط لصاحب الملف نفسه (غير الزائر)؛ عند تصفّح ملف آخر تكون القراءة فقط
+    const editable = t.isSelf && !isGuest && !!(currentUser && currentUser.authId);
+    ['profileNameInput', 'profilePhoneInput', 'profileJobInput'].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = !editable; });
+    const saveBtn = document.getElementById('profileSaveBtn'); if (saveBtn) saveBtn.style.display = editable ? '' : 'none';
+    const secCard = document.getElementById('profileSecurityCard'); if (secCard) secCard.style.display = t.isSelf ? '' : 'none';
+
+    // شريط "تعرض ملف مستخدم آخر"
+    const vb = document.getElementById('profileViewingBanner');
+    if (vb) {
+        if (!t.isSelf) {
+            vb.style.display = 'block';
+            vb.innerHTML = `<i class="fas fa-user-friends"></i> ${en ? 'You are viewing the profile of' : 'تعرض الآن ملف المستخدم'} <strong>${escapeHtml(t.username)}</strong> — <a href="#" onclick="profileViewSelf(); return false;">${en ? 'back to my profile' : 'العودة إلى ملفي'}</a>`;
+        } else { vb.style.display = 'none'; }
+    }
+
+    renderProfileSwitchControl();
+    renderProfilePermissions(t.role);
+    renderProfileStats(t.username);
+    renderProfileActivity(t.username, t.email);
+    if (currentLanguage === 'en') applyTranslations('en');
+}
+
+// إظهار/إخفاء أداة تصفّح الملفات حسب صلاحية profiles:view
+function renderProfileSwitchControl() {
+    const wrap = document.getElementById('profileSwitchWrap'); if (!wrap) return;
+    const allowed = can('profiles', 'view');
+    wrap.style.display = allowed ? '' : 'none';
+    if (!allowed) _profileViewUserId = null;
+    const inp = document.getElementById('profileSwitchInput');
+    if (inp && document.activeElement !== inp) inp.value = '';
+    const list = document.getElementById('profileSwitchList'); if (list) list.style.display = 'none';
+}
+// قائمة البحث المنسدلة (كتابة وبحث)
+function renderProfileSwitchList(q) {
+    const list = document.getElementById('profileSwitchList'); if (!list) return;
+    const en = currentLanguage === 'en';
+    const term = (q || '').trim().toLowerCase();
+    const users = registeredUsers.filter(u => !term ||
+        (u.username || '').toLowerCase().includes(term) || (u.email || '').toLowerCase().includes(term));
+    if (!users.length) {
+        list.innerHTML = `<div class="psw-empty">${en ? 'No matching users' : 'لا يوجد مستخدمون مطابقون'}</div>`;
+    } else {
+        list.innerHTML = users.slice(0, 60).map(u =>
+            `<div class="psw-item" onmousedown="selectProfileUser('${u.id}')"><i class="fas fa-user-circle"></i> <span>${escapeHtml(u.username || '—')}</span> <small dir="ltr">${escapeHtml(u.email || '')}</small></div>`
+        ).join('');
+    }
+    list.style.display = 'block';
+}
+function selectProfileUser(id) {
+    _profileViewUserId = id;
+    const list = document.getElementById('profileSwitchList'); if (list) list.style.display = 'none';
+    const inp = document.getElementById('profileSwitchInput'); if (inp) { inp.value = ''; inp.blur(); }
+    loadProfile();
+}
+function profileViewSelf() { _profileViewUserId = null; loadProfile(); }
+
+// عرض الصلاحيات المتاحة (حسب دور الملف المعروض)
+function renderProfilePermissions(role) {
+    const wrap = document.getElementById('profilePermissions'); if (!wrap) return;
+    role = role || (currentUser ? currentUser.role : 'guest');
+    const en = currentLanguage === 'en';
+    wrap.innerHTML = PERM_MODULES.map(mod => {
+        const applicable = mod.acts || DEFAULT_PERM_ACTS;
+        const tags = PERM_ACTIONS.filter(a => applicable.indexOf(a.key) !== -1).map(act => {
+            const on = roleCan(role, mod.key, act.key);
+            return `<span class="perm-tag ${on ? 'on' : 'off'}">${en ? act.en : act.ar}</span>`;
+        }).join('');
+        return `<div class="perm-module"><div class="perm-module-title"><i class="fas fa-cube"></i> ${en ? mod.en : mod.ar}</div><div class="perm-actions">${tags}</div></div>`;
+    }).join('');
+}
+
+// حساب كشف إحصائي بنشاط مستخدم (الأوامر/المسودات/الموردون) — افتراضياً المستخدم الحالي
+function profileStatData(uname) {
+    uname = (uname != null) ? uname : (currentUser ? currentUser.username : '');
+    const mine = (staff) => staff && (staff === uname);
+    const myOrders = lpoDrafts.filter(o => mine(o.staff));
+    const myDrafts = draftSaves.filter(d => mine(d.staff));
+    const mySuppliers = suppliers.filter(s => s.createdBy && s.createdBy === uname);
+    const myTotal = myOrders.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
+    const myApproved = myOrders.filter(o => o.approvalStatus === 'approved' || !o.approvalStatus).length;
+    const myPending = myOrders.filter(o => o.approvalStatus === 'pending').length;
+    const myRejected = myOrders.filter(o => o.approvalStatus === 'rejected').length;
+    return { myOrders, myDrafts, mySuppliers, myTotal, myApproved, myPending, myRejected };
+}
+
+function renderProfileStats(uname) {
+    const en = currentLanguage === 'en';
+    const d = profileStatData(uname);
+    const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setTxt('profOrdersCount', d.myOrders.length);
+    setTxt('profDraftsCount', d.myDrafts.length);
+    setTxt('profSuppliersCount', d.mySuppliers.length);
+    setTxt('profTotalAmount', fmt(d.myTotal));
+
+    // كشف تفصيلي
+    const tbody = document.getElementById('profStatementBody'); if (!tbody) return;
+    const rows = [
+        { label: en ? 'Purchase orders created' : 'أوامر الشراء المُنشأة', val: d.myOrders.length, det: (en ? 'Total value: ' : 'إجمالي القيمة: ') + fmt(d.myTotal) + ' ' + (en ? 'OMR' : 'ر.ع') },
+        { label: en ? 'Approved orders' : 'الأوامر المعتمدة', val: d.myApproved, det: en ? 'Approved / legacy orders' : 'أوامر معتمدة أو قديمة' },
+        { label: en ? 'Pending orders' : 'أوامر بانتظار الاعتماد', val: d.myPending, det: en ? 'Awaiting approval' : 'بانتظار اعتماد المعتمِد' },
+        { label: en ? 'Rejected orders' : 'الأوامر المرفوضة', val: d.myRejected, det: en ? 'Rejected orders' : 'أوامر تم رفضها' },
+        { label: en ? 'Drafts created' : 'المسودات المُنشأة', val: d.myDrafts.length, det: en ? 'Saved drafts' : 'مسودات محفوظة' },
+        { label: en ? 'Suppliers registered' : 'الموردون المُسجّلون', val: d.mySuppliers.length, det: en ? 'Registered suppliers' : 'موردون مُسجّلون' }
+    ];
+    tbody.innerHTML = rows.map(r =>
+        `<td style="font-weight:600;">${r.label}</td><td style="font-weight:700; color:#0093c4;">${r.val}</td><td style="font-size:12.5px; color:#667;">${r.det}</td>`
+    ).map(html => `<tr>${html}</tr>`).join('');
+}
+
+// عمليات مستخدم مُحدّد (للسجل والتصدير) — افتراضياً المستخدم الحالي
+function getUserActivityEntries(uname, email) {
+    uname = (uname != null) ? uname : (currentUser ? currentUser.username : '');
+    email = ((email != null) ? email : (currentUser ? (currentUser.email || '') : '')).toLowerCase();
+    return getActivityEntries().filter(e =>
+        (e.username && e.username === uname) || (e.userEmail && (e.userEmail || '').toLowerCase() === email && email));
+}
+
+// سجل كل العمليات التي قام بها مستخدم — بنفس نمط "سجل العمليات" في المعاينة
+function renderProfileActivity(uname, email) {
+    const box = document.getElementById('profileOpsLog'); if (!box) return;
+    // getActivityEntries مُرتّبة من الأحدث → مناسبة لعرض "الأحدث أولاً"
+    box.innerHTML = buildOpsLogHtml(getUserActivityEntries(uname, email).slice(0, 500));
+}
+
+// تغيير كلمة السر من داخل الملف الشخصي (جزء الحماية والأمان)
+async function changeProfilePassword() {
+    const msgEl = document.getElementById('profilePwMsg');
+    const show = (txt, ok) => { if (msgEl) { msgEl.style.color = ok ? '#2e7d32' : '#c0392b'; msgEl.textContent = txt; } };
+    if (isGuest || !sb) { show(msg('غير مصرّح'), false); return; }
+    const p1 = document.getElementById('profileNewPassword').value;
+    const p2 = document.getElementById('profileConfirmPassword').value;
+    if (!p1 || p1.length < 6) { show(msg('كلمة السر يجب أن تكون 6 أحرف على الأقل'), false); return; }
+    if (p1 !== p2) { show(msg('كلمتا السر غير متطابقتين'), false); return; }
+    const { error } = await sb.auth.updateUser({ password: p1 });
+    if (error) { show(msg('تعذّر تغيير كلمة السر: ') + error.message, false); return; }
+    document.getElementById('profileNewPassword').value = '';
+    document.getElementById('profileConfirmPassword').value = '';
+    recordAction('تغيير كلمة السر', 'permissions');
+    show(msg('تم تغيير كلمة السر بنجاح ✅'), true);
+}
+
+// تنزيل سجل عمليات المستخدم الحالي بصيغة Excel
+async function downloadProfileActivity() {
+    if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
+    const en = currentLanguage === 'en';
+    const t = profileTarget();
+    const entries = getUserActivityEntries(t.username, t.email);
+    if (!entries.length) { alert(msg('لا توجد بيانات للتصدير')); return; }
+    try {
+        const rows = entries.map(e => ({
+            [en ? 'Date & Time' : 'التاريخ والوقت']: e.createdAt ? new Date(e.createdAt).toLocaleString('en-GB') : '',
+            [en ? 'Operation Type' : 'نوع العملية']: activityTypeLabel(e.actionType),
+            [en ? 'Details' : 'التفاصيل']: e.details || ''
+        }));
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(rows);
+        ws['!cols'] = [{ wch: 20 }, { wch: 16 }, { wch: 52 }];
+        XLSX.utils.book_append_sheet(wb, ws, en ? 'Activity' : 'سجل العمليات');
+        const safe = (t.username || 'user').replace(/[^\w؀-ۿ]+/g, '_');
+        XLSX.writeFile(wb, (en ? 'Activity_' : 'سجل_عمليات_') + safe + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
+        recordAction(en ? 'Export activity log' : 'تنزيل سجل العمليات', 'export');
+    } catch (e) { alert(msg('تعذّر تصدير الملف: ') + e.message); }
+}
+
+// حفظ البيانات الشخصية (اسم العرض + الهاتف + المسمى الوظيفي)
+async function saveProfile() {
+    if (isGuest || !(currentUser && currentUser.authId) || !sb) { alert(msg('غير مصرّح')); return; }
+    const name = (document.getElementById('profileNameInput').value || '').trim();
+    const phone = (document.getElementById('profilePhoneInput').value || '').trim();
+    const job = (document.getElementById('profileJobInput').value || '').trim();
+    if (!name) { alert(msg('يرجى إدخال اسم العرض')); return; }
+    const sm = document.getElementById('profileSaveMsg');
+    const full = { username: name, phone: phone || null, job_title: job || null };
+    // إسقاط الأعمدة غير الموجودة بعد (phone / job_title) بأمان ثم إعادة المحاولة
+    let res = await sb.from('app_users').update(full).eq('auth_id', currentUser.authId);
+    if (res.error) {
+        const em = (res.error.message || '') + ' ' + (res.error.details || '');
+        const fb = { username: name };
+        if (!/phone/i.test(em)) fb.phone = phone || null;
+        if (!/job_title/i.test(em)) fb.job_title = job || null;
+        res = await sb.from('app_users').update(fb).eq('auth_id', currentUser.authId);
+    }
+    if (res.error) { if (sm) { sm.style.color = '#c0392b'; sm.textContent = msg('تعذّر الحفظ: ') + res.error.message; } return; }
+    // تحديث الحالة المحلية والواجهة
+    currentUser.username = name;
+    const sbu = document.getElementById('sidebarUsername'); if (sbu) sbu.textContent = name;
+    await loadAllFromCloud();
+    recordAction('تحديث بيانات الملف الشخصي', 'update');
+    loadProfile();
+    if (sm) { sm.style.color = '#2e7d32'; sm.textContent = msg('تم حفظ البيانات بنجاح ✅'); }
+}
+
+// تنزيل الكشف الإحصائي الشخصي بصيغة Excel
+async function downloadProfileStatement() {
+    if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
+    const en = currentLanguage === 'en';
+    const t = profileTarget();
+    const d = profileStatData(t.username);
+    const name = t.username || '';
+    try {
+        const wb = XLSX.utils.book_new();
+        // ورقة 1: الملخص
+        const info = [
+            { [en ? 'Field' : 'البند']: en ? 'Display name' : 'اسم العرض', [en ? 'Value' : 'القيمة']: name },
+            { [en ? 'Field' : 'البند']: en ? 'Email' : 'البريد الإلكتروني', [en ? 'Value' : 'القيمة']: t.email || '' },
+            { [en ? 'Field' : 'البند']: en ? 'Phone' : 'الهاتف', [en ? 'Value' : 'القيمة']: t.phone || '' },
+            { [en ? 'Field' : 'البند']: en ? 'Job title' : 'المسمى الوظيفي', [en ? 'Value' : 'القيمة']: t.jobTitle || '' },
+            { [en ? 'Field' : 'البند']: en ? 'Role' : 'الدور', [en ? 'Value' : 'القيمة']: roleLabel(t.role) },
+            { [en ? 'Field' : 'البند']: en ? 'Orders created' : 'أوامر أنشأتها', [en ? 'Value' : 'القيمة']: d.myOrders.length },
+            { [en ? 'Field' : 'البند']: en ? 'Approved orders' : 'أوامر معتمدة', [en ? 'Value' : 'القيمة']: d.myApproved },
+            { [en ? 'Field' : 'البند']: en ? 'Pending orders' : 'أوامر معلّقة', [en ? 'Value' : 'القيمة']: d.myPending },
+            { [en ? 'Field' : 'البند']: en ? 'Rejected orders' : 'أوامر مرفوضة', [en ? 'Value' : 'القيمة']: d.myRejected },
+            { [en ? 'Field' : 'البند']: en ? 'Drafts created' : 'مسودات أنشأتها', [en ? 'Value' : 'القيمة']: d.myDrafts.length },
+            { [en ? 'Field' : 'البند']: en ? 'Suppliers registered' : 'موردون سجّلتهم', [en ? 'Value' : 'القيمة']: d.mySuppliers.length },
+            { [en ? 'Field' : 'البند']: en ? 'Total value (OMR)' : 'إجمالي القيمة (ر.ع)', [en ? 'Value' : 'القيمة']: +d.myTotal.toFixed(3) }
+        ];
+        const ws1 = XLSX.utils.json_to_sheet(info);
+        ws1['!cols'] = [{ wch: 26 }, { wch: 30 }];
+        XLSX.utils.book_append_sheet(wb, ws1, en ? 'Summary' : 'الملخص');
+        // ورقة 2: أوامري
+        if (d.myOrders.length) {
+            const orows = d.myOrders.map(o => ({
+                [en ? 'Order No.' : 'رقم الأمر']: o.number || '',
+                [en ? 'Supplier' : 'المورد']: o.supplierName || '',
+                [en ? 'Date' : 'التاريخ']: o.date || '',
+                [en ? 'Total (OMR)' : 'الإجمالي (ر.ع)']: +(+o.total).toFixed(3),
+                [en ? 'Status' : 'الحالة']: o.approvalStatus || (en ? 'approved' : 'معتمد')
+            }));
+            const ws2 = XLSX.utils.json_to_sheet(orows);
+            ws2['!cols'] = [{ wch: 16 }, { wch: 28 }, { wch: 14 }, { wch: 15 }, { wch: 14 }];
+            XLSX.utils.book_append_sheet(wb, ws2, en ? 'My Orders' : 'أوامري');
+        }
+        // ورقة 3: موردوني
+        if (d.mySuppliers.length) {
+            const srows = d.mySuppliers.map(s => ({
+                [en ? 'Supplier' : 'المورد']: s.name || '',
+                [en ? 'Service' : 'نوع الخدمة']: s.serviceType || '',
+                [en ? 'Phone' : 'الهاتف']: s.phone || '',
+                [en ? 'Email' : 'البريد']: s.email || ''
+            }));
+            const ws3 = XLSX.utils.json_to_sheet(srows);
+            ws3['!cols'] = [{ wch: 28 }, { wch: 22 }, { wch: 16 }, { wch: 26 }];
+            XLSX.utils.book_append_sheet(wb, ws3, en ? 'My Suppliers' : 'موردوني');
+        }
+        const safe = (name || 'user').replace(/[^\w؀-ۿ]+/g, '_');
+        XLSX.writeFile(wb, (en ? 'My_Statement_' : 'كشفي_') + safe + '_' + new Date().toISOString().split('T')[0] + '.xlsx');
+        recordAction(en ? 'Export personal statement' : 'تنزيل الكشف الشخصي', 'export');
+    } catch (e) {
+        alert(msg('تعذّر تصدير الملف: ') + e.message);
+    }
+}
+
 function openUserModal() { document.getElementById('userModal').classList.add('active'); }
 function closeUserModal() {
     document.getElementById('userModal').classList.remove('active');
@@ -6093,6 +7195,8 @@ function loadControlPanel() {
             deptBody.insertRow().innerHTML = `<td>${d.name}</td><td><button class="btn btn-small" onclick="deleteDepartment('${d.id}')" style="color:#e74c3c;"><i class="fas fa-trash"></i></button></td>`;
         });
     }
+    // سجل نشاط المستخدمين والنظام (منقول إلى هذه الصفحة)
+    try { renderActivityLog(); } catch (e) {}
 }
 
 async function addServiceType() {
@@ -6352,6 +7456,127 @@ function buildLPOHtml(data, isDraft) {
     </div>`;
 }
 
+// ======================================================================
+// ============ سجل العمليات (Operations Log / Timeline) — مُشترك ========
+// ======================================================================
+function _escRe(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+// بناء كشف العمليات لأمر شراء/مسودة: من سجل النشاط + من حقول الأمر نفسه
+function getOrderHistory(data, isDraft) {
+    if (!data) return [];
+    const en = currentLanguage === 'en';
+    const num = data.number || data.draftNumber || '';
+    const events = [];
+    // 1) سجل النشاط: كل ما يخص رقم هذا الأمر (مع حدود لتفادي التطابق الجزئي بين الأرقام)
+    let matched = [];
+    if (num) {
+        const re = new RegExp(_escRe(num) + '(\\D|$)');
+        matched = getActivityEntries().filter(e => e.details && re.test(String(e.details) + ' '));
+        matched.forEach(e => events.push({ createdAt: e.createdAt, actionType: e.actionType, username: e.username, details: e.details }));
+    }
+    const hasType = (t) => matched.some(e => e.actionType === t);
+    // 2) أحداث مبنية من كائن الأمر (تُكمّل السجل إن لم تكن مُسجّلة مسبقاً)
+    if (data.createdAt && !hasType(isDraft ? 'draft' : 'create')) {
+        events.push({ createdAt: data.createdAt, actionType: isDraft ? 'draft' : 'create',
+            username: data.staff || '—',
+            details: isDraft ? (en ? 'Draft saved: ' : 'تم حفظ المسودة: ') + num
+                             : (en ? 'Purchase order created: ' : 'تم إنشاء أمر الشراء: ') + num });
+    }
+    if (!isDraft) {
+        if (data.approvalStatus === 'approved' && data.approvedAt && !hasType('approve')) {
+            events.push({ createdAt: data.approvedAt, actionType: 'approve', username: data.approvedBy || '—',
+                details: en ? 'Order approved' : 'تم اعتماد أمر الشراء' });
+        }
+        if (data.approvalStatus === 'rejected' && data.approvedAt && !hasType('reject')) {
+            events.push({ createdAt: data.approvedAt, actionType: 'reject', username: data.approvedBy || '—',
+                details: (en ? 'Order rejected' : 'تم رفض أمر الشراء') + (data.rejectionReason ? ((en ? ' — Reason: ' : ' — السبب: ') + data.rejectionReason) : '') });
+        }
+    }
+    if (data.deletedAt && !hasType('delete')) {
+        events.push({ createdAt: data.deletedAt, actionType: 'delete', username: '—',
+            details: en ? 'Moved to the recycle bin' : 'نُقل إلى سلة المهملات' });
+    }
+    // ترتيب زمني تصاعدي: من الأقدم (المسودة/الإنشاء) إلى الأحدث (الاعتماد/التعديل)
+    return events.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+}
+
+// آخر عملية/تعديل على أمر الشراء (تُستخدم في عمود "آخر تعديل") — تقبل قائمة نشاط مُجهّزة مسبقاً للأداء
+function getOrderLastAction(order, actEntries) {
+    if (!order) return null;
+    const entries = actEntries || getActivityEntries();
+    const en = currentLanguage === 'en';
+    const num = order.number || '';
+    let newest = null;
+    if (num) {
+        const re = new RegExp(_escRe(num) + '(\\D|$)');
+        // القائمة مُرتّبة من الأحدث؛ أول تطابق هو أحدث إجراء مُسجّل في سجل النشاط
+        for (let i = 0; i < entries.length; i++) {
+            const e = entries[i];
+            if (e.details && re.test(String(e.details) + ' ')) {
+                newest = { createdAt: e.createdAt, actionType: e.actionType, username: e.username, details: e.details };
+                break;
+            }
+        }
+    }
+    const consider = (createdAt, actionType, username, details) => {
+        if (!createdAt) return;
+        if (!newest || new Date(createdAt).getTime() > new Date(newest.createdAt).getTime())
+            newest = { createdAt, actionType, username: username || '—', details: details || '' };
+    };
+    consider(order.createdAt, 'create', order.staff, en ? 'Order created' : 'إنشاء أمر الشراء');
+    if (order.approvalStatus === 'approved') consider(order.approvedAt, 'approve', order.approvedBy, en ? 'Order approved' : 'اعتماد أمر الشراء');
+    if (order.approvalStatus === 'rejected') consider(order.approvedAt, 'reject', order.approvedBy, en ? 'Order rejected' : 'رفض أمر الشراء');
+    if (order.deletedAt) consider(order.deletedAt, 'delete', '—', en ? 'Moved to recycle bin' : 'نُقل إلى سلة المهملات');
+    return newest;
+}
+
+// خلية "آخر تعديل" المدمجة في جدول قائمة الأوامر
+function lastModifiedCell(order, actEntries) {
+    const last = getOrderLastAction(order, actEntries);
+    if (!last) return '<span style="color:#bbb;">—</span>';
+    const color = activityTypeColor(last.actionType);
+    return `${fmtRecordDate(last.createdAt)}` +
+           `<div style="margin-top:3px; display:flex; align-items:center; gap:5px; flex-wrap:wrap;">` +
+           `<span style="background:${color}22; color:${color}; border:1px solid ${color}55; border-radius:10px; padding:1px 7px; font-size:10px; font-weight:700; white-space:nowrap;">${activityTypeLabel(last.actionType)}</span>` +
+           (last.username && last.username !== '—' ? `<span style="font-size:10px; color:#8aa2b0; white-space:nowrap;"><i class="fas fa-user"></i> ${escapeHtml(last.username)}</span>` : '') +
+           `</div>`;
+}
+
+// بناء HTML لكشف العمليات (مكوّن احترافي قابل لإعادة الاستخدام)
+function buildOpsLogHtml(entries) {
+    const en = currentLanguage === 'en';
+    if (!entries || !entries.length) {
+        return `<div class="ops-empty"><i class="fas fa-inbox"></i> ${en ? 'No operations recorded yet' : 'لا توجد عمليات مسجّلة بعد'}</div>`;
+    }
+    const fmtDT = (x) => x ? new Date(x).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+    return '<ul class="ops-timeline">' + entries.map(e => {
+        const color = activityTypeColor(e.actionType);
+        return `<li class="ops-item">
+            <span class="ops-dot" style="background:${color};"></span>
+            <div class="ops-row1">
+                <span class="ops-badge" style="background:${color}22; color:${color}; border:1px solid ${color}55;">${activityTypeLabel(e.actionType)}</span>
+                <span class="ops-when"><i class="far fa-clock"></i> ${fmtDT(e.createdAt)}</span>
+                <span class="ops-user"><i class="fas fa-user"></i> ${escapeHtml(e.username || '—')}</span>
+            </div>
+            <div class="ops-detail">${escapeHtml(e.details || '—')}</div>
+        </li>`;
+    }).join('') + '</ul>';
+}
+
+// عرض كشف العمليات أسفل معاينة أمر الشراء (للجميع). لا يدخل في ملف الطباعة PDF
+function renderPreviewOpsLog(data, isDraft, isUnsaved) {
+    const box = document.getElementById('previewOpsLog');
+    if (!box) return;
+    const en = currentLanguage === 'en';
+    if (isUnsaved) { box.style.display = 'none'; box.innerHTML = ''; return; }
+    const entries = getOrderHistory(data, isDraft);
+    box.style.display = 'block';
+    box.innerHTML = `<div class="ops-log-box">
+        <div class="ops-log-head"><i class="fas fa-stream"></i> ${en ? 'Operations Log' : 'سجل العمليات'} <span class="ops-count">${entries.length}</span></div>
+        ${buildOpsLogHtml(entries)}
+    </div>`;
+}
+
 function previewLPO() {
     if (!document.getElementById('supplierId').value) { alert(msg('يرجى اختيار مورد أولاً')); return; }
     const refV = (document.getElementById('lpoRef').value || '').trim();
@@ -6369,6 +7594,7 @@ function previewLPO() {
     };
     previewIsDraft = true;  // أمر غير محفوظ بعد → يُعرض كمسودة (بعلامة مائية)
     document.getElementById('previewContent').innerHTML = buildLPOHtml(previewLPOData, true);
+    renderPreviewOpsLog(previewLPOData, false, true); // أمر جديد غير محفوظ: لا سجل بعد
     document.getElementById('previewModal').classList.add('active');
     // أمر جديد غير محفوظ بعد: لا محادثة له (تظهر فقط للأوامر/المسودات المحفوظة)
     closeChatPanel();
@@ -6387,6 +7613,7 @@ function viewLPO(id) {
     previewLPOData = l;
     previewIsDraft = false;  // أمر محفوظ نهائي → بلا علامة مائية
     document.getElementById('previewContent').innerHTML = buildLPOHtml(l, false);
+    renderPreviewOpsLog(l, false, false); // سجل العمليات الكامل للأمر المحفوظ
     buildPreviewActionBar(l);
     document.getElementById('previewModal').classList.add('active');
     // فتح المحادثة المرتبطة برقم الأمر
@@ -6437,6 +7664,7 @@ function previewDraft(id) {
     };
     previewIsDraft = true;
     document.getElementById('previewContent').innerHTML = buildLPOHtml(previewLPOData, true);
+    renderPreviewOpsLog(d, true, false); // كشف عمليات المسودة (بناءً على المسودة الأصلية)
     document.getElementById('previewModal').classList.add('active');
     openChat(d.draftNumber, 'draft');
 }
