@@ -131,7 +131,7 @@
         .sidebar-user .su-email { font-size: 10.5px; color: #5a6b7a; font-weight: 600; display: flex; align-items: center; gap: 5px; max-width: 100%; word-break: break-all; text-align: center; line-height: 1.3; }
         .sidebar-user .su-email i { color: #9aa7b2; font-size: 10px; flex-shrink: 0; }
         .sidebar-user .su-role { background: #eaf6ea; color: #4e8b2a; border: 1px solid #cfe8c7; border-radius: 20px; padding: 2px 13px; font-size: 11px; font-weight: 700; white-space: nowrap; }
-        .sidebar-user .su-name { font-size: 13.5px; font-weight: 800; color: #0093c4; display: flex; align-items: center; gap: 6px; }
+        .sidebar-user .su-name { font-size: 13.5px; font-weight: 400; color: #0093c4; display: flex; align-items: center; gap: 6px; }
         .sidebar-user .su-name i { font-size: 15px; }
         .sidebar-nav { flex: 1; padding: 1rem 0; }
         .nav-item { padding: 12px 1.4rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 500; }
@@ -4939,9 +4939,10 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// طباعة قائمة أوامر الشراء المعروضة (حسب الفلترة والفرز) كتقرير A4 أفقي احترافي
-async function printLPOListPDF() {
-    if (!(await ensureLib('html2pdf'))) { alert(msg('تعذّر تحميل مكتبة الطباعة. تأكد من اتصالك بالإنترنت وأعد المحاولة.')); return; }
+// طباعة قائمة أوامر الشراء المعروضة (حسب الفلترة والفرز) كتقرير A4 أفقي احترافي.
+// تعتمد على محرّك الطباعة الأصلي في المتصفح عبر iframe مخفي (بدل html2canvas الذي كان
+// يُنتج صفحة بيضاء على بعض الأجهزة) — موثوق على الحاسوب والجوال، ونص قابل للتحديد، وعدة صفحات.
+function printLPOListPDF() {
     const en = currentLanguage === 'en';
     const list = getSortedLPOs(); // يحترم الفلترة والفرز المطبّقين في الجدول
     if (!list.length) { alert(msg('لا توجد أوامر لطباعتها')); return; }
@@ -4976,68 +4977,80 @@ async function printLPOListPDF() {
         <td style="text-align:center;">${statusText(l)}</td>
         <td>${escapeHtml(l.staff || '')}</td>
         <td style="text-align:center; white-space:nowrap;">${l.createdAt ? new Date(l.createdAt).toLocaleDateString('en-GB') : ''}</td>
-        <td style="text-align:left; font-weight:700; white-space:nowrap;">${fmt(l.total)}</td>
+        <td style="text-align:center; font-weight:700; white-space:nowrap;">${fmt(l.total)}</td>
     </tr>`).join('');
 
-    const th = (t) => `<th style="padding:7px 5px; border:1px solid #cfe0ea;">${t}</th>`;
-    const holder = document.createElement('div');
-    holder.id = '__lpoListPdf';
-    holder.setAttribute('dir', en ? 'ltr' : 'rtl');
-    // مخفي عن المستخدم بـ opacity:0 (وليس z-index سالب الذي يُسبّب صفحة بيضاء في html2canvas)،
-    // ثم نُظهره داخل النسخة المستنسخة فقط عبر onclone لالتقاطه بشكل صحيح.
-    holder.style.cssText = "position:fixed; left:0; top:0; width:1040px; background:#fff; opacity:0; pointer-events:none; z-index:2147483647; font-family:Arial,'Segoe UI',Tahoma,sans-serif; color:#222; padding:14px;";
-    holder.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:3px solid #0093c4; padding-bottom:10px; margin-bottom:12px;">
-            <div style="width:90px;">${typeof LOGO_DATA !== 'undefined' ? `<img src="${LOGO_DATA}" style="width:100%;">` : ''}</div>
+    const th = (t) => `<th>${t}</th>`;
+    const logoImg = (typeof LOGO_DATA !== 'undefined' && LOGO_DATA) ? `<img src="${LOGO_DATA}" style="width:100%;">` : '';
+    const bodyHtml = `
+        <div class="pdf-head">
+            <div style="width:90px;">${logoImg}</div>
             <div style="text-align:center; flex:1;">
                 <div style="font-size:21px; font-weight:800; color:#0093c4;">${en ? 'Purchase Orders Report' : 'تقرير أوامر الشراء المحلية'}</div>
                 <div style="font-size:12px; color:#555; margin-top:2px;">${en ? 'Takaful Oman Insurance' : 'تكافل عمان للتأمين'}</div>
             </div>
-            <div style="width:180px; text-align:${en ? 'right' : 'left'}; font-size:11px; color:#555; line-height:1.7;">
+            <div style="width:190px; text-align:${en ? 'right' : 'left'}; font-size:11px; color:#555; line-height:1.7;">
                 <div><strong>${en ? 'Printed:' : 'تاريخ الطباعة:'}</strong> ${dateStr}</div>
                 <div><strong>${en ? 'Count:' : 'عدد الأوامر:'}</strong> ${list.length}</div>
             </div>
         </div>
-        <div style="font-size:11px; color:#444; background:#eef7fb; border:1px solid #cfe7f3; border-radius:6px; padding:6px 10px; margin-bottom:10px;">
-            <strong>${en ? 'Filters:' : 'الفلاتر:'}</strong> ${escapeHtml(filterSummary)}
-        </div>
-        <table style="width:100%; border-collapse:collapse; font-size:11px;">
-            <thead><tr style="background:#0093c4; color:#fff;">
+        <div class="pdf-filters"><strong>${en ? 'Filters:' : 'الفلاتر:'}</strong> ${escapeHtml(filterSummary)}</div>
+        <table>
+            <thead><tr>
                 ${th('#')}${th(en ? 'Order No.' : 'رقم الأمر')}${th(en ? 'Supplier' : 'المورد')}${th(en ? 'Service' : 'نوع الخدمة')}${th(en ? 'Department' : 'القسم / الغرض')}${th(en ? 'Date' : 'التاريخ')}${th(en ? 'Status' : 'الحالة')}${th(en ? 'Employee' : 'الموظف')}${th(en ? 'Record Date' : 'تاريخ التسجيل')}${th(en ? 'Total (OMR)' : 'المبلغ (ر.ع)')}
             </tr></thead>
             <tbody>${rowsHtml}</tbody>
-            <tfoot><tr style="background:#f1f6f9; font-weight:800;">
-                <td colspan="9" style="padding:8px 6px; border:1px solid #cfe0ea; text-align:${en ? 'right' : 'left'};">${en ? 'Grand Total (OMR)' : 'الإجمالي الكلي (ر.ع)'}</td>
-                <td style="padding:8px 6px; border:1px solid #cfe0ea; text-align:left; color:#0093c4;">${fmt(grand)}</td>
+            <tfoot><tr class="pdf-total">
+                <td colspan="9" style="text-align:${en ? 'right' : 'left'};">${en ? 'Grand Total (OMR)' : 'الإجمالي الكلي (ر.ع)'}</td>
+                <td style="text-align:center; color:#0093c4;">${fmt(grand)}</td>
             </tr></tfoot>
         </table>
-        <div style="margin-top:10px; font-size:9.5px; color:#8aa2b0; text-align:center;">${en ? 'Generated by the LPO Management System — Takaful Oman Insurance' : 'صادر عن نظام إدارة أوامر الشراء المحلية — تكافل عمان للتأمين'}</div>`;
-    const style = document.createElement('style');
-    style.id = '__lpoListPdfStyle';
-    style.textContent = "#__lpoListPdf tbody td{border:1px solid #e1e8ee; padding:5px 5px;} #__lpoListPdf tbody tr:nth-child(even){background:#f7fafc;}";
-    document.body.appendChild(style);
-    document.body.appendChild(holder);
+        <div class="pdf-foot">${en ? 'Generated by the LPO Management System — Takaful Oman Insurance' : 'صادر عن نظام إدارة أوامر الشراء المحلية — تكافل عمان للتأمين'}</div>`;
 
-    const opt = {
-        margin: [6, 6, 8, 6],
-        filename: (en ? 'LPO-List-' : 'قائمة-أوامر-الشراء-') + now.toISOString().split('T')[0] + '.pdf',
-        image: { type: 'jpeg', quality: 0.97 },
-        // windowWidth يضمن رسم العرض الكامل (1040px) حتى على الجوال، وonclone يُظهر النسخة للالتقاط
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 1120,
-            onclone: function (cdoc) { var el = cdoc.getElementById('__lpoListPdf'); if (el) { el.style.opacity = '1'; el.style.position = 'static'; } } },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-        pagebreak: { mode: ['css', 'legacy'] }
+    const docHtml = `<!DOCTYPE html><html dir="${en ? 'ltr' : 'rtl'}" lang="${en ? 'en' : 'ar'}"><head><meta charset="utf-8">
+<title>${en ? 'Purchase Orders Report' : 'تقرير أوامر الشراء المحلية'}</title>
+<style>
+  @page { size: A4 landscape; margin: 8mm; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  body { font-family: Arial, 'Segoe UI', Tahoma, sans-serif; color:#222; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding:4px; }
+  .pdf-head { display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:3px solid #0093c4; padding-bottom:10px; margin-bottom:12px; }
+  .pdf-filters { font-size:11px; color:#444; background:#eef7fb; border:1px solid #cfe7f3; border-radius:6px; padding:6px 10px; margin-bottom:10px; }
+  table { width:100%; border-collapse:collapse; font-size:11px; }
+  thead { display: table-header-group; }
+  th { background:#0093c4; color:#fff; padding:7px 5px; border:1px solid #cfe0ea; }
+  td { border:1px solid #e1e8ee; padding:5px; }
+  tbody tr:nth-child(even) { background:#f7fafc; }
+  tr { page-break-inside: avoid; }
+  .pdf-total td { background:#f1f6f9; font-weight:800; padding:8px 6px; border:1px solid #cfe0ea; }
+  .pdf-foot { margin-top:10px; font-size:9.5px; color:#8aa2b0; text-align:center; }
+</style></head><body>${bodyHtml}</body></html>`;
+
+    // إزالة أي إطار طباعة سابق ثم إنشاء iframe مخفي والطباعة منه
+    const prev = document.getElementById('__lpoPrintFrame'); if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
+    const iframe = document.createElement('iframe');
+    iframe.id = '__lpoPrintFrame';
+    iframe.setAttribute('aria-hidden', 'true');
+    iframe.style.cssText = 'position:fixed; right:0; bottom:0; width:0; height:0; border:0; visibility:hidden;';
+    document.body.appendChild(iframe);
+    const cleanup = () => { try { if (iframe.parentNode) iframe.parentNode.removeChild(iframe); } catch (e) {} };
+    const doPrint = () => {
+        try {
+            iframe.contentWindow.focus();
+            try { iframe.contentWindow.onafterprint = () => setTimeout(cleanup, 500); } catch (e) {}
+            iframe.contentWindow.print();
+            setTimeout(cleanup, 60000); // تنظيف احتياطي
+            recordAction(en ? 'Print orders list PDF' : 'طباعة قائمة أوامر الشراء PDF', 'export');
+        } catch (e) {
+            cleanup();
+            alert(msg('تعذّرت الطباعة: ') + (e && e.message ? e.message : ''));
+        }
     };
-    try {
-        await new Promise(r => setTimeout(r, 120));
-        await html2pdf().set(opt).from(holder).save();
-        recordAction(en ? 'Print orders list PDF' : 'طباعة قائمة أوامر الشراء PDF', 'export');
-    } catch (e) {
-        alert(msg('تعذّر إنشاء ملف الطباعة: ') + (e && e.message ? e.message : ''));
-    } finally {
-        if (holder.parentNode) holder.parentNode.removeChild(holder);
-        if (style.parentNode) style.parentNode.removeChild(style);
-    }
+    const idoc = iframe.contentWindow.document;
+    idoc.open(); idoc.write(docHtml); idoc.close();
+    // مهلة بسيطة لاكتمال التخطيط وفك ترميز الشعار قبل فتح نافذة الطباعة
+    if (idoc.readyState === 'complete') setTimeout(doPrint, 400);
+    else iframe.onload = () => setTimeout(doPrint, 400);
 }
 
 // تصدير قائمة أوامر الشراء المُصفّاة إلى ملف Excel احترافي بورقتين
@@ -8461,8 +8474,9 @@ async function quickPrintLPO(id) {
     // استخدام top/left سالبة كبيرة (‎-9999px) كان يُربك html2canvas ويُسبّب تعليق المتصفح.
     const holder = document.createElement('div');
     holder.id = '__quickPdfHolder';
-    // مخفي عن المستخدم بـ opacity:0 (لا z-index سالب الذي يُسبّب صفحة بيضاء)، ويُظهَر داخل النسخة عبر onclone
-    holder.style.cssText = 'position:fixed; left:0; top:0; width:794px; background:#ffffff; opacity:0; pointer-events:none; z-index:2147483647;';
+    // حاوية مرئية فعلاً أثناء الالتقاط (كما في معاينة الأمر التي تعمل بنجاح) — العنصر المرئي
+    // يُلتقط دائماً بشكل صحيح بعكس المخفي/السالب الذي كان يُنتج صفحة بيضاء. تُزال فوراً بعد الالتقاط.
+    holder.style.cssText = 'position:fixed; left:0; top:0; width:794px; background:#ffffff; z-index:2147483647;';
     holder.setAttribute('aria-hidden', 'true');
     holder.innerHTML = buildLPOHtml(l, false);
     document.body.appendChild(holder);
@@ -8475,8 +8489,7 @@ async function quickPrintLPO(id) {
             margin: 4,
             filename: (l.number || 'LPO') + '.pdf',
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 860,
-                onclone: function (cdoc) { var h = cdoc.getElementById('__quickPdfHolder'); if (h) { h.style.opacity = '1'; h.style.position = 'static'; } } },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', windowWidth: 860 },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         }).from(el).save();
     } catch (e) {
