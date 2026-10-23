@@ -156,12 +156,12 @@
         .chat-input-row input { flex: 1; padding: 10px 12px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit; }
         .chat-reply-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #eef7fb; border-top: 1px solid #d5e9f2; border-right: 3px solid #0093c4; flex-shrink: 0; }
 
-        /* وضع: مثبت جانبي */
-        .chat-mode-docked { top: 0; bottom: 0; left: 0; width: 380px; max-width: 90vw; border-radius: 0; border-left: none; }
+        /* وضع: مثبت جانبي (العرض الافتراضي أقل ما يكون) */
+        .chat-mode-docked { top: 0; bottom: 0; left: 0; width: 300px; max-width: 90vw; border-radius: 0; border-left: none; }
         html[dir="rtl"] .chat-mode-docked { left: auto; right: 0; border-right: none; border-left: 1px solid #e0e6ed; }
 
-        /* وضع: عائم */
-        .chat-mode-floating { bottom: 20px; left: 20px; width: 360px; max-width: 92vw; height: 520px; max-height: 78vh; border-radius: 14px; }
+        /* وضع: عائم (الحجم الافتراضي أقل ما يكون) */
+        .chat-mode-floating { bottom: 20px; left: 20px; width: 310px; max-width: 92vw; height: 360px; max-height: 78vh; border-radius: 14px; }
         html[dir="rtl"] .chat-mode-floating { left: auto; right: 20px; }
 
         /* وضع: مخفي */
@@ -173,8 +173,13 @@
         .chat-resize-corner { position: absolute; inset-inline-end: 0; bottom: 0; width: 18px; height: 18px; cursor: nwse-resize; z-index: 21; display: none; }
         html[dir="rtl"] .chat-resize-corner { cursor: nesw-resize; }
         .chat-resize-corner::after { content: ''; position: absolute; inset-inline-end: 3px; bottom: 3px; width: 9px; height: 9px; border-inline-end: 2px solid rgba(0,147,196,0.5); border-bottom: 2px solid rgba(0,147,196,0.5); }
-        /* المقبض الزاوي يظهر في الوضع العائم فقط */
-        .chat-mode-floating .chat-resize-corner { display: block; }
+        /* مقبض تغيير الحجم في الزاوية العلوية (جهة inline-end) */
+        .chat-resize-corner-top { position: absolute; inset-inline-end: 0; top: 0; width: 18px; height: 18px; cursor: nesw-resize; z-index: 22; display: none; }
+        html[dir="rtl"] .chat-resize-corner-top { cursor: nwse-resize; }
+        .chat-resize-corner-top::after { content: ''; position: absolute; inset-inline-end: 3px; top: 3px; width: 9px; height: 9px; border-inline-end: 2px solid rgba(255,255,255,0.7); border-top: 2px solid rgba(255,255,255,0.7); }
+        /* المقابض الزاوية تظهر في الوضع العائم فقط */
+        .chat-mode-floating .chat-resize-corner, .chat-mode-floating .chat-resize-corner-top { display: block; }
+        .chat-fab.chat-fab-dragging { cursor: grabbing; opacity: 0.9; }
         body.chat-resizing, body.chat-resizing * { user-select: none !important; }
 
         /* الزر العائم لإعادة الإظهار */
@@ -308,6 +313,12 @@
         .ctrl-list-scroll table { margin: 0; }
         .ctrl-list-scroll thead th { position: sticky; top: 0; background: #f8fafc; z-index: 1; }
         .ctrl-count { font-size: 11px; font-weight: 700; color: #0093c4; background: #eaf4f9; border-radius: 20px; padding: 1px 9px; margin-inline-start: 6px; }
+        /* أقسام قابلة للطي */
+        .collapse-head { cursor: pointer; user-select: none; }
+        .collapse-head .card-title { cursor: pointer; }
+        .collapse-chevron { color: #8aa2b0; transition: transform 0.2s; font-size: 14px; }
+        .collapse-head.collapsed .collapse-chevron { transform: rotate(-90deg); }
+        html[dir="rtl"] .collapse-head.collapsed .collapse-chevron { transform: rotate(90deg); }
         /* محاكاة المستخدم */
         .impr-banner { background: linear-gradient(135deg,#e67e22,#d35400); color: #fff; border-radius: 10px; padding: 10px 16px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 13px; font-weight: 600; box-shadow: 0 4px 14px rgba(211,84,0,0.25); }
         .impr-banner .impr-back { background: #fff; color: #d35400; border: none; border-radius: 7px; padding: 6px 14px; font-weight: 700; cursor: pointer; font-size: 12.5px; font-family: inherit; display: inline-flex; align-items: center; gap: 6px; }
@@ -321,7 +332,7 @@
         .impr-item .impr-role { font-size: 11px; font-weight: 700; color: #4e8b2a; background: #eaf6ea; border: 1px solid #cfe8c7; border-radius: 20px; padding: 2px 10px; margin-inline-start: auto; white-space: nowrap; }
         /* محرّر قاعدة البيانات */
         .db-grid { width: 100%; border-collapse: collapse; font-size: 12px; }
-        .db-grid th { background: #0093c4; color: #fff; padding: 7px 8px; position: sticky; top: 0; white-space: nowrap; font-weight: 700; z-index: 2; }
+        .db-grid th { background: #dbe9f1; color: #15303d; padding: 7px 8px; position: sticky; top: 0; white-space: nowrap; font-weight: 700; z-index: 2; border-bottom: 2px solid #0093c4; }
         .db-grid td { border: 1px solid #e8eef5; padding: 4px; vertical-align: top; }
         .db-grid tr:nth-child(even) td { background: #f9fbfc; }
         .db-grid input, .db-grid textarea { width: 100%; min-width: 120px; border: 1px solid #dde4ea; border-radius: 5px; padding: 5px 7px; font-size: 12px; font-family: inherit; box-sizing: border-box; }
@@ -484,7 +495,7 @@
         .ops-empty { padding: 1.4rem; text-align: center; color: #9fb0bc; font-size: 13px; }
 
         /* ===== زر النقاط + قائمة إجراءات الصف ===== */
-        #lpoListTable .col-actions { width: 46px; }
+        #lpoListTable .col-actions, #suppliersTable .col-actions { width: 38px; min-width: 38px; max-width: 38px; text-align: center; padding-left: 2px; padding-right: 2px; white-space: nowrap; }
         .kebab-btn { background: #f1f5f8; border: 1px solid #e1e8ee; color: #5a6b7a; width: 30px; height: 30px; border-radius: 7px; cursor: pointer; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; transition: background 0.15s, color 0.15s; }
         .kebab-btn:hover { background: #0093c4; color: #fff; border-color: #0093c4; }
         .row-action-menu { position: fixed; background: #fff; border: 1px solid #e3eaf0; border-radius: 10px; box-shadow: 0 12px 34px rgba(0,0,0,0.17); padding: 6px; z-index: 3000; animation: ramIn 0.14s ease-out; }
@@ -518,6 +529,19 @@
         .filter-section { background: #f8fafc; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid #e8eef5; }
         .filter-title { font-size: 13px; font-weight: 700; color: #0093c4; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
         .filter-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem; }
+        .filter-grid-auto { grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)) !important; }
+        /* شريط التقسيم إلى صفحات */
+        .pager-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+        .pager-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .pager-right { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+        .pager-btn { min-width: 30px; height: 30px; padding: 0 9px; border: 1.5px solid #dbe4ea; background: #fff; color: #2a3b47; border-radius: 7px; cursor: pointer; font-size: 12.5px; font-weight: 600; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; }
+        .pager-btn:hover:not(:disabled) { border-color: #0093c4; color: #0093c4; }
+        .pager-btn.active { background: #0093c4; color: #fff; border-color: #0093c4; }
+        .pager-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .pager-ellipsis { padding: 0 4px; color: #9fb0bc; font-size: 12.5px; }
+        /* جدول الموردين: صفوف أنحف مع الحفاظ على حجم الخط والأيقونات */
+        #suppliersTable td { padding-top: 5px; padding-bottom: 5px; }
+        #suppliersTable th { padding-top: 7px; padding-bottom: 7px; }
         .filter-grid input, .filter-grid select { padding: 9px 11px; border: 1.5px solid #ddd; border-radius: 6px; font-size: 13px; font-family: inherit; }
         .filter-actions { display: flex; gap: 10px; flex-wrap: wrap; }
         /* قائمة منسدلة متعددة الاختيارات قابلة للبحث */
@@ -676,9 +700,9 @@
             <div class="nav-item" data-perm="suppliers:view" onclick="showPage('suppliers', this)"><i class="fas fa-building"></i> إدارة الموردون</div>
             <div class="nav-item hidden-for-guest perm-hidden" id="controlNav" data-perm="control:view" onclick="showPage('control-panel', this)"><i class="fas fa-sliders-h"></i> الإدارة والتحكم</div>
             <div class="nav-item" data-perm="reports:view" onclick="showPage('reports', this)"><i class="fas fa-chart-bar"></i> التقارير</div>
+            <div class="nav-item hidden-for-guest" id="profileNav" onclick="_profileViewUserId=null; showPage('profile', this)"><i class="fas fa-id-badge"></i> الملف الشخصي</div>
             <div class="nav-item hidden-for-guest perm-hidden" id="adminNav" onclick="showPage('admin', this)"><i class="fas fa-cog"></i> مدير النظام</div>
             <div class="nav-item hidden-for-guest perm-hidden" id="trashNav" data-perm="trash:view" onclick="showPage('trash', this)"><i class="fas fa-trash-restore"></i> سلة المهملات</div>
-            <div class="nav-item hidden-for-guest" id="profileNav" onclick="_profileViewUserId=null; showPage('profile', this)"><i class="fas fa-id-badge"></i> الملف الشخصي</div>
             <div class="nav-item" onclick="showPage('about', this)"><i class="fas fa-info-circle"></i> حول البرنامج</div>
         </div>
         <div class="sidebar-footer">
@@ -846,9 +870,13 @@
                 </div>
                 <div class="form-group-item">
                     <label><i class="fas fa-sitemap"></i> القسم المعني / غرض الطلب *</label>
-                    <select id="lpoDepartment" required>
-                        <option value="">-- اختر القسم / الغرض --</option>
-                    </select>
+                    <div class="combo" id="deptCombo">
+                        <input type="text" id="lpoDepartment" class="combo-input" autocomplete="off" required placeholder="اكتب أو اختر القسم / الغرض..."
+                               oninput="renderDeptComboList(this.value)" onfocus="renderDeptComboList('')"
+                               onblur="setTimeout(closeDeptCombo,180)" onkeydown="deptComboKey(event)">
+                        <span class="combo-caret" onmousedown="event.preventDefault(); toggleDeptCombo(event)"><i class="fas fa-chevron-down"></i></span>
+                        <div id="deptComboList" class="combo-list" style="display:none;"></div>
+                    </div>
                 </div>
                 <div class="form-group-item">
                     <label><i class="fas fa-hashtag"></i> L.P.O Ref</label>
@@ -949,7 +977,10 @@
         <div class="filter-section">
             <div class="filter-title"><i class="fas fa-filter"></i> فلاتر البحث</div>
             <div class="filter-grid">
-                <input type="text" id="filterDraftNumber" placeholder="رقم المسودة..." oninput="loadDrafts()">
+                <div class="ms-wrap" data-ms="msDraftNum">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل أرقام المسودات --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
                 <div class="ms-wrap" data-ms="msDraftSupplier">
                     <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الموردين --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
                     <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
@@ -1010,9 +1041,9 @@
         <div class="filter-section filter-section-compact">
             <div class="filter-title"><i class="fas fa-filter"></i> فلاتر البحث</div>
             <div class="filter-grid filter-grid-auto">
-                <div style="position:relative;">
-                    <input type="text" id="filterOrderNumber" placeholder="رقم الأمر..." autocomplete="off" oninput="onOrderNumberInput()" onfocus="showOrderNumberDropdown()">
-                    <div id="orderNumberDropdown" class="dropdown-list"></div>
+                <div class="ms-wrap" data-ms="msOrderNum">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل أرقام الأوامر --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
                 </div>
                 <div class="ms-wrap" data-ms="msSupplier">
                     <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الموردين --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
@@ -1044,9 +1075,10 @@
             <table id="lpoListTable">
                 <thead>
                     <tr>
+                        <th class="col-actions" style="text-align:center;">الإجراء</th>
                         <th class="sortable" data-col="9" onclick="sortLPOTable(9)">تاريخ التسجيل <span class="sort-arrow">⇅</span></th>
-                        <th class="col-actions" style="width:46px; text-align:center;">الإجراء</th>
                         <th class="sortable" data-col="0" onclick="sortLPOTable(0)">الرقم <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-col="10" onclick="sortLPOTable(10)">آخر تعديل <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="1" onclick="sortLPOTable(1)">المورد <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="2" onclick="sortLPOTable(2)">نوع الخدمة <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="8" onclick="sortLPOTable(8)">القسم / الغرض <span class="sort-arrow">⇅</span></th>
@@ -1054,7 +1086,6 @@
                         <th class="sortable" data-col="4" onclick="sortLPOTable(4)">المبلغ (ر.ع) <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="5" onclick="sortLPOTable(5)">الحالة <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="6" onclick="sortLPOTable(6)">الموظف <span class="sort-arrow">⇅</span></th>
-                        <th class="sortable" data-col="10" onclick="sortLPOTable(10)">آخر تعديل <span class="sort-arrow">⇅</span></th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -1074,28 +1105,96 @@
             <div class="card-title"><i class="fas fa-building"></i> إدارة الموردون</div>
             <button type="button" class="btn btn-primary btn-small hidden-for-guest" data-perm="suppliers:create" onclick="openSupplierModal()"><i class="fas fa-plus"></i> مورد جديد</button>
         </div>
-        <div class="filter-section">
+        <div class="filter-section filter-section-compact">
             <div class="filter-title"><i class="fas fa-filter"></i> فلاتر البحث</div>
-            <div class="filter-grid">
-                <input type="text" id="filterSupName" placeholder="اسم المورد..." oninput="filterSuppliers()">
+            <div class="filter-grid filter-grid-auto">
+                <div class="ms-wrap" data-ms="msSupName">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الموردين --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
                 <div class="ms-wrap" data-ms="msSupSvc">
                     <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل أنواع الخدمات --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
                     <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
                 </div>
-                <select id="filterSupCity" onchange="filterSuppliers()"><option value="">-- كل المدن --</option></select>
+                <div class="ms-wrap" data-ms="msSupCity">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل المدن --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msSupClass">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل التصنيفات --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msSupRating">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل التقييمات --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msSupCr">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل أرقام السجل --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msSupPhone">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الأرقام --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
             </div>
             <div class="filter-actions">
                 <button type="button" class="btn btn-danger btn-small" onclick="clearSupplierFilters()"><i class="fas fa-eraser"></i> مسح التصفية</button>
+                <button type="button" class="btn btn-small" style="background:#c0392b; color:#fff;" onclick="printSuppliersPDF()"><i class="fas fa-file-pdf"></i> طباعة PDF</button>
+                <button type="button" class="btn btn-success btn-small" onclick="downloadSuppliersExcel()"><i class="fas fa-file-excel"></i> تصدير Excel</button>
             </div>
         </div>
+
+        <!-- بطاقات إحصائية صغيرة تتحدّث مع الفلتر -->
+        <div class="stats-grid stats-grid-slim" style="grid-template-columns:repeat(2,1fr);">
+            <div class="stat-card">
+                <div class="stat-icon">🏢</div>
+                <div class="stat-label">عدد الموردين</div>
+                <div class="stat-value" id="supStatCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🧰</div>
+                <div class="stat-label">أنواع الخدمات</div>
+                <div class="stat-value" id="supStatSvc">0</div>
+            </div>
+        </div>
+
+        <!-- شريط التحكم بالتقسيم إلى صفحات (أعلى الجدول) -->
+        <div class="pager-bar">
+            <div class="pager-left">
+                <span style="font-size:12.5px; color:#667;">عدد الصفوف:</span>
+                <select id="supPageSize" onchange="changeSupPageSize(this.value)" style="padding:6px 10px; border:1.5px solid #ddd; border-radius:7px; font-size:13px; font-family:inherit;">
+                    <option value="10">10</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                </select>
+                <span id="supRangeInfo" style="font-size:12px; color:#8aa2b0;"></span>
+            </div>
+            <div class="pager-right" id="supPagerTop"></div>
+        </div>
+
         <div class="table-responsive">
             <table id="suppliersTable">
-                <thead><tr><th>تاريخ التسجيل</th><th>الاسم</th><th>التقييم</th><th>نوع الخدمة</th><th>التصنيف</th><th>الهاتف</th><th>VAT</th><th>C.R</th><th>انتهاء السجل التجاري</th><th>الملفات</th><th>الإجراءات</th></tr></thead>
+                <thead><tr>
+                    <th class="sortable" onclick="sortSuppliers('recDate')">تاريخ التسجيل <span class="sort-arrow">⇅</span></th>
+                    <th class="col-actions" style="text-align:center;">الإجراء</th>
+                    <th class="sortable" onclick="sortSuppliers('name')">الاسم <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" onclick="sortSuppliers('rating')">التقييم <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" onclick="sortSuppliers('service')">نوع الخدمة <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" onclick="sortSuppliers('type')">التصنيف <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" onclick="sortSuppliers('phone')">الهاتف <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" onclick="sortSuppliers('vat')">VAT <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" onclick="sortSuppliers('cr')">C.R <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" onclick="sortSuppliers('crExpiry')">انتهاء السجل التجاري <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" onclick="sortSuppliers('createdBy')">أُنشئ بواسطة <span class="sort-arrow">⇅</span></th>
+                    <th>الملفات</th>
+                </tr></thead>
                 <tbody></tbody>
             </table>
         </div>
-        <div style="text-align:center; margin-top:16px; padding-top:12px; border-top:1px dashed #d5dde3;">
-            <a href="#" onclick="downloadSuppliersExcel(); return false;" class="excel-link"><i class="fas fa-file-excel"></i> تنزيل البيانات Excel</a>
+        <!-- شريط التنقّل بين الصفحات (أسفل الجدول) -->
+        <div class="pager-bar" style="justify-content:center; margin-top:10px;">
+            <div class="pager-right" id="supPagerBottom"></div>
         </div>
     </div>
 </div>
@@ -1113,9 +1212,9 @@
                 <button type="button" class="btn btn-small" style="background:#c0392b; color:white;" onclick="exportReportPDF()"><i class="fas fa-file-pdf"></i> طباعة التقرير PDF</button>
             </div>
         </div>
-        <div class="filter-section">
+        <div class="filter-section filter-section-compact">
             <div class="filter-title"><i class="fas fa-filter"></i> فلاتر البحث</div>
-            <div class="filter-grid">
+            <div class="filter-grid filter-grid-auto">
                 <div class="ms-wrap" data-ms="msRepMonth">
                     <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الأشهر --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
                     <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
@@ -1128,8 +1227,6 @@
                     <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الموردين --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
                     <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
                 </div>
-            </div>
-            <div class="filter-grid">
                 <div class="ms-wrap" data-ms="msRepStatus">
                     <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الحالات --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
                     <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
@@ -1329,7 +1426,7 @@
             <div class="ctrl-search"><input type="text" id="svcSearch" placeholder="بحث في أنواع الخدمات..." oninput="loadControlPanel()"><i class="fas fa-search"></i></div>
             <div class="ctrl-list-scroll">
                 <table id="serviceTypesTable">
-                    <thead><tr><th>نوع الخدمة</th><th style="width:70px;"></th></tr></thead>
+                    <thead><tr><th style="width:44px;">#</th><th>نوع الخدمة</th><th style="width:70px;"></th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -1345,7 +1442,7 @@
             <div class="ctrl-search"><input type="text" id="deptSearch" placeholder="بحث في الأقسام..." oninput="loadControlPanel()"><i class="fas fa-search"></i></div>
             <div class="ctrl-list-scroll">
                 <table id="departmentsTable">
-                    <thead><tr><th>القسم / الغرض</th><th style="width:70px;"></th></tr></thead>
+                    <thead><tr><th style="width:44px;">#</th><th>القسم / الغرض</th><th style="width:70px;"></th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -1363,7 +1460,7 @@
         <div class="ctrl-search"><input type="text" id="descSearch" placeholder="بحث في نصوص البنود..." oninput="loadControlPanel()"><i class="fas fa-search"></i></div>
         <div class="ctrl-list-scroll" style="max-height:360px;">
             <table id="descriptionsTable">
-                <thead><tr><th>نص البند / الوصف</th><th style="width:100px;"></th></tr></thead>
+                <thead><tr><th style="width:44px;">#</th><th>نص البند / الوصف</th><th style="width:100px;"></th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -1462,39 +1559,15 @@
 
     <!-- محاكاة المستخدم (Log in as User) -->
     <div class="card">
-        <div class="card-header"><div class="card-title"><i class="fas fa-user-secret"></i> محاكاة المستخدم (تجربة الدخول كمستخدم)</div></div>
-        <p style="font-size:12.5px; color:#667; line-height:1.7; margin-bottom:10px;">اختر مستخدماً لتجربة النظام بصلاحياته ورؤيته كما يراها هو تماماً. لا يؤثر ذلك على بيانات المستخدم، ويمكنك العودة إلى حسابك في أي وقت من الشريط العلوي.</p>
-        <div class="ctrl-search"><input type="text" id="imprSearch" placeholder="بحث عن مستخدم بالاسم أو البريد..." oninput="renderImpersonationList()"><i class="fas fa-search"></i></div>
-        <div class="ctrl-list-scroll" style="max-height:340px;"><div id="impersonationList" class="impr-list"></div></div>
-    </div>
-
-    <!-- تعديل مباشر لقواعد البيانات (Direct Database Editor) -->
-    <div class="card">
-        <div class="card-header"><div class="card-title"><i class="fas fa-database"></i> التعديل المباشر لقواعد البيانات</div>
-            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-                <select id="dbTableSelect" onchange="loadDbTable()" style="padding:8px 10px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-family:inherit;">
-                    <option value="">— اختر الجدول —</option>
-                    <option value="purchase_orders">أوامر الشراء (purchase_orders)</option>
-                    <option value="drafts">المسودات (drafts)</option>
-                    <option value="suppliers">الموردون (suppliers)</option>
-                    <option value="app_users">المستخدمون (app_users)</option>
-                    <option value="service_types">أنواع الخدمات (service_types)</option>
-                    <option value="departments">الأقسام (departments)</option>
-                    <option value="descriptions">نصوص البنود (descriptions)</option>
-                    <option value="supplier_evaluations">تقييمات الموردين (supplier_evaluations)</option>
-                    <option value="comments">المحادثات (comments)</option>
-                    <option value="activity_log">سجل النشاط (activity_log)</option>
-                    <option value="settings">الإعدادات (settings)</option>
-                </select>
-                <input type="text" id="dbSearch" placeholder="بحث..." oninput="renderDbTable()" style="padding:8px 10px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-family:inherit; width:150px;">
-                <button type="button" class="btn btn-small" onclick="loadDbTable()" title="تحديث"><i class="fas fa-sync"></i></button>
-            </div>
+        <div class="card-header collapse-head collapsed" onclick="toggleCollapse('impersonationBody', this)">
+            <div class="card-title"><i class="fas fa-user-secret"></i> محاكاة المستخدم (تجربة الدخول كمستخدم)</div>
+            <i class="fas fa-chevron-down collapse-chevron"></i>
         </div>
-        <div style="background:#fff4e5; border:1px solid #ffd9a8; border-radius:8px; padding:0.7rem 1rem; font-size:12.5px; color:#9a6a1f; line-height:1.7; margin-bottom:12px;">
-            <i class="fas fa-triangle-exclamation"></i> هذه أداة متقدمة لمدير النظام تتيح استعراض وتعديل وحذف أي سجل في قاعدة البيانات مباشرةً. التعديل يؤثر فوراً على بيانات النظام — توخَّ الحذر. الحقول المعقّدة (مثل البنود) تُعرض بصيغة JSON.
+        <div id="impersonationBody" style="display:none;">
+            <p style="font-size:12.5px; color:#667; line-height:1.7; margin:10px 0;">اختر مستخدماً لتجربة النظام بصلاحياته ورؤيته كما يراها هو تماماً. لا يؤثر ذلك على بيانات المستخدم، ويمكنك العودة إلى حسابك في أي وقت من الشريط العلوي.</p>
+            <div class="ctrl-search"><input type="text" id="imprSearch" placeholder="بحث عن مستخدم بالاسم أو البريد..." oninput="renderImpersonationList()"><i class="fas fa-search"></i></div>
+            <div class="ctrl-list-scroll" style="max-height:340px;"><div id="impersonationList" class="impr-list"></div></div>
         </div>
-        <div id="dbEditorStatus" style="font-size:12.5px; margin-bottom:10px; display:none;"></div>
-        <div class="ctrl-list-scroll" id="dbEditorScroll" style="max-height:560px; overflow:auto;"><div id="dbEditorContent" style="padding:14px; text-align:center; color:#999; font-size:13px;">اختر جدولاً لعرض بياناته وتعديلها.</div></div>
     </div>
 
     <!-- إدارة الأدوار والصلاحيات (مدمجة ضمن صفحة مدير النظام) -->
@@ -1597,6 +1670,35 @@
         </div>
     </div>
 
+    <!-- تعديل مباشر لقواعد البيانات (Direct Database Editor) — في آخر الصفحة -->
+    <div class="card">
+        <div class="card-header"><div class="card-title"><i class="fas fa-database"></i> التعديل المباشر لقواعد البيانات</div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <select id="dbTableSelect" onchange="loadDbTable()" style="padding:8px 10px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-family:inherit;">
+                    <option value="">— اختر الجدول —</option>
+                    <option value="purchase_orders">أوامر الشراء (purchase_orders)</option>
+                    <option value="drafts">المسودات (drafts)</option>
+                    <option value="suppliers">الموردون (suppliers)</option>
+                    <option value="app_users">المستخدمون (app_users)</option>
+                    <option value="service_types">أنواع الخدمات (service_types)</option>
+                    <option value="departments">الأقسام (departments)</option>
+                    <option value="descriptions">نصوص البنود (descriptions)</option>
+                    <option value="supplier_evaluations">تقييمات الموردين (supplier_evaluations)</option>
+                    <option value="comments">المحادثات (comments)</option>
+                    <option value="activity_log">سجل النشاط (activity_log)</option>
+                    <option value="settings">الإعدادات (settings)</option>
+                </select>
+                <input type="text" id="dbSearch" placeholder="بحث..." oninput="renderDbTable()" style="padding:8px 10px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-family:inherit; width:150px;">
+                <button type="button" class="btn btn-small" onclick="loadDbTable()" title="تحديث"><i class="fas fa-sync"></i></button>
+            </div>
+        </div>
+        <div style="background:#fff4e5; border:1px solid #ffd9a8; border-radius:8px; padding:0.7rem 1rem; font-size:12.5px; color:#9a6a1f; line-height:1.7; margin-bottom:12px;">
+            <i class="fas fa-triangle-exclamation"></i> هذه أداة متقدمة لمدير النظام تتيح استعراض وتعديل وحذف أي سجل في قاعدة البيانات مباشرةً. التعديل يؤثر فوراً على بيانات النظام — توخَّ الحذر. الحقول المعقّدة (مثل البنود) تُعرض بصيغة JSON.
+        </div>
+        <div id="dbEditorStatus" style="font-size:12.5px; margin-bottom:10px; display:none;"></div>
+        <div class="ctrl-list-scroll" id="dbEditorScroll" style="max-height:560px; overflow:auto;"><div id="dbEditorContent" style="padding:14px; text-align:center; color:#999; font-size:13px;">اختر جدولاً لعرض بياناته وتعديلها.</div></div>
+    </div>
+
 </div>
 
 <!-- ============ ABOUT ============ -->
@@ -1610,8 +1712,7 @@
         </div>
         <div class="about-box">
             <div class="about-item"><span class="about-label">إصدار النظام</span><span class="about-value">v1.0</span></div>
-            <div class="about-item"><span class="about-label">تاريخ إنشاء النسخة</span><span class="about-value">23/6/2026</span></div>
-            <div class="about-item"><span class="about-label">تم تصميم النظام بواسطة</span><span class="about-value">ismailt@takafuloman.om</span></div>
+            <div class="about-item"><span class="about-label">أُنشئ وطُوّر بواسطة</span><span class="about-value">ismailt@takafuloman.om</span></div>
             <div class="about-item"><span class="about-label">للدعم الفني</span><span class="about-value">98299425</span></div>
         </div>
         <div class="about-box" style="background:#fff8e1; border-color:#ffd700;">
@@ -1738,17 +1839,34 @@
         </div>
     </div>
 
-    <!-- الحماية والأمان -->
-    <div class="card" id="profileSecurityCard">
-        <div class="card-header"><div class="card-title"><i class="fas fa-shield-alt"></i> الحماية والأمان</div></div>
-        <p style="font-size:12.5px; color:#667; line-height:1.7; margin-bottom:1rem;">لحماية حسابك، يُنصح باستخدام كلمة سر قوية (٦ أحرف على الأقل) وتغييرها بشكل دوري وعدم مشاركتها مع أي شخص.</p>
-        <div class="profile-form-grid" id="profileSecurityGrid">
-            <div><label>كلمة السر الجديدة</label><input type="password" id="profileNewPassword" dir="ltr" placeholder="••••••"></div>
-            <div><label>تأكيد كلمة السر</label><input type="password" id="profileConfirmPassword" dir="ltr" placeholder="••••••"></div>
+    <!-- تفضيلات العرض وإعادة التعيين (بعد البيانات الشخصية) -->
+    <div class="card">
+        <div class="card-header"><div class="card-title"><i class="fas fa-sliders-h"></i> تفضيلات العرض وإعادة التعيين</div></div>
+        <p style="font-size:12.5px; color:#667; line-height:1.7; margin-bottom:1rem;">إذا تغيّر حجم أو موضع نافذة المحادثة أو ترتيب أعمدة جدول أوامر الشراء بشكل غير مرغوب، يمكنك إعادتها إلى الوضع الافتراضي من هنا.</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button class="btn btn-small" style="background:#0093c4; color:#fff;" onclick="resetChatFromProfile()"><i class="fas fa-rotate-left"></i> إعادة تعيين نافذة المحادثة</button>
+            <button class="btn btn-small" style="background:#e67e22; color:#fff;" onclick="resetLpoTableFromProfile()"><i class="fas fa-table-columns"></i> إعادة تعيين أعمدة جدول أوامر الشراء</button>
+            <button class="btn btn-small" style="background:#7cb342; color:#fff;" onclick="resetSuppliersTableFromProfile()"><i class="fas fa-table-columns"></i> إعادة تعيين أعمدة جدول الموردين</button>
         </div>
-        <div style="margin-top:1.1rem;">
-            <button class="btn" style="background:#7cb342; color:#fff; border-color:#7cb342;" onclick="changeProfilePassword()"><i class="fas fa-key"></i> تغيير كلمة السر</button>
-            <span id="profilePwMsg" style="font-size:12.5px; margin-inline-start:12px;"></span>
+        <span id="profileResetMsg" style="font-size:12.5px; display:block; margin-top:10px; color:#2e7d32;"></span>
+    </div>
+
+    <!-- الحماية والأمان (بعد تفضيلات العرض) — قابل للطي، مطوي افتراضياً -->
+    <div class="card" id="profileSecurityCard">
+        <div class="card-header collapse-head collapsed" onclick="toggleCollapse('profileSecurityBody', this)">
+            <div class="card-title"><i class="fas fa-shield-alt"></i> الحماية والأمان</div>
+            <i class="fas fa-chevron-down collapse-chevron"></i>
+        </div>
+        <div id="profileSecurityBody" style="display:none;">
+            <p style="font-size:12.5px; color:#667; line-height:1.7; margin:1rem 0;">لحماية حسابك، يُنصح باستخدام كلمة سر قوية (٦ أحرف على الأقل) وتغييرها بشكل دوري وعدم مشاركتها مع أي شخص.</p>
+            <div class="profile-form-grid" id="profileSecurityGrid">
+                <div><label>كلمة السر الجديدة</label><input type="password" id="profileNewPassword" dir="ltr" placeholder="••••••"></div>
+                <div><label>تأكيد كلمة السر</label><input type="password" id="profileConfirmPassword" dir="ltr" placeholder="••••••"></div>
+            </div>
+            <div style="margin-top:1.1rem;">
+                <button class="btn" style="background:#7cb342; color:#fff; border-color:#7cb342;" onclick="changeProfilePassword()"><i class="fas fa-key"></i> تغيير كلمة السر</button>
+                <span id="profilePwMsg" style="font-size:12.5px; margin-inline-start:12px;"></span>
+            </div>
         </div>
     </div>
 
@@ -1798,7 +1916,11 @@
     <div class="modal-content">
         <div class="modal-header">
             <h2><i class="fas fa-file-pdf"></i> معاينة أمر الشراء</h2>
-            <div style="display:flex; gap:10px; align-items:center;">
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; color:#2a3b47; font-weight:600; cursor:pointer; background:#eef7fb; border:1px solid #cfe7f3; border-radius:7px; padding:6px 10px;" title="إظهار/إخفاء اسم المستلم في ملف الـ PDF">
+                    <input type="checkbox" id="chkShowRecipient" checked onchange="toggleShowRecipient(this.checked)" style="width:15px; height:15px; cursor:pointer;">
+                    <span data-i18n="إظهار اسم المستلم">إظهار اسم المستلم</span>
+                </label>
                 <button onclick="downloadPreviewPDF()" class="btn btn-success"><i class="fas fa-download"></i> تحميل PDF</button>
                 <button onclick="closePreview()" class="btn">إغلاق</button>
                 <button class="modal-close" onclick="closePreview()">×</button>
@@ -1841,6 +1963,7 @@
     <!-- مقابض تغيير حجم نافذة المحادثة -->
     <div id="chatResizeX" class="chat-resize-x" title="اسحب لتغيير العرض"></div>
     <div id="chatResizeCorner" class="chat-resize-corner" title="اسحب لتغيير الحجم"></div>
+    <div id="chatResizeCornerTop" class="chat-resize-corner-top" title="اسحب لتغيير الحجم"></div>
     <div class="chat-header" id="chatHeader">
         <div style="display:flex; align-items:center; gap:8px; min-width:0;">
             <i class="fas fa-comments"></i>
@@ -1882,13 +2005,13 @@
 </div>
 
 <!-- زر عائم لإعادة إظهار المحادثة عند إخفائها -->
-<button type="button" id="chatFab" class="chat-fab" style="display:none;" onclick="setChatMode('floating')" title="فتح المحادثة">
+<button type="button" id="chatFab" class="chat-fab" style="display:none;" onclick="fabClick()" title="فتح المحادثة (يمكن سحبه)">
     <i class="fas fa-comments"></i>
     <span id="chatFabBadge" class="chat-fab-badge" style="display:none;">0</span>
 </button>
 
 <!-- ============ SUPPLIER MODAL ============ -->
-<div id="supplierModal" class="modal">
+<div id="supplierModal" class="modal" onclick="if(event.target===this) closeSupplierModal()">
     <div class="modal-content">
         <div class="modal-header">
             <h2 id="supplierModalTitle"><i class="fas fa-plus"></i> إضافة مورد جديد</h2>
@@ -1898,11 +2021,12 @@
             <form onsubmit="addSupplier(event)">
                 <div class="form-grid cols-2">
                     <div class="form-group-item"><label>اسم المورد *</label><input type="text" id="newSupplierName" required></div>
-                    <div class="form-group-item"><label>نوع الخدمة * <span style="font-weight:400; color:#999; font-size:11px;">(يمكن اختيار أكثر من نوع)</span></label>
+                    <div class="form-group-item"><label>نوع الخدمة * <span style="font-weight:400; color:#999; font-size:11px;">(يمكن اختيار أكثر من نوع — أو اكتب نوعاً جديداً واضغط Enter)</span></label>
                         <div class="ms-wrap" data-ms="msNewSupplierSvc">
                             <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- اختر نوع الخدمة --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
-                            <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                            <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث أو اكتب نوعاً جديداً..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
                         </div>
+                        <a href="#" id="addSvcTypeLink" onclick="openQuickServiceTypeModal(); return false;" style="display:none; font-size:12px; color:#1f7a37; font-weight:600; margin-top:6px;"><i class="fas fa-plus-circle"></i> إضافة نوع خدمة جديد</a>
                     </div>
                     <div class="form-group-item"><label>تصنيف المورد *</label>
                         <select id="newSupplierType" required>
@@ -2024,18 +2148,41 @@
     </div>
 </div>
 
+<!-- ============ QUICK ADD SERVICE TYPE MODAL ============ -->
+<div id="quickSvcModal" class="modal" onclick="if(event.target===this) closeQuickServiceTypeModal()">
+    <div class="modal-content" style="max-width:460px;">
+        <div class="modal-header">
+            <h2><i class="fas fa-cogs"></i> <span data-i18n="إضافة نوع خدمة جديد">إضافة نوع خدمة جديد</span></h2>
+            <button class="modal-close" onclick="closeQuickServiceTypeModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <p style="font-size:12.5px; color:#667; line-height:1.7; margin-bottom:12px;">يُضاف النوع الجديد إلى قائمة أنواع الخدمات في النظام (كما في صفحة الإدارة والتحكم) ويصبح متاحاً فوراً للاختيار.</p>
+            <input type="text" id="quickSvcInput" placeholder="اكتب نوع الخدمة الجديد..." style="width:100%; padding:11px 12px; border:1.5px solid #ddd; border-radius:8px; font-size:14px; font-family:inherit; box-sizing:border-box;" onkeydown="if(event.key==='Enter'){event.preventDefault();saveQuickServiceType();}">
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:1.3rem;">
+                <button type="button" onclick="closeQuickServiceTypeModal()" class="btn">إلغاء</button>
+                <button type="button" class="btn btn-success" onclick="saveQuickServiceType()"><i class="fas fa-save"></i> حفظ وإضافة</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ============ SUPPLIER EVALUATION MODAL ============ -->
-<div id="evalModal" class="modal">
+<div id="evalModal" class="modal" onclick="if(event.target===this) closeEvalModal()">
     <div class="modal-content" style="max-width:560px;">
         <div class="modal-header">
             <h2><i class="fas fa-star"></i> <span id="evalModalTitle">تقييم المورد</span></h2>
             <button class="modal-close" onclick="closeEvalModal()">×</button>
         </div>
         <div class="modal-body">
-            <div style="font-size:14px; font-weight:700; color:#0093c4; margin-bottom:1rem;" id="evalSupplierName"></div>
+            <div style="font-size:14px; font-weight:700; color:#0093c4; margin-bottom:0.6rem;" id="evalSupplierName"></div>
             <input type="hidden" id="evalSupplierId">
             <input type="hidden" id="evalOrderNumber">
+            <input type="hidden" id="editingEvalId">
 
+            <!-- سجل متابعة التقييمات (Tracker) -->
+            <div id="evalTracker" style="margin-bottom:1rem;"></div>
+
+            <div id="evalFormTitle" style="font-size:13px; font-weight:700; color:#2a3b47; margin-bottom:0.5rem;"><i class="fas fa-star"></i> <span data-i18n="تقييم جديد">تقييم جديد</span></div>
             <div style="display:flex; flex-direction:column; gap:1rem;">
                 <div class="eval-criterion">
                     <label style="font-size:13px; font-weight:600;">جودة المنتجات / الخدمات (Quality)</label>
@@ -2130,9 +2277,10 @@ const ROLE_ORDER = ['new_user','requester','purchasing_officer','approver','stor
 // الوحدات (الموارد) التي تُضبط صلاحياتها — يمكن لكل وحدة تحديد الإجراءات المطبّقة عليها عبر acts
 const PERM_MODULES = [
     { key: 'dashboard',     ar: 'لوحة التحكم',       en: 'Dashboard', acts: ['view'] },
-    { key: 'orders',        ar: 'أوامر الشراء',     en: 'Purchase Orders' },
+    { key: 'orders',        ar: 'أوامر الشراء',     en: 'Purchase Orders', acts: ['view','create','edit','delete','approve','unapprove'] },
     { key: 'drafts',        ar: 'المسودات',          en: 'Drafts', acts: ['view','create','edit','delete'] },
     { key: 'suppliers',     ar: 'الموردون',         en: 'Suppliers' },
+    { key: 'evaluation',    ar: 'تقييم الموردين',    en: 'Supplier Evaluation', acts: ['view','create','edit'] },
     { key: 'reports',       ar: 'التقارير',          en: 'Reports' },
     { key: 'control',       ar: 'الإدارة والتحكم',   en: 'Management & Control', acts: ['view','create','edit','delete'] },
     { key: 'notifications', ar: 'الإشعارات',         en: 'Notifications' },
@@ -2147,7 +2295,8 @@ const PERM_ACTIONS = [
     { key: 'edit',    ar: 'تعديل',   en: 'Edit' },
     { key: 'delete',  ar: 'حذف',     en: 'Delete' },
     { key: 'restore', ar: 'استرجاع', en: 'Restore' },
-    { key: 'approve', ar: 'اعتماد',  en: 'Approve' }
+    { key: 'approve', ar: 'اعتماد',  en: 'Approve' },
+    { key: 'unapprove', ar: 'التراجع عن الاعتماد', en: 'Undo Approval' }
 ];
 // الإجراءات الافتراضية المطبّقة على الوحدات التي لا تحدّد acts
 const DEFAULT_PERM_ACTS = ['view','create','edit','delete','approve'];
@@ -2195,6 +2344,11 @@ Object.keys(DEFAULT_PERMISSIONS).forEach(r => {
     // وتبقى قابلة للضبط المستقل من صفحة الأدوار والصلاحيات (منها حذف المسودات).
     const o = DEFAULT_PERMISSIONS[r].orders || {};
     DEFAULT_PERMISSIONS[r].drafts = { view: !!o.view, create: !!o.create, edit: !!o.edit, delete: !!o.delete };
+    // التراجع عن الاعتماد: افتراضياً لمدير النظام فقط (قابل للمنح لأي دور)
+    if (o) o.unapprove = (r === 'sysadmin');
+    // تقييم الموردين: رؤية للجميع، وإضافة/تعديل لمن يملك تعديل الموردين
+    const s = DEFAULT_PERMISSIONS[r].suppliers || {};
+    DEFAULT_PERMISSIONS[r].evaluation = { view: !!s.view || true, create: !!s.edit || !!s.create, edit: !!s.edit };
 });
 
 // المصفوفة الفعلية (تُحمَّل من السحابة؛ تبدأ بالافتراضية)
@@ -2641,7 +2795,43 @@ const I18N = {
     'الصلاحية *': 'Role *',
     // حول البرنامج
     'إصدار النظام': 'System Version',
-    'تاريخ إنشاء النسخة': 'Build Date',
+    'أُنشئ وطُوّر بواسطة': 'Created and Developed by',
+    'إظهار اسم المستلم': 'Show Recipient Name',
+    'تقييم جديد': 'New evaluation',
+    'أُنشئ بواسطة': 'Created By',
+    'إضافة نوع خدمة جديد': 'Add a new service type',
+    '-- كل التصنيفات --': '-- All Classifications --',
+    '-- كل التقييمات --': '-- All Ratings --',
+    '-- كل أرقام السجل --': '-- All C.R Numbers --',
+    '-- كل الأرقام --': '-- All Phone Numbers --',
+    'بلا تقييم': 'No rating',
+    'عدد الصفوف:': 'Rows per page:',
+    '-- كل أرقام الأوامر --': '-- All Order Numbers --',
+    '-- كل أرقام المسودات --': '-- All Draft Numbers --',
+    'تفضيلات العرض وإعادة التعيين': 'Display Preferences & Reset',
+    'إعادة تعيين نافذة المحادثة': 'Reset chat window',
+    'إعادة تعيين أعمدة جدول أوامر الشراء': 'Reset purchase orders table columns',
+    'إعادة تعيين أعمدة جدول الموردين': 'Reset suppliers table columns',
+    'محاكاة المستخدم (تجربة الدخول كمستخدم)': 'User Impersonation (Log in as User)',
+    'نص البند / الوصف': 'Description',
+    'نصوص البنود (Description)': 'Line Item Descriptions',
+    'التراجع عن الاعتماد': 'Undo Approval',
+    'تقييم الموردين': 'Supplier Evaluation',
+    'التعديل المباشر لقواعد البيانات': 'Direct Database Editing',
+    '— اختر الجدول —': '— Select a table —',
+    'أوامر الشراء (purchase_orders)': 'Purchase Orders (purchase_orders)',
+    'المسودات (drafts)': 'Drafts (drafts)',
+    'الموردون (suppliers)': 'Suppliers (suppliers)',
+    'المستخدمون (app_users)': 'Users (app_users)',
+    'أنواع الخدمات (service_types)': 'Service Types (service_types)',
+    'الأقسام (departments)': 'Departments (departments)',
+    'نصوص البنود (descriptions)': 'Descriptions (descriptions)',
+    'تقييمات الموردين (supplier_evaluations)': 'Supplier Evaluations (supplier_evaluations)',
+    'المحادثات (comments)': 'Comments (comments)',
+    'سجل النشاط (activity_log)': 'Activity Log (activity_log)',
+    'الإعدادات (settings)': 'Settings (settings)',
+    'هذه أداة متقدمة لمدير النظام تتيح استعراض وتعديل وحذف أي سجل في قاعدة البيانات مباشرةً. التعديل يؤثر فوراً على بيانات النظام — توخَّ الحذر. الحقول المعقّدة (مثل البنود) تُعرض بصيغة JSON.': 'This is an advanced tool for the system administrator to view, edit and delete any database record directly. Changes take effect immediately on the system data — proceed with care. Complex fields (such as line items) are shown as JSON.',
+    'اختر جدولاً لعرض بياناته وتعديلها.': 'Select a table to view and edit its data.',
     'تم تصميم النظام بواسطة': 'Designed by',
     'للدعم الفني': 'Technical Support',
     'وصف البرنامج': 'About the System',
@@ -2831,6 +3021,12 @@ const I18N = {
 // ===================== قاموس رسائل التنبيه والأخطاء =====================
 // يُستخدم عبر الدالة msg() لعرض الرسائل بلغة الواجهة المختارة
 const MSG_I18N = {
+    'رقم L.P.O Ref مسجّل مسبقاً، الرجاء إدخال رقم مرجعي آخر غير مكرر': 'This L.P.O Ref already exists. Please enter a different, non-duplicate reference number.',
+    'رقم السجل التجاري (C.R) مسجّل مسبقاً لمورد آخر، الرجاء إدخال رقم غير مكرر': 'This C.R number is already registered for another supplier. Please enter a non-duplicate number.',
+    'هذا النوع من الخدمات غير مدرج سابقاً، هل تريد إضافته وحفظه؟': 'This service type is not listed yet. Do you want to add and save it?',
+    'تعديل نوع الخدمة:': 'Edit service type:',
+    'تعديل القسم / الغرض:': 'Edit department / purpose:',
+    'لا يمكن ترك النص فارغاً': 'The text cannot be left empty',
     'الزائر لا يمكنه إضافة رسائل': 'Guests cannot post messages',
     'الزائر لا يملك صلاحية إنشاء أمر شراء': 'Guests are not allowed to create purchase orders',
     'الزائر لا يملك صلاحية الإضافة': 'Guests are not allowed to add records',
@@ -2930,7 +3126,7 @@ function changeLanguage(lang, ev) {
         if (appEl && appEl.style.display !== 'none') {
             const active = document.querySelector('.page.active');
             const id = active ? active.id : '';
-            if (id === 'page-admin') loadAdminPanel();
+            if (id === 'page-admin') { loadAdminPanel(); if (typeof _dbRows !== 'undefined' && _dbRows && _dbRows.length) renderDbTable(); }
             else if (id === 'page-dashboard') loadDashboard();
             else if (id === 'page-reports') generateReport();
             else if (id === 'page-suppliers') filterSuppliers();
@@ -3342,7 +3538,15 @@ const PREFERS_REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced
 
 function mAnimate(el, keyframes, options) {
     if (!el || !MOTION_OK() || PREFERS_REDUCED) return;
-    try { Motion.animate(el, keyframes, options || {}); } catch (e) {}
+    try {
+        Motion.animate(el, keyframes, options || {});
+        // إزالة أي transform متبقٍّ بعد انتهاء الحركة: وجوده يُنشئ "سياق تكديس" يجعل
+        // البطاقات التالية تحجب القوائم المنسدلة المفتوحة. التصفير لا يُحدث أي قفزة بصرية.
+        if (keyframes && keyframes.transform) {
+            var dur = (options && typeof options.duration === 'number') ? options.duration * 1000 : 350;
+            setTimeout(function () { try { el.style.transform = ''; el.style.willChange = ''; } catch (e2) {} }, dur + 240);
+        }
+    } catch (e) {}
 }
 
 // حركة دخول الصفحة
@@ -3363,6 +3567,11 @@ function animateCards(root) {
             { opacity: [0, 1], transform: ['translateY(10px)', 'translateY(0)'] },
             { duration: 0.3, delay: Motion.stagger(0.04), easing: 'ease-out' }
         );
+        // إزالة الـ transform المتبقّي على البطاقات بعد انتهاء الحركة: بقاؤه يُنشئ
+        // سياق تكديس لكل بطاقة فتحجب البطاقات التالية القوائم المنسدلة المفتوحة (التقارير/البروفايل).
+        setTimeout(function () {
+            cards.forEach(function (c) { try { c.style.transform = ''; c.style.willChange = ''; } catch (e2) {} });
+        }, 300 + cards.length * 45 + 260);
     } catch (e) {}
 }
 
@@ -3502,7 +3711,7 @@ function newLpoHasData() {
     items.forEach(r => {
         const desc = r.querySelector('.item-desc');
         const price = r.querySelector('.item-price');
-        if ((desc && desc.value.trim()) || (price && parseFloat(price.value) > 0)) hasItemData = true;
+        if ((desc && desc.value.trim()) || (price && price.value.trim() !== '' && parseFloat(price.value) !== 0)) hasItemData = true;
     });
     return !!sup || hasItemData;
 }
@@ -3716,6 +3925,53 @@ function clearSupplierInfo() {
     const ratingView = document.getElementById('supplierRatingView'); if (ratingView) ratingView.style.display = 'none';
 }
 
+// ===================== قائمة القسم/الغرض (combobox قابل للكتابة والبحث) =====================
+let _deptComboIdx = -1;
+function renderDeptComboList(filter) {
+    const list = document.getElementById('deptComboList');
+    if (!list) return;
+    const en = currentLanguage === 'en';
+    const f = (filter || '').trim().toLowerCase();
+    const items = departments.filter(d => !f || (d.name || '').toLowerCase().includes(f));
+    _deptComboIdx = -1;
+    if (!items.length) {
+        list.innerHTML = `<div class="combo-empty">${en ? 'No matching departments (free text allowed)' : 'لا يوجد قسم مطابق (يمكن كتابة نص حر)'}</div>`;
+    } else {
+        list.innerHTML = items.slice(0, 200).map(d =>
+            `<div class="combo-item" data-name="${escapeHtml(d.name)}" onmousedown="event.preventDefault(); selectDept('${String(d.name).replace(/'/g, "\\'")}')">` +
+            `<span class="combo-item-name">${escapeHtml(d.name)}</span></div>`).join('');
+    }
+    list.style.display = 'block';
+}
+function closeDeptCombo() { const l = document.getElementById('deptComboList'); if (l) l.style.display = 'none'; _deptComboIdx = -1; }
+function toggleDeptCombo(ev) {
+    if (ev) ev.stopPropagation();
+    const list = document.getElementById('deptComboList');
+    const inp = document.getElementById('lpoDepartment');
+    if (list && list.style.display === 'block') closeDeptCombo();
+    else { if (inp) inp.focus(); renderDeptComboList(inp ? inp.value : ''); }
+}
+function selectDept(name) {
+    const inp = document.getElementById('lpoDepartment');
+    if (inp) inp.value = name;
+    closeDeptCombo();
+}
+function deptComboKey(e) {
+    const list = document.getElementById('deptComboList');
+    const open = list && list.style.display === 'block';
+    if (e.key === 'ArrowDown' && !open) { renderDeptComboList(e.target.value); return; }
+    if (!open) return;
+    const items = Array.prototype.slice.call(list.querySelectorAll('.combo-item'));
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); _deptComboIdx = Math.min(items.length - 1, _deptComboIdx + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); _deptComboIdx = Math.max(0, _deptComboIdx - 1); }
+    else if (e.key === 'Enter') { if (_deptComboIdx >= 0) { e.preventDefault(); selectDept(items[_deptComboIdx].getAttribute('data-name')); } return; }
+    else if (e.key === 'Escape') { closeDeptCombo(); return; }
+    else return;
+    items.forEach((it, i) => it.classList.toggle('combo-active', i === _deptComboIdx));
+    if (items[_deptComboIdx]) items[_deptComboIdx].scrollIntoView({ block: 'nearest' });
+}
+
 // توافق خلفي: تملأ البيانات اعتماداً على supplierId الحالي
 function onSupplierSelected() {
     const id = document.getElementById('supplierId').value;
@@ -3765,8 +4021,8 @@ function addItemRow(data) {
     tr.innerHTML = `
         <td class="col-num"><span class="row-grip" title="${currentLanguage==='en'?'Drag to reorder':'اسحب لإعادة الترتيب'}"><i class="fas fa-grip-vertical"></i></span><span class="row-no">${n}</span></td>
         <td class="col-desc"><input type="text" class="item-desc" list="itemDescList" autocomplete="off" oninput="calculateTotals()" placeholder="${currentLanguage==='en'?'Description... (type or pick)':'الوصف... (اكتب أو اختر من السابق)'}" value="${data ? escapeHtml(data.desc||'') : ''}"></td>
-        <td class="col-qty"><input type="number" class="item-qty" dir="ltr" lang="en" inputmode="numeric" style="text-align:center;" value="${data ? data.qty : 1}" min="0" step="1" oninput="calculateTotals()" onkeydown="handleTab(event)"></td>
-        <td class="col-price"><input type="number" class="item-price" dir="ltr" lang="en" inputmode="decimal" style="text-align:center;" value="${priceVal}" min="0" step="0.001" placeholder="0.000" oninput="calculateTotals()" onkeydown="handleTab(event)"></td>
+        <td class="col-qty"><input type="number" class="item-qty" dir="ltr" lang="en" inputmode="numeric" style="text-align:center;" value="${data ? data.qty : 1}" step="1" oninput="calculateTotals()" onkeydown="handleTab(event)" title="${currentLanguage==='en'?'You can enter a negative value for a discount line':'يمكن إدخال قيمة سالبة لبند الخصم'}"></td>
+        <td class="col-price"><input type="number" class="item-price" dir="ltr" lang="en" inputmode="decimal" style="text-align:center;" value="${priceVal}" step="0.001" placeholder="0.000" oninput="calculateTotals()" onkeydown="handleTab(event)" title="${currentLanguage==='en'?'You can enter a negative value for a discount (e.g. -10.000)':'يمكن إدخال قيمة سالبة للخصم (مثال: 10.000-)'}"></td>
         <td class="col-taxchk"><div class="tax-cell">
             <input type="checkbox" class="item-tax-check" ${checked} onchange="calculateTotals()">
             <input type="number" class="tax-pct item-tax-rate" dir="ltr" lang="en" inputmode="decimal" value="${tax}" min="0" max="100" step="0.5" oninput="calculateTotals()" onkeydown="handleTab(event)">
@@ -3788,20 +4044,25 @@ function renumberItems() {
 }
 
 // سحب صف البند لإعادة ترتيبه بين الصفوف (أعلى/أسفل)
+// منطقة السحب محصورة فقط على خلية المقبض (#) — لا يتعارض مع الكتابة في الحقول
 let _itemDragRow = null;
 function makeItemRowDraggable(tr) {
-    tr.setAttribute('draggable', 'true');
-    tr.addEventListener('dragstart', function(e) {
-        // لا يبدأ السحب من داخل حقل إدخال — فقط من مقبض السحب أو خلية الرقم
-        if (e.target.closest('input, textarea, button')) { e.preventDefault(); return; }
-        _itemDragRow = tr; tr.classList.add('item-dragging');
-        try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'row'); } catch(_) {}
-    });
-    tr.addEventListener('dragend', function() {
-        tr.classList.remove('item-dragging');
-        document.querySelectorAll('#itemsBody tr').forEach(r => r.classList.remove('item-drop-above', 'item-drop-below'));
-        _itemDragRow = null;
-    });
+    // الصف نفسه غير قابل للسحب؛ القابلية محصورة في خلية المقبض فقط
+    tr.setAttribute('draggable', 'false');
+    const handle = tr.querySelector('.col-num');
+    if (handle) {
+        handle.setAttribute('draggable', 'true');
+        handle.style.cursor = 'grab';
+        handle.addEventListener('dragstart', function(e) {
+            _itemDragRow = tr; tr.classList.add('item-dragging');
+            try { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', 'row'); } catch(_) {}
+        });
+        handle.addEventListener('dragend', function() {
+            tr.classList.remove('item-dragging');
+            document.querySelectorAll('#itemsBody tr').forEach(r => r.classList.remove('item-drop-above', 'item-drop-below'));
+            _itemDragRow = null;
+        });
+    }
     tr.addEventListener('dragover', function(e) {
         if (!_itemDragRow || _itemDragRow === tr) return;
         e.preventDefault();
@@ -3858,10 +4119,14 @@ function calculateTotals() {
     document.getElementById('totalTax').textContent = fmt(totalTax);
     document.getElementById('totalFinal').textContent = fmt(final);
 
-    const whole = Math.floor(final);
-    const baizaPart = Math.round((final - whole) * 1000);
-    document.getElementById('amountWordsAr').textContent = numToWordsAr(whole) + ' ريال' + (baizaPart > 0 ? ' و' + numToWordsAr(baizaPart) + ' بيسة' : '');
-    document.getElementById('amountWordsEn').textContent = numToWordsEn(whole) + ' Rials' + (baizaPart > 0 ? ' and ' + numToWordsEn(baizaPart) + ' Baisa' : '');
+    // دعم المجموع السالب (في حال كان الخصم أكبر من قيمة البنود)
+    const absFinal = Math.abs(final);
+    const whole = Math.floor(absFinal);
+    const baizaPart = Math.round((absFinal - whole) * 1000);
+    const negAr = final < 0 ? 'سالب ' : '';
+    const negEn = final < 0 ? 'Minus ' : '';
+    document.getElementById('amountWordsAr').textContent = negAr + numToWordsAr(whole) + ' ريال' + (baizaPart > 0 ? ' و' + numToWordsAr(baizaPart) + ' بيسة' : '');
+    document.getElementById('amountWordsEn').textContent = negEn + numToWordsEn(whole) + ' Rials' + (baizaPart > 0 ? ' and ' + numToWordsEn(baizaPart) + ' Baisa' : '');
 }
 
 function collectItems() {
@@ -3890,6 +4155,13 @@ async function saveDraft() {
     if (!document.getElementById('supplierId').value) { alert(msg('يرجى اختيار مورد من القائمة')); return; }
     const supId = document.getElementById('supplierId').value;
     const draftRefVal = (document.getElementById('lpoRef') ? (document.getElementById('lpoRef').value || '').trim() : '');
+    // منع تكرار رقم L.P.O Ref (عبر الأوامر والمسودات، مع استثناء المسودة الجارية تعديلها)
+    if (draftRefVal) {
+        const fullRef = ('Ref-' + draftRefVal).toLowerCase();
+        const dup = lpoDrafts.some(o => (o.lpoRef || '').toLowerCase() === fullRef)
+                 || draftSaves.some(d => (d.lpoRef || '').toLowerCase() === fullRef && String(d.id) !== String(editingDraftId));
+        if (dup) { alert(msg('رقم L.P.O Ref مسجّل مسبقاً، الرجاء إدخال رقم مرجعي آخر غير مكرر')); return; }
+    }
     const row = {
         draft_number: (editingDraftId && editingDraftNumber) ? editingDraftNumber : `DRAFT-${new Date().getFullYear()}-${draftSaves.length + 1}`,
         order_date: document.getElementById('lpoDate').value,
@@ -3958,6 +4230,13 @@ async function saveLPO(event) {
     if (!document.getElementById('lpoDepartment').value) { alert(msg('يرجى اختيار القسم المعني / غرض الطلب')); return; }
     const supId = document.getElementById('supplierId').value;
     const lpoRefVal = (document.getElementById('lpoRef').value || '').trim();
+    // منع تكرار رقم L.P.O Ref (عبر الأوامر والمسودات، مع استثناء السجل الجاري تعديله)
+    if (lpoRefVal) {
+        const fullRef = ('Ref-' + lpoRefVal).toLowerCase();
+        const dup = lpoDrafts.some(o => (o.lpoRef || '').toLowerCase() === fullRef && String(o.id) !== String(editingOrderId))
+                 || draftSaves.some(d => (d.lpoRef || '').toLowerCase() === fullRef && String(d.id) !== String(editingDraftId));
+        if (dup) { alert(msg('رقم L.P.O Ref مسجّل مسبقاً، الرجاء إدخال رقم مرجعي آخر غير مكرر')); return; }
+    }
     const row = {
         number: document.getElementById('lpoNumber').value,
         order_date: document.getElementById('lpoDate').value,
@@ -4275,7 +4554,7 @@ function isTodayDate(d) {
 
 function loadDrafts() {
     initColumnDrag('draftsTable', loadDrafts);
-    const numF = (document.getElementById('filterDraftNumber').value || '').toLowerCase();
+    const numF = msGet('msDraftNum');          // مصفوفة أرقام مسودات مختارة
     const supF = msGet('msDraftSupplier');     // مصفوفة معرّفات موردين
     const svcF = msGet('msDraftService');       // مصفوفة أنواع خدمات
     const deptF = msGet('msDraftDept');         // مصفوفة أقسام
@@ -4284,7 +4563,7 @@ function loadDrafts() {
     const tbody = document.querySelector('#draftsTable tbody');
     tbody.innerHTML = '';
     let filtered = draftSaves.filter(d =>
-        (!numF || d.draftNumber.toLowerCase().includes(numF)) &&
+        (!numF.length || numF.includes(d.draftNumber)) &&
         (!supF.length || supF.includes(d.supplierId)) &&
         (!svcF.length || splitSvc(orderServiceType(d)).some(t => svcF.includes(t))) &&
         (!deptF.length || deptF.includes(d.department)) &&
@@ -4409,8 +4688,7 @@ async function deleteDraft(id) {
 }
 
 function clearDraftFilters() {
-    document.getElementById('filterDraftNumber').value = '';
-    msClear('msDraftSupplier'); msClear('msDraftService'); msClear('msDraftDept');
+    msClear('msDraftNum'); msClear('msDraftSupplier'); msClear('msDraftService'); msClear('msDraftDept');
     document.getElementById('filterDraftDate').value = '';
     loadDrafts();
 }
@@ -4452,6 +4730,33 @@ async function approveOrder(id) {
     await loadAllFromCloud();
     recordAction('اعتماد أمر ' + l.number);
     alert(currentLanguage === 'en' ? 'Order approved and locked successfully.' : 'تم اعتماد الأمر وقفله بنجاح.');
+    renderLPOList();
+    loadDashboard();
+}
+
+// التراجع عن اعتماد أمر شراء — يُعيد الحالة إلى "بانتظار الاعتماد" (صلاحية orders:unapprove)
+async function unapproveOrder(id) {
+    if (!can('orders', 'unapprove')) { alert(msg('غير مصرّح')); return; }
+    const l = lpoDrafts.find(x => String(x.id) === String(id));
+    if (!l) return;
+    if (l.approvalStatus !== 'approved') {
+        alert(currentLanguage === 'en' ? 'This order is not approved.' : 'هذا الأمر غير معتمد.');
+        return;
+    }
+    const q = currentLanguage === 'en'
+        ? `Undo approval of order ${l.number}?\nIt will return to "Pending Approval".`
+        : `التراجع عن اعتماد الأمر ${l.number}؟\nستعود حالته إلى "بانتظار الاعتماد".`;
+    if (!confirm(q)) return;
+    const { error } = await sb.from('purchase_orders').update({
+        approval_status: 'pending',
+        approved_by: null,
+        approved_at: null,
+        rejection_reason: null
+    }).eq('id', id);
+    if (error) { alert(msg('تعذّر التراجع عن الاعتماد: ') + error.message); return; }
+    await loadAllFromCloud();
+    recordAction('التراجع عن اعتماد أمر ' + l.number, 'update');
+    alert(currentLanguage === 'en' ? 'Approval undone. Order is now pending approval.' : 'تم التراجع عن الاعتماد. الأمر الآن بانتظار الاعتماد.');
     renderLPOList();
     loadDashboard();
 }
@@ -4755,6 +5060,47 @@ function loadLPOList() {
 // ============ قائمة منسدلة متعددة الاختيارات قابلة للبحث (Searchable Multi-select) ============
 const MS = {}; // key -> { el, options:[{value,label}], selected:Set, placeholder, onChange }
 
+// تموضع القائمة المنسدلة بـ position:fixed محسوبة من موضع الحقل — يتجاوز أي قص/تغطية من البطاقات
+function msPositionDropdown(el) {
+    const dd = el.querySelector('.ms-dropdown');
+    const ctrl = el.querySelector('.ms-control');
+    if (!dd || !ctrl) return;
+    const r = ctrl.getBoundingClientRect();
+    dd.style.position = 'fixed';
+    dd.style.width = r.width + 'px';
+    dd.style.left = r.left + 'px';
+    dd.style.insetInlineStart = 'auto';
+    dd.style.insetInlineEnd = 'auto';
+    dd.style.zIndex = '4000';
+    // قياس الارتفاع المتاح: افتح للأسفل، وإن ضاق المكان افتح للأعلى
+    dd.style.maxHeight = '';
+    const spaceBelow = window.innerHeight - r.bottom - 10;
+    const spaceAbove = r.top - 10;
+    const desired = Math.min(dd.scrollHeight || 280, 320);
+    if (spaceBelow < desired && spaceAbove > spaceBelow) {
+        dd.style.maxHeight = Math.min(desired, spaceAbove) + 'px';
+        dd.style.top = (r.top - Math.min(desired, spaceAbove) - 4) + 'px';
+    } else {
+        dd.style.maxHeight = Math.min(desired, spaceBelow) + 'px';
+        dd.style.top = (r.bottom + 4) + 'px';
+    }
+    dd.style.overflowY = 'auto';
+}
+function msResetDropdownPos(el) {
+    const dd = el.querySelector('.ms-dropdown');
+    if (!dd) return;
+    dd.style.position = ''; dd.style.width = ''; dd.style.left = ''; dd.style.top = '';
+    dd.style.insetInlineStart = ''; dd.style.insetInlineEnd = ''; dd.style.zIndex = '';
+    dd.style.maxHeight = ''; dd.style.overflowY = '';
+}
+// إعادة تموضع/إغلاق القوائم المفتوحة عند التمرير أو تغيير الحجم
+window.addEventListener('scroll', function() {
+    document.querySelectorAll('[data-ms].open').forEach(el => msPositionDropdown(el));
+}, true);
+window.addEventListener('resize', function() {
+    document.querySelectorAll('[data-ms].open').forEach(el => msPositionDropdown(el));
+});
+
 function msSetup(key, placeholder, onChange) {
     const el = document.querySelector('[data-ms="' + key + '"]');
     if (!el) return;
@@ -4765,9 +5111,10 @@ function msSetup(key, placeholder, onChange) {
     control.addEventListener('click', function(e) {
         if (e.target.closest('.ms-tag-x')) return;
         const willOpen = !el.classList.contains('open');
-        document.querySelectorAll('[data-ms].open').forEach(o => { if (o !== el) o.classList.remove('open'); });
+        document.querySelectorAll('[data-ms].open').forEach(o => { if (o !== el) { o.classList.remove('open'); msResetDropdownPos(o); } });
         el.classList.toggle('open', willOpen);
-        if (willOpen) { search.value = ''; msRenderList(key); setTimeout(function(){ search.focus(); }, 0); }
+        if (willOpen) { search.value = ''; msRenderList(key); msPositionDropdown(el); setTimeout(function(){ search.focus(); }, 0); }
+        else { msResetDropdownPos(el); }
     });
     search.addEventListener('input', function() { msRenderList(key); });
     search.addEventListener('click', function(e) { e.stopPropagation(); });
@@ -4847,7 +5194,7 @@ function allServiceTypesSet() {
 
 document.addEventListener('click', function(e) {
     if (e.target.closest('[data-ms]')) return;
-    document.querySelectorAll('[data-ms].open').forEach(el => el.classList.remove('open'));
+    document.querySelectorAll('[data-ms].open').forEach(el => { el.classList.remove('open'); msResetDropdownPos(el); });
 });
 // إغلاق لوحة الإشعارات عند النقر خارجها
 document.addEventListener('click', function(e) {
@@ -4862,7 +5209,7 @@ function orderServiceType(l) {
 }
 
 function getFilteredLPOs() {
-    const numF = (document.getElementById('filterOrderNumber').value || '').toLowerCase();
+    const numF = msGet('msOrderNum');       // مصفوفة أرقام أوامر مختارة
     const supF = msGet('msSupplier');      // مصفوفة معرّفات موردين
     const statusF = document.getElementById('filterStatus').value;
     const staffF = msGet('msUser');         // مصفوفة مستخدمين
@@ -4871,7 +5218,7 @@ function getFilteredLPOs() {
     const toF = document.getElementById('filterToDate').value;
     const deptF = msGet('msDepartment');    // مصفوفة أقسام
     return lpoDrafts.filter(l =>
-        (!numF || l.number.toLowerCase().includes(numF)) &&
+        (!numF.length || numF.includes(l.number)) &&
         (!supF.length || supF.includes(l.supplierId)) &&
         (!statusF || (statusF === '__pending' ? l.approvalStatus === 'pending'
                      : statusF === '__approved' ? (l.approvalStatus === 'approved' || !l.approvalStatus)
@@ -4943,6 +5290,8 @@ function buildRowActionItems(l) {
         items.push({ icon: 'fa-check', color: '#2e7d32', label: en ? 'Approve' : 'اعتماد', fn: `approveOrder('${l.id}')` });
         items.push({ icon: 'fa-times', color: '#c0392b', label: en ? 'Reject' : 'رفض',     fn: `rejectOrder('${l.id}')` });
     }
+    if ((l.approvalStatus === 'approved') && can('orders', 'unapprove'))
+        items.push({ icon: 'fa-rotate-left', color: '#e67e22', label: en ? 'Undo Approval' : 'التراجع عن الاعتماد', fn: `unapproveOrder('${l.id}')` });
     if (can('orders', 'delete'))
         items.push({ icon: 'fa-trash', color: '#c0392b', label: en ? 'Delete' : 'حذف', fn: `deleteLPO('${l.id}')` });
     return items;
@@ -4978,6 +5327,52 @@ function openRowMenu(ev, id) {
     document.addEventListener('keydown', _rowMenuKey, true);
 }
 
+// عناصر قائمة إجراءات المورد (قائمة منسدلة من أيقونة النقاط)
+function buildSupplierActionItems(s) {
+    const en = currentLanguage === 'en';
+    const sid = String(s.id).replace(/'/g, "\\'");
+    const canEval = can('evaluation', 'create') || can('evaluation', 'edit') || can('evaluation', 'view');
+    const items = [];
+    items.push({ icon: 'fa-eye', color: '#0093c4', label: en ? 'View details' : 'استعراض البيانات', fn: `viewSupplierDetails('${sid}')` });
+    if (can('suppliers', 'edit'))
+        items.push({ icon: 'fa-edit', color: '#f0ad4e', label: en ? 'Edit' : 'تعديل', fn: `editSupplier('${sid}')` });
+    if (canEval)
+        items.push({ icon: 'fa-star', color: '#f39c12', label: en ? 'Rate' : 'تقييم', fn: `openEvalModal('${sid}','${(s.name||'').replace(/'/g,'')}','')` });
+    if (can('suppliers', 'delete'))
+        items.push({ icon: 'fa-trash', color: '#c0392b', label: en ? 'Delete' : 'حذف', fn: `deleteSupplier('${sid}')` });
+    return items;
+}
+function openSupplierRowMenu(ev, id) {
+    ev.stopPropagation();
+    const sameBtn = _rowMenuEl && _rowMenuEl.getAttribute('data-for') === ('sup-' + id);
+    closeRowMenu();
+    if (sameBtn) return;
+    const s = suppliers.find(x => String(x.id) === String(id));
+    if (!s) return;
+    const items = buildSupplierActionItems(s);
+    const menu = document.createElement('div');
+    menu.className = 'row-action-menu';
+    menu.setAttribute('data-for', 'sup-' + id);
+    menu.innerHTML = items.map(it => `<button class="ram-item" onclick="closeRowMenu(); ${it.fn}"><i class="fas ${it.icon}" style="color:${it.color};"></i> <span>${it.label}</span></button>`).join('');
+    document.body.appendChild(menu);
+    _rowMenuEl = menu;
+    const btn = ev.currentTarget;
+    const r = btn.getBoundingClientRect();
+    const mw = 196;
+    menu.style.width = mw + 'px';
+    let left = r.right - mw;
+    if (left < 8) left = 8;
+    if (left + mw > window.innerWidth - 8) left = window.innerWidth - mw - 8;
+    menu.style.left = left + 'px';
+    const h = menu.offsetHeight;
+    let top = r.bottom + 4;
+    if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 4);
+    menu.style.top = top + 'px';
+    setTimeout(() => { document.addEventListener('click', closeRowMenu, { once: true }); }, 0);
+    window.addEventListener('scroll', closeRowMenu, { once: true, capture: true });
+    document.addEventListener('keydown', _rowMenuKey, true);
+}
+
 function renderLPOList() {
     const list = getSortedLPOs();
     // الإحصائيات (تعتمد على المصفّاة وليس المرتّبة، والنتيجة نفسها)
@@ -5007,11 +5402,12 @@ function renderLPOList() {
             row.setAttribute('onclick', `viewLPO('${l.id}')`);
             // إبراز أوامر اليوم (تسجيلاً أو إصداراً) بخط عريض في عمودي رقم الأمر وتاريخ التسجيل
             const bwL = (isTodayDate(l.createdAt) || isTodayDate(l.date)) ? ' style="font-weight:800;"' : '';
-            row.innerHTML = `<td${bwL}>${fmtRecordDate(l.createdAt)}</td>`
-            + `<td class="col-actions" style="text-align:center; white-space:nowrap;" onclick="event.stopPropagation();">${kebab}</td>`
-            + `<td${bwL}>${l.number}</td><td>${l.supplierName}</td><td>${escapeHtml(orderServiceType(l)) || '<span style="color:#bbb;">—</span>'}</td><td>${deptLabel}</td><td>${l.date}</td><td>${fmt(l.total)}</td>`
-            + `<td>${approvalBadge(l)}${reasonLine}</td><td>${l.staff}</td>`
-            + `<td>${lastModifiedCell(l, actEntries)}</td>`;
+            row.innerHTML = `<td class="col-actions" style="text-align:center; white-space:nowrap;" onclick="event.stopPropagation();">${kebab}</td>`
+            + `<td${bwL}>${fmtRecordDate(l.createdAt)}</td>`
+            + `<td${bwL}>${l.number}</td>`
+            + `<td>${lastModifiedCell(l, actEntries)}</td>`
+            + `<td>${l.supplierName}</td><td>${escapeHtml(orderServiceType(l)) || '<span style="color:#bbb;">—</span>'}</td><td>${deptLabel}</td><td>${l.date}</td><td>${fmt(l.total)}</td>`
+            + `<td>${approvalBadge(l)}${reasonLine}</td><td>${l.staff}</td>`;
         });
     }
     updateSortArrows();
@@ -5046,9 +5442,8 @@ function sortLPOTable(col) {
 }
 
 function clearLPOFilters() {
-    ['filterOrderNumber','filterStatus','filterFromDate','filterToDate'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
-    msClear('msSupplier'); msClear('msUser'); msClear('msService'); msClear('msDepartment');
-    document.getElementById('orderNumberDropdown').classList.remove('active');
+    ['filterStatus','filterFromDate','filterToDate'].forEach(id => { const e = document.getElementById(id); if (e) e.value = ''; });
+    msClear('msOrderNum'); msClear('msSupplier'); msClear('msUser'); msClear('msService'); msClear('msDepartment');
     filterLPOs();
 }
 
@@ -5106,6 +5501,84 @@ document.addEventListener('click', function(e) {
 // طباعة قائمة أوامر الشراء المعروضة (حسب الفلترة والفرز) كتقرير A4 أفقي احترافي.
 // تعتمد على محرّك الطباعة الأصلي في المتصفح عبر iframe مخفي (بدل html2canvas الذي كان
 // يُنتج صفحة بيضاء على بعض الأجهزة) — موثوق على الحاسوب والجوال، ونص قابل للتحديد، وعدة صفحات.
+// طباعة قائمة الموردين (حسب الفلترة والفرز) كتقرير A4 أفقي احترافي عبر محرّك الطباعة الأصلي
+function printSuppliersPDF() {
+    const en = currentLanguage === 'en';
+    const list = getFilteredSuppliers();
+    if (!list.length) { alert(en ? 'No suppliers to print.' : 'لا يوجد موردون للطباعة.'); return; }
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    const th = (t) => `<th>${t}</th>`;
+    const rowsHtml = list.map((s, i) => {
+        const r = getSupplierAvgRating(s.id);
+        return `<tr>
+            <td style="text-align:center;">${i + 1}</td>
+            <td>${escapeHtml(s.name || '')}</td>
+            <td>${escapeHtml(s.serviceType || '')}</td>
+            <td style="text-align:center;">${escapeHtml(s.supplierType || '')}</td>
+            <td style="text-align:center; white-space:nowrap;" dir="ltr">${escapeHtml(s.phone || '')}</td>
+            <td style="text-align:center;">${escapeHtml(s.vatNo || '')}</td>
+            <td style="text-align:center;">${escapeHtml(s.crNo || '')}</td>
+            <td style="text-align:center; white-space:nowrap;">${s.crExpiry ? new Date(s.crExpiry).toLocaleDateString('en-GB') : ''}</td>
+            <td style="text-align:center; white-space:nowrap;">${r.count ? r.avg.toFixed(1) + ' (' + r.count + ')' : '—'}</td>
+            <td dir="ltr" style="font-size:9.5px;">${escapeHtml(s.createdBy || '')}</td>
+        </tr>`;
+    }).join('');
+    const logoImg = (typeof LOGO_DATA !== 'undefined' && LOGO_DATA) ? `<img src="${LOGO_DATA}" style="width:100%;">` : '';
+    const bodyHtml = `
+        <div class="pdf-head">
+            <div style="width:90px;">${logoImg}</div>
+            <div style="text-align:center; flex:1;">
+                <div style="font-size:21px; font-weight:800; color:#0093c4;">${en ? 'Suppliers List' : 'كشف قائمة الموردين'}</div>
+                <div style="font-size:12px; color:#555; margin-top:2px;">${en ? 'Takaful Oman Insurance' : 'تكافل عمان للتأمين'}</div>
+            </div>
+            <div style="width:190px; text-align:${en ? 'right' : 'left'}; font-size:11px; color:#555; line-height:1.7;">
+                <div><strong>${en ? 'Printed:' : 'تاريخ الطباعة:'}</strong> ${dateStr}</div>
+                <div><strong>${en ? 'Count:' : 'عدد الموردين:'}</strong> ${list.length}</div>
+            </div>
+        </div>
+        <table>
+            <thead><tr>
+                ${th('#')}${th(en ? 'Supplier' : 'المورد')}${th(en ? 'Service Type' : 'نوع الخدمة')}${th(en ? 'Classification' : 'التصنيف')}${th(en ? 'Phone' : 'الهاتف')}${th('VAT')}${th('C.R')}${th(en ? 'C.R Expiry' : 'انتهاء السجل')}${th(en ? 'Rating' : 'التقييم')}${th(en ? 'Created By' : 'أُنشئ بواسطة')}
+            </tr></thead>
+            <tbody>${rowsHtml}</tbody>
+        </table>
+        <div class="pdf-foot">${en ? 'Generated by the LPO Management System — Takaful Oman Insurance' : 'صادر عن نظام إدارة أوامر الشراء المحلية — تكافل عمان للتأمين'}</div>`;
+    const docHtml = `<!DOCTYPE html><html dir="${en ? 'ltr' : 'rtl'}" lang="${en ? 'en' : 'ar'}"><head><meta charset="utf-8"><title>${en ? 'Suppliers List' : 'كشف قائمة الموردين'}</title>
+<style>
+  @page { size: A4 landscape; margin: 8mm; }
+  * { box-sizing: border-box; } html, body { margin:0; padding:0; }
+  body { font-family: Arial, 'Segoe UI', Tahoma, sans-serif; color:#222; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding:4px; }
+  .pdf-head { display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:3px solid #0093c4; padding-bottom:10px; margin-bottom:12px; }
+  table { width:100%; border-collapse:collapse; font-size:11px; }
+  thead { display: table-header-group; }
+  th { background:#0093c4; color:#fff; padding:7px 5px; border:1px solid #cfe0ea; }
+  td { border:1px solid #e1e8ee; padding:5px; }
+  tbody tr:nth-child(even) { background:#f7fafc; }
+  tr { page-break-inside: avoid; }
+  .pdf-foot { margin-top:10px; font-size:9.5px; color:#8aa2b0; text-align:center; }
+</style></head><body>${bodyHtml}</body></html>`;
+    const prev = document.getElementById('__supPrintFrame'); if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
+    const iframe = document.createElement('iframe');
+    iframe.id = '__supPrintFrame';
+    iframe.style.cssText = 'position:fixed; right:0; bottom:0; width:0; height:0; border:0; visibility:hidden;';
+    document.body.appendChild(iframe);
+    const cleanup = () => { try { if (iframe.parentNode) iframe.parentNode.removeChild(iframe); } catch (e) {} };
+    const doPrint = () => {
+        try {
+            iframe.contentWindow.focus();
+            try { iframe.contentWindow.onafterprint = () => setTimeout(cleanup, 500); } catch (e) {}
+            iframe.contentWindow.print();
+            setTimeout(cleanup, 60000);
+            recordAction(en ? 'Print suppliers list PDF' : 'طباعة قائمة الموردين PDF', 'export');
+        } catch (e) { cleanup(); alert(msg('تعذّرت الطباعة: ') + (e && e.message ? e.message : '')); }
+    };
+    const idoc = iframe.contentWindow.document;
+    idoc.open(); idoc.write(docHtml); idoc.close();
+    if (idoc.readyState === 'complete') setTimeout(doPrint, 400);
+    else iframe.onload = () => setTimeout(doPrint, 400);
+}
+
 function printLPOListPDF() {
     const en = currentLanguage === 'en';
     const list = getSortedLPOs(); // يحترم الفلترة والفرز المطبّقين في الجدول
@@ -5115,8 +5588,8 @@ function printLPOListPDF() {
 
     // ملخّص الفلاتر المطبّقة
     const parts = [];
-    const numV = (document.getElementById('filterOrderNumber') || {}).value;
-    if (numV) parts.push((en ? 'Order No: ' : 'رقم الأمر: ') + numV);
+    const numSel = msGet('msOrderNum');
+    if (numSel && numSel.length) parts.push((en ? 'Order No: ' : 'رقم الأمر: ') + numSel.join('، '));
     const supSel = msGet('msSupplier'); if (supSel && supSel.length) parts.push((en ? 'Supplier: ' : 'المورد: ') + supSel.map(id => { const s = suppliers.find(x => x.id === id); return s ? s.name : id; }).join('، '));
     const svcSel = msGet('msService'); if (svcSel && svcSel.length) parts.push((en ? 'Service: ' : 'الخدمة: ') + svcSel.join('، '));
     const usrSel = msGet('msUser'); if (usrSel && usrSel.length) parts.push((en ? 'Employee: ' : 'الموظف: ') + usrSel.join('، '));
@@ -5244,6 +5717,7 @@ async function exportLPOList() {
             { header: 'القسم / الغرض', headerEn: 'Department / Purpose', key: 'dept', width: 22, align: 'right' },
             { header: 'تاريخ الأمر', headerEn: 'Order Date', key: 'date', width: 13, align: 'center' },
             { header: 'تاريخ التسجيل', headerEn: 'Record Date', key: 'recDate', width: 17, align: 'center' },
+            { header: 'آخر تعديل', headerEn: 'Last Modified', key: 'lastMod', width: 26, align: 'right' },
             { header: 'الحالة', headerEn: 'Status', key: 'status', width: 16, align: 'center' },
             { header: 'المعتمِد / الرافض', headerEn: 'Approved/Rejected By', key: 'approvedBy', width: 18, align: 'center' },
             { header: 'تاريخ الاعتماد/الرفض', headerEn: 'Approval/Reject Date', key: 'approvedAt', width: 18, align: 'center' },
@@ -5254,10 +5728,16 @@ async function exportLPOList() {
             { header: 'الضريبة (ر.ع)', headerEn: 'Tax (OMR)', key: 'tax', width: 13, align: 'center', numFmt: '#,##0.000' },
             { header: 'الإجمالي (ر.ع)', headerEn: 'Total (OMR)', key: 'total', width: 16, align: 'center', numFmt: '#,##0.000' }
         ];
+        const _actEntries = getActivityEntries();
+        const lastModText = (l) => {
+            const lm = getOrderLastAction(l, _actEntries);
+            if (!lm) return '';
+            return fmtDT(lm.createdAt) + ' · ' + activityTypeLabel(lm.actionType) + (lm.username && lm.username !== '—' ? ' · ' + lm.username : '');
+        };
         const rows = list.map((l, i) => ({
             sl: i + 1, number: l.number, ref: l.lpoRef || '', supplier: l.supplierName || '',
             service: orderServiceType(l) || '', dept: l.department || '',
-            date: l.date || '', recDate: fmtDT(l.createdAt), status: statusText(l),
+            date: l.date || '', recDate: fmtDT(l.createdAt), lastMod: lastModText(l), status: statusText(l),
             approvedBy: l.approvedBy || '', approvedAt: fmtD(l.approvedAt), reason: l.rejectionReason || '',
             staff: l.staff || '', fromDraft: l.sourceDraftNumber || '',
             subtotal: +(+l.subtotal || 0).toFixed(3), tax: +(+l.tax || 0).toFixed(3), total: +(+l.total || 0).toFixed(3)
@@ -5560,9 +6040,12 @@ async function downloadSuppliersExcel() {
             { header: 'المدينة', headerEn: 'City', key: 'city', width: 16, align: 'center' },
             { header: 'الرقم الضريبي', headerEn: 'VAT No.', key: 'vat', width: 18, align: 'center' },
             { header: 'السجل التجاري', headerEn: 'C.R No.', key: 'cr', width: 18, align: 'center' },
+            { header: 'انتهاء السجل التجاري', headerEn: 'C.R Expiry', key: 'crExpiry', width: 16, align: 'center' },
             { header: 'التقييم العام', headerEn: 'Avg. Rating', key: 'rating', width: 14, align: 'center', numFmt: '0.0' },
             { header: 'عدد التقييمات', headerEn: 'Ratings', key: 'ratingCount', width: 13, align: 'center' },
-            { header: 'عدد الأوامر', headerEn: 'Orders', key: 'orders', width: 12, align: 'center' }
+            { header: 'عدد الأوامر', headerEn: 'Orders', key: 'orders', width: 12, align: 'center' },
+            { header: 'أُنشئ بواسطة', headerEn: 'Created By', key: 'createdBy', width: 26, align: 'right' },
+            { header: 'ملاحظات', headerEn: 'Notes', key: 'notes', width: 30, align: 'right' }
         ];
         const sorted = suppliers.slice().sort((a, b) => { const ca = a.createdAt || '', cb = b.createdAt || ''; return cb < ca ? -1 : cb > ca ? 1 : 0; });
         const rows = sorted.map(s => {
@@ -5578,9 +6061,12 @@ async function downloadSuppliersExcel() {
                 city: s.city || '',
                 vat: s.vatNo || '',
                 cr: s.crNo || '',
+                crExpiry: s.crExpiry ? new Date(s.crExpiry).toLocaleDateString('en-GB') : '',
                 rating: r.count ? +r.avg.toFixed(1) : '—',
                 ratingCount: r.count,
-                orders: orderCount
+                orders: orderCount,
+                createdBy: s.createdBy || '',
+                notes: s.notes || ''
             };
         });
         const totalOrders = rows.reduce((s, r) => s + (r.orders || 0), 0);
@@ -5715,50 +6201,183 @@ function loadSuppliersList() {
     filterSuppliers();
 }
 
-function filterSuppliers() {
-    const nameF = (document.getElementById('filterSupName').value || '').toLowerCase();
-    const svcF = msGet('msSupSvc');          // مصفوفة أنواع خدمات
-    const cityF = document.getElementById('filterSupCity').value;
-    const tbody = document.querySelector('#suppliersTable tbody');
-    tbody.innerHTML = '';
-    const list = suppliers.filter(s =>
-        (!nameF || s.name.toLowerCase().includes(nameF)) &&
+// دلو التقييم لمورد: عدد النجوم المقرّب (1..5) أو 0 لمن لا تقييم له
+function supRatingBucket(s) {
+    const r = getSupplierAvgRating(s.id);
+    return r.count ? String(Math.round(r.avg)) : '0';
+}
+
+let _supSort = { key: 'recDate', dir: 'desc' };
+function sortSuppliers(key) {
+    if (_supSort.key === key) _supSort.dir = (_supSort.dir === 'asc') ? 'desc' : 'asc';
+    else { _supSort.key = key; _supSort.dir = 'asc'; }
+    filterSuppliers();
+}
+
+function _supSortValue(s, key) {
+    switch (key) {
+        case 'recDate': return s.createdAt || '';
+        case 'name': return (s.name || '').toLowerCase();
+        case 'rating': return getSupplierAvgRating(s.id).avg || 0;
+        case 'service': return (s.serviceType || '').toLowerCase();
+        case 'type': return (s.supplierType || '').toLowerCase();
+        case 'phone': return (s.phone || '').toLowerCase();
+        case 'vat': return (s.vatNo || '').toLowerCase();
+        case 'cr': return (s.crNo || '').toLowerCase();
+        case 'crExpiry': return s.crExpiry || '';
+        case 'createdBy': return (s.createdBy || '').toLowerCase();
+        default: return '';
+    }
+}
+
+// قائمة الموردين بعد تطبيق فلاتر الصفحة والفرز (تُستخدم في العرض والطباعة والتصدير)
+function getFilteredSuppliers() {
+    const nameF = msGet('msSupName'), svcF = msGet('msSupSvc'), cityF = msGet('msSupCity'),
+          classF = msGet('msSupClass'), ratingF = msGet('msSupRating'), crF = msGet('msSupCr'), phoneF = msGet('msSupPhone');
+    let list = suppliers.filter(s =>
+        (!nameF.length || nameF.includes(s.id)) &&
         (!svcF.length || splitSvc(s.serviceType).some(t => svcF.includes(t))) &&
-        (!cityF || s.city === cityF)
-    ).sort((a, b) => {
-        // الأحدث تسجيلاً أولاً (تنازلي حسب تاريخ التسجيل) — كما في قائمة أوامر الشراء
-        const ca = a.createdAt || '', cb = b.createdAt || '';
-        return cb < ca ? -1 : cb > ca ? 1 : 0;
+        (!cityF.length || cityF.includes(s.city)) &&
+        (!classF.length || classF.includes(s.supplierType || 'Local Supplier')) &&
+        (!ratingF.length || ratingF.includes(supRatingBucket(s))) &&
+        (!crF.length || crF.includes(s.crNo)) &&
+        (!phoneF.length || phoneF.includes(s.phone))
+    );
+    const dir = _supSort.dir === 'asc' ? 1 : -1;
+    return list.sort((a, b) => {
+        const va = _supSortValue(a, _supSort.key), vb = _supSortValue(b, _supSort.key);
+        if (va < vb) return -1 * dir;
+        if (va > vb) return 1 * dir;
+        return 0;
     });
-    if (list.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; color:#999;">لا يوجد موردون مطابقون</td></tr>';
+}
+
+// حالة التقسيم إلى صفحات لجدول الموردين
+let _supPage = 1;
+let _supPageSize = 10;
+
+// تغيير عدد الصفوف في الصفحة (يعيد للصفحة الأولى)
+function changeSupPageSize(v) {
+    _supPageSize = parseInt(v, 10) || 10;
+    _supPage = 1;
+    renderSuppliersTable();
+}
+// الانتقال إلى صفحة محددة
+function goSupPage(n) {
+    _supPage = n;
+    renderSuppliersTable();
+}
+
+// نقطة الدخول عند تغيّر الفلاتر/الفرز: تعيد للصفحة الأولى ثم ترسم
+function filterSuppliers() {
+    _supPage = 1;
+    renderSuppliersTable();
+}
+
+// رسم جدول الموردين لصفحة واحدة (شريحة) مع تحديث أدوات التنقّل
+function renderSuppliersTable() {
+    const tbody = document.querySelector('#suppliersTable tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    const full = getFilteredSuppliers();
+
+    // البطاقات الإحصائية تعكس كامل النتيجة المصفّاة (وليس الصفحة فقط)
+    const scEl = document.getElementById('supStatCount'); if (scEl) scEl.textContent = full.length;
+    const svcCountEl = document.getElementById('supStatSvc');
+    if (svcCountEl) { const set = new Set(); full.forEach(s => splitSvc(s.serviceType).forEach(t => { if (t) set.add(t); })); svcCountEl.textContent = set.size; }
+
+    // حساب التقسيم إلى صفحات
+    const total = full.length;
+    const pageSize = _supPageSize || 10;
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    if (_supPage > totalPages) _supPage = totalPages;
+    if (_supPage < 1) _supPage = 1;
+    const startIdx = (_supPage - 1) * pageSize;
+    const list = full.slice(startIdx, startIdx + pageSize);
+
+    if (total === 0) {
+        tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; color:#999;">لا يوجد موردون مطابقون</td></tr>';
     } else {
+        const en = currentLanguage === 'en';
+        const canEval = can('evaluation', 'create') || can('evaluation', 'edit') || can('evaluation', 'view');
         list.forEach(s => {
             const sid = String(s.id).replace(/'/g, "\\'");
-            const en = currentLanguage === 'en';
-            const viewBtn = `<button class="btn btn-small" onclick="viewSupplierDetails('${sid}')" title="${en?'View details':'استعراض البيانات'}"><i class="fas fa-eye"></i></button>`;
-            const editBtn = can('suppliers','edit') ? `<button class="btn btn-small" style="background:#f0ad4e; color:#fff;" onclick="editSupplier('${sid}')" title="${en?'Edit':'تعديل'}"><i class="fas fa-edit"></i></button>` : '';
-            const evalBtn = can('suppliers','edit') ? `<button class="btn btn-small" onclick="openEvalModal('${sid}','${(s.name||'').replace(/'/g,'')}','')" title="${en?'Rate':'تقييم'}" style="color:#f39c12;"><i class="fas fa-star"></i></button>` : '';
-            const delBtn = can('suppliers','delete') ? `<button class="btn btn-small" onclick="deleteSupplier('${sid}')" title="${en?'Delete':'حذف'}" style="color:#e74c3c;"><i class="fas fa-trash"></i></button>` : '';
-            // روابط الملفات
+            const kebab = `<button class="kebab-btn" title="${en ? 'Actions' : 'إجراءات'}" onclick="event.stopPropagation(); openSupplierRowMenu(event, '${sid}')"><i class="fas fa-ellipsis-v"></i></button>`;
             const files = [];
             if (s.taxCardUrl) files.push(`<a href="${s.taxCardUrl}" target="_blank" title="البطاقة الضريبية" style="color:#0093c4;"><i class="fas fa-file-invoice"></i></a>`);
             if (s.crCertUrl) files.push(`<a href="${s.crCertUrl}" target="_blank" title="السجل التجاري" style="color:#7cb342;"><i class="fas fa-file-contract"></i></a>`);
             if (s.otherFilesUrl) files.push(`<a href="${s.otherFilesUrl}" target="_blank" title="مرفقات أخرى" style="color:#888;"><i class="fas fa-paperclip"></i></a>`);
             const filesHtml = files.length ? files.join(' ') : '<span style="color:#ccc;">-</span>';
             const row = tbody.insertRow();
+            row.style.cursor = 'pointer';
             row.setAttribute('onclick', `viewSupplierDetails('${sid}')`);
-            row.innerHTML = `<td>${fmtRecordDate(s.createdAt)}</td><td>${s.name}</td><td>${supplierRatingLabel(s.id)}</td><td>${s.serviceType||'-'}</td><td>${s.supplierType||'-'}</td><td>${s.phone||'-'}</td><td>${s.vatNo||'-'}</td><td>${s.crNo||'-'}</td><td>${crExpiryCell(s.crExpiry)}</td><td style="font-size:16px;" onclick="event.stopPropagation();">${filesHtml}</td><td style="white-space:nowrap;" onclick="event.stopPropagation();">${viewBtn} ${editBtn} ${evalBtn} ${delBtn}</td>`;
+            row.innerHTML = `<td>${fmtRecordDate(s.createdAt)}</td>`
+                + `<td class="col-actions" style="text-align:center; white-space:nowrap;" onclick="event.stopPropagation();">${kebab}</td>`
+                + `<td>${escapeHtml(s.name||'')}</td><td>${supplierRatingLabel(s.id)}</td><td>${escapeHtml(s.serviceType||'')||'-'}</td><td>${escapeHtml(s.supplierType||'')||'-'}</td><td dir="ltr">${escapeHtml(s.phone||'')||'-'}</td><td>${escapeHtml(s.vatNo||'')||'-'}</td><td>${escapeHtml(s.crNo||'')||'-'}</td><td>${crExpiryCell(s.crExpiry)}</td><td style="font-size:11.5px; color:#667;" dir="ltr">${escapeHtml(s.createdBy||'')||'-'}</td><td style="font-size:16px;" onclick="event.stopPropagation();">${filesHtml}</td>`;
         });
     }
+    updateSupplierSortArrows();
     animateTableRows('#suppliersTable');
     applyColumnOrder('suppliersTable');
+
+    // تحديث معلومات النطاق وأدوات التنقّل
+    const en = currentLanguage === 'en';
+    const info = document.getElementById('supRangeInfo');
+    if (info) {
+        if (total === 0) info.textContent = '';
+        else info.textContent = (en ? `Showing ${startIdx + 1}–${startIdx + list.length} of ${total}` : `عرض ${startIdx + 1}–${startIdx + list.length} من ${total}`);
+    }
+    // مزامنة قيمة قائمة عدد الصفوف
+    const ps = document.getElementById('supPageSize'); if (ps && String(ps.value) !== String(pageSize)) ps.value = String(pageSize);
+    renderSupPager(totalPages);
+}
+
+// بناء أزرار التنقّل بين الصفحات (أعلى وأسفل الجدول)
+function renderSupPager(totalPages) {
+    const en = currentLanguage === 'en';
+    const cur = _supPage;
+    const mk = (label, page, opts) => {
+        opts = opts || {};
+        const dis = opts.disabled ? ' disabled' : '';
+        const act = opts.active ? ' active' : '';
+        return `<button class="pager-btn${act}" onclick="goSupPage(${page})"${dis}>${label}</button>`;
+    };
+    let html = '';
+    if (totalPages > 1) {
+        html += mk((en ? '‹ Prev' : 'السابق ›'), cur - 1, { disabled: cur <= 1 });
+        // أرقام الصفحات مع اختصار بالنقاط عند كثرتها
+        const pages = [];
+        const add = (p) => { if (!pages.includes(p) && p >= 1 && p <= totalPages) pages.push(p); };
+        add(1); add(2);
+        for (let p = cur - 1; p <= cur + 1; p++) add(p);
+        add(totalPages - 1); add(totalPages);
+        pages.sort((a, b) => a - b);
+        let prev = 0;
+        pages.forEach(p => {
+            if (prev && p - prev > 1) html += `<span class="pager-ellipsis">…</span>`;
+            html += mk(String(p), p, { active: p === cur });
+            prev = p;
+        });
+        html += mk((en ? 'Next ›' : '‹ التالي'), cur + 1, { disabled: cur >= totalPages });
+    }
+    html += `<span style="font-size:12px; color:#667; margin-inline-start:8px;">${en ? `Page ${cur} of ${totalPages}` : `صفحة ${cur} من ${totalPages}`}</span>`;
+    const top = document.getElementById('supPagerTop'); if (top) top.innerHTML = html;
+    const bottom = document.getElementById('supPagerBottom'); if (bottom) bottom.innerHTML = html;
+}
+
+// أسهم الفرز في رأس جدول الموردين
+function updateSupplierSortArrows() {
+    document.querySelectorAll('#suppliersTable thead th.sortable').forEach(th => {
+        const arrow = th.querySelector('.sort-arrow'); if (!arrow) return;
+        const oc = th.getAttribute('onclick') || '';
+        const m = oc.match(/sortSuppliers\('([^']+)'\)/);
+        const key = m ? m[1] : '';
+        arrow.textContent = (key === _supSort.key) ? (_supSort.dir === 'asc' ? '▲' : '▼') : '⇅';
+    });
 }
 
 function clearSupplierFilters() {
-    document.getElementById('filterSupName').value = '';
-    msClear('msSupSvc');
-    document.getElementById('filterSupCity').value = '';
+    ['msSupName','msSupSvc','msSupCity','msSupClass','msSupRating','msSupCr','msSupPhone'].forEach(k => msClear(k));
     filterSuppliers();
 }
 
@@ -5792,6 +6411,10 @@ function openSupplierModal(fromLPO) {
     msSetup('msNewSupplierSvc', '-- اختر نوع الخدمة --', null);
     msSetOptions('msNewSupplierSvc', allServiceTypesSet().map(t => ({ value: t, label: t })));
     msSetSelected('msNewSupplierSvc', []);
+    // رابط إضافة نوع خدمة جديد: يظهر فقط لمن يملك صلاحية إضافة أنواع الخدمات
+    const addLink = document.getElementById('addSvcTypeLink');
+    if (addLink) addLink.style.display = can('control', 'create') ? 'inline-block' : 'none';
+    wireServiceTypeCreatable();
     document.getElementById('supplierModal').classList.add('active');
 }
 function closeSupplierModal() {
@@ -5887,11 +6510,87 @@ async function uploadSupplierFile(fileInputId, prefix) {
     return data ? data.publicUrl : '';
 }
 
+// ===================== إضافة نوع خدمة جديد (نافذة منبثقة + إنشاء مباشر من حقل البحث) =====================
+function openQuickServiceTypeModal(prefill) {
+    if (!(can('control', 'create'))) { alert(msg('لا تملك صلاحية إضافة أنواع الخدمات')); return; }
+    const inp = document.getElementById('quickSvcInput');
+    if (inp) inp.value = prefill || '';
+    document.getElementById('quickSvcModal').classList.add('active');
+    setTimeout(() => { if (inp) inp.focus(); }, 50);
+}
+function closeQuickServiceTypeModal() {
+    document.getElementById('quickSvcModal').classList.remove('active');
+}
+async function saveQuickServiceType() {
+    if (!(can('control', 'create'))) { alert(msg('لا تملك صلاحية إضافة أنواع الخدمات')); return; }
+    const inp = document.getElementById('quickSvcInput');
+    const name = (inp ? inp.value : '').trim();
+    if (!name) { alert(msg('يرجى إدخال اسم نوع الخدمة')); return; }
+    if (!serviceTypes.some(s => (s.name || '').toLowerCase() === name.toLowerCase())) {
+        const { error } = await sb.from('service_types').insert({ name });
+        if (error) { alert(msg('تعذّر الإضافة: ') + error.message); return; }
+        await loadAllFromCloud();
+        recordAction('إضافة نوع خدمة ' + name, 'create');
+    }
+    // تحديث خيارات قائمة نوع الخدمة في نافذة المورد واختيار النوع الجديد
+    msSetOptions('msNewSupplierSvc', allServiceTypesSet().map(t => ({ value: t, label: t })));
+    const cur = msGet('msNewSupplierSvc'); if (!cur.includes(name)) cur.push(name);
+    msSetSelected('msNewSupplierSvc', cur);
+    try { populateAllFilters(); } catch (e) {}
+    closeQuickServiceTypeModal();
+}
+// إنشاء نوع خدمة من نص البحث عند عدم وجود تطابق (يُستدعى عند الضغط Enter)
+async function createServiceTypeFromSearch(name) {
+    name = (name || '').trim();
+    if (!name) return;
+    if (serviceTypes.some(s => (s.name || '').toLowerCase() === name.toLowerCase())) {
+        // موجود مسبقاً: اختره فقط
+        const cur = msGet('msNewSupplierSvc'); if (!cur.includes(name)) cur.push(name); msSetSelected('msNewSupplierSvc', cur); return;
+    }
+    if (!can('control', 'create')) { alert(msg('لا تملك صلاحية إضافة أنواع الخدمات')); return; }
+    if (!confirm(msg('هذا النوع من الخدمات غير مدرج سابقاً، هل تريد إضافته وحفظه؟'))) return;
+    const { error } = await sb.from('service_types').insert({ name });
+    if (error) { alert(msg('تعذّر الإضافة: ') + error.message); return; }
+    await loadAllFromCloud();
+    recordAction('إضافة نوع خدمة ' + name, 'create');
+    msSetOptions('msNewSupplierSvc', allServiceTypesSet().map(t => ({ value: t, label: t })));
+    const cur = msGet('msNewSupplierSvc'); if (!cur.includes(name)) cur.push(name);
+    msSetSelected('msNewSupplierSvc', cur);
+    try { populateAllFilters(); } catch (e) {}
+}
+// ربط Enter في حقل بحث نوع الخدمة لإنشاء نوع جديد (يُستدعى مرة واحدة عند فتح النافذة)
+function wireServiceTypeCreatable() {
+    const wrap = document.querySelector('[data-ms="msNewSupplierSvc"]');
+    if (!wrap) return;
+    const search = wrap.querySelector('.ms-search');
+    if (!search || search._creatableWired) return;
+    search._creatableWired = true;
+    search.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        const val = (search.value || '').trim();
+        if (!val) return;
+        // إن وُجد تطابق معروض فلا ننشئ (نترك السلوك العادي)
+        const hasExact = (MS['msNewSupplierSvc'] && MS['msNewSupplierSvc'].options || []).some(o => (o.label || '').toLowerCase() === val.toLowerCase());
+        if (hasExact) return;
+        e.preventDefault();
+        createServiceTypeFromSearch(val);
+        search.value = '';
+    });
+}
+
 async function addSupplier(event) {
     event.preventDefault();
     if (isGuest) { alert(msg('الزائر لا يملك صلاحية الإضافة')); return; }
     const selectedSvc = msGet('msNewSupplierSvc');
     if (!selectedSvc.length) { alert(msg('يرجى اختيار نوع الخدمة')); return; }
+
+    // منع تكرار رقم السجل التجاري (C.R) — باستثناء المورد الجاري تعديله
+    const crVal = (document.getElementById('newSupplierCr').value || '').trim();
+    if (crVal) {
+        const dupCr = suppliers.some(s => (s.crNo || '').trim().toLowerCase() === crVal.toLowerCase() && String(s.id) !== String(editingSupplierId))
+                   || deletedSuppliers.some(s => (s.crNo || '').trim().toLowerCase() === crVal.toLowerCase());
+        if (dupCr) { alert(msg('رقم السجل التجاري (C.R) مسجّل مسبقاً لمورد آخر، الرجاء إدخال رقم غير مكرر')); return; }
+    }
 
     // رفع الملفات أولاً (إن وُجدت) — كلها اختيارية
     let taxUrl = '', crUrl = '', otherUrl = '';
@@ -5922,7 +6621,7 @@ async function addSupplier(event) {
         cr_no: document.getElementById('newSupplierCr').value,
         cr_expiry: document.getElementById('newSupplierCrExpiry').value || null,
         notes: document.getElementById('newSupplierNotes').value || null,
-        created_by: (currentUser && currentUser.username) || null,
+        created_by: (currentUser && (currentUser.email || currentUser.username)) || null,
         tax_card_url: taxUrl || null,
         cr_cert_url: crUrl || null,
         other_files_url: otherUrl || null
@@ -6024,12 +6723,20 @@ let evalStars = { quality: 0, delivery: 0, pricing: 0, communication: 0 };
 
 function openEvalModal(supplierId, supplierName, orderNumber) {
     if (isGuest) return;
+    if (!(can('evaluation', 'view') || can('evaluation', 'create') || can('evaluation', 'edit'))) { alert(msg('غير مصرّح')); return; }
     evalStars = { quality: 0, delivery: 0, pricing: 0, communication: 0 };
     document.getElementById('evalSupplierId').value = supplierId || '';
     document.getElementById('evalSupplierName').textContent = supplierName || '';
     document.getElementById('evalOrderNumber').value = orderNumber || '';
     document.getElementById('evalNotes').value = '';
-    // بناء النجوم القابلة للنقر
+    const edId = document.getElementById('editingEvalId'); if (edId) edId.value = '';
+    buildEvalStars();
+    renderEvalTracker(supplierId);
+    updateEvalFormMode();
+    document.getElementById('evalModal').classList.add('active');
+}
+
+function buildEvalStars() {
     document.querySelectorAll('#evalModal .star-rating').forEach(container => {
         const crit = container.getAttribute('data-criterion');
         container.innerHTML = '';
@@ -6042,9 +6749,85 @@ function openEvalModal(supplierId, supplierName, orderNumber) {
             star.onmouseout = () => paintStars(container, evalStars[crit]);
             container.appendChild(star);
         }
-        paintStars(container, 0);
+        paintStars(container, evalStars[crit] || 0);
     });
-    document.getElementById('evalModal').classList.add('active');
+}
+
+// يعكس وضع النموذج: تقييم جديد أو تعديل تقييم قائم
+function updateEvalFormMode() {
+    const en = currentLanguage === 'en';
+    const editing = document.getElementById('editingEvalId') && document.getElementById('editingEvalId').value;
+    const t = document.getElementById('evalFormTitle');
+    if (t) t.innerHTML = editing
+        ? `<i class="fas fa-pen"></i> ${en ? 'Editing an existing evaluation' : 'تعديل تقييم قائم'} <a href="#" onclick="cancelEvalEdit();return false;" style="font-size:11px; margin-inline-start:8px; color:#c0392b;">${en ? '(cancel)' : '(إلغاء)'}</a>`
+        : `<i class="fas fa-star"></i> ${en ? 'New evaluation' : 'تقييم جديد'}`;
+}
+
+function cancelEvalEdit() {
+    document.getElementById('editingEvalId').value = '';
+    evalStars = { quality: 0, delivery: 0, pricing: 0, communication: 0 };
+    document.getElementById('evalNotes').value = '';
+    buildEvalStars();
+    updateEvalFormMode();
+}
+
+// سجل متابعة تقييمات المورد: العدد + المتوسط التراكمي + قائمة بكل التقييمات
+function renderEvalTracker(supplierId) {
+    const box = document.getElementById('evalTracker'); if (!box) return;
+    const en = currentLanguage === 'en';
+    const evals = evaluations.filter(e => String(e.supplierId) === String(supplierId))
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const stat = getSupplierAvgRating(supplierId);
+    const canEdit = can('evaluation', 'edit');
+    let head = `<div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px;">
+        <div style="flex:1; min-width:110px; background:#f1f8fc; border:1px solid #d5e9f2; border-radius:8px; padding:8px 10px; text-align:center;">
+            <div style="font-size:11px; color:#6b7c89;">${en ? 'Evaluations' : 'عدد التقييمات'}</div>
+            <div style="font-size:18px; font-weight:800; color:#0093c4;">${stat.count}</div></div>
+        <div style="flex:1; min-width:110px; background:#f1f8fc; border:1px solid #d5e9f2; border-radius:8px; padding:8px 10px; text-align:center;">
+            <div style="font-size:11px; color:#6b7c89;">${en ? 'Cumulative avg.' : 'المتوسط التراكمي'}</div>
+            <div style="font-size:16px; font-weight:800; color:#0093c4;">${stat.count ? renderStarsDisplay(stat.avg) + ' ' + stat.avg.toFixed(1) : '—'}</div></div>
+    </div>`;
+    if (!evals.length) {
+        box.innerHTML = head + `<div style="font-size:12px; color:#999; text-align:center; padding:6px;">${en ? 'No previous evaluations for this supplier.' : 'لا توجد تقييمات سابقة لهذا المورد.'}</div>`;
+        return;
+    }
+    const rows = evals.map(e => {
+        const avg = ((e.quality + e.delivery + e.pricing + e.communication) / 4);
+        const dt = e.createdAt ? new Date(e.createdAt).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : '';
+        const editBtn = canEdit ? `<button class="btn btn-small" style="color:#f0ad4e; padding:2px 7px;" title="${en ? 'Edit' : 'تعديل'}" onclick="editEvaluation('${e.id}')"><i class="fas fa-edit"></i></button>` : '';
+        return `<tr>
+            <td style="white-space:nowrap; font-size:11px;">${dt}</td>
+            <td style="font-size:11.5px;">${escapeHtml(e.evaluator || '—')}</td>
+            <td style="white-space:nowrap;">${renderStarsDisplay(avg)} <span style="font-size:11px; color:#666;">${avg.toFixed(1)}</span></td>
+            <td style="font-size:11px; color:#777; max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(e.notes || '')}">${escapeHtml(e.notes || '')}</td>
+            <td style="white-space:nowrap;">${editBtn}</td>
+        </tr>`;
+    }).join('');
+    box.innerHTML = head + `<div style="font-size:12px; font-weight:700; color:#2a3b47; margin-bottom:5px;"><i class="fas fa-history"></i> ${en ? 'Evaluation history' : 'سجل التقييمات'}</div>
+        <div class="ctrl-list-scroll" style="max-height:170px;">
+          <table style="width:100%; border-collapse:collapse; font-size:12px;">
+            <thead><tr style="background:#f6f9fb;">
+              <th style="padding:5px 6px; text-align:start;">${en ? 'Date' : 'التاريخ'}</th>
+              <th style="padding:5px 6px; text-align:start;">${en ? 'User' : 'المستخدم'}</th>
+              <th style="padding:5px 6px; text-align:start;">${en ? 'Rating' : 'التقييم'}</th>
+              <th style="padding:5px 6px; text-align:start;">${en ? 'Notes' : 'ملاحظات'}</th>
+              <th></th>
+            </tr></thead><tbody>${rows}</tbody>
+          </table>
+        </div>`;
+}
+
+// تحميل تقييم قائم في النموذج لتعديله
+function editEvaluation(evalId) {
+    if (!can('evaluation', 'edit')) { alert(msg('غير مصرّح')); return; }
+    const e = evaluations.find(x => String(x.id) === String(evalId));
+    if (!e) return;
+    document.getElementById('editingEvalId').value = e.id;
+    evalStars = { quality: e.quality, delivery: e.delivery, pricing: e.pricing, communication: e.communication };
+    document.getElementById('evalNotes').value = e.notes || '';
+    buildEvalStars();
+    updateEvalFormMode();
+    const body = document.querySelector('#evalModal .modal-body'); if (body) body.scrollTop = body.scrollHeight;
 }
 
 function setStar(criterion, value) {
@@ -6067,6 +6850,9 @@ function closeEvalModal() {
 
 async function saveEvaluation() {
     if (isGuest) { alert(msg('الزائر لا يملك صلاحية التقييم')); return; }
+    const editingId = document.getElementById('editingEvalId') ? document.getElementById('editingEvalId').value : '';
+    if (editingId) { if (!can('evaluation', 'edit')) { alert(msg('غير مصرّح')); return; } }
+    else { if (!can('evaluation', 'create')) { alert(msg('غير مصرّح')); return; } }
     const supplierId = document.getElementById('evalSupplierId').value;
     if (!supplierId) { alert(msg('لا يوجد مورد للتقييم')); return; }
     // التحقق من إدخال كل المعايير
@@ -6075,20 +6861,31 @@ async function saveEvaluation() {
         return;
     }
     const sup = suppliers.find(s => s.id === supplierId);
-    const row = {
-        supplier_id: supplierId,
-        supplier_name: sup ? sup.name : '',
-        quality: evalStars.quality,
-        delivery: evalStars.delivery,
-        pricing: evalStars.pricing,
-        communication: evalStars.communication,
-        notes: document.getElementById('evalNotes').value,
-        evaluator: currentUser.username,
-        order_number: document.getElementById('evalOrderNumber').value || null
-    };
-    const { error } = await sb.from('supplier_evaluations').insert(row);
+    let error;
+    if (editingId) {
+        const res = await sb.from('supplier_evaluations').update({
+            quality: evalStars.quality, delivery: evalStars.delivery, pricing: evalStars.pricing,
+            communication: evalStars.communication, notes: document.getElementById('evalNotes').value
+        }).eq('id', editingId);
+        error = res.error;
+    } else {
+        const row = {
+            supplier_id: supplierId,
+            supplier_name: sup ? sup.name : '',
+            quality: evalStars.quality,
+            delivery: evalStars.delivery,
+            pricing: evalStars.pricing,
+            communication: evalStars.communication,
+            notes: document.getElementById('evalNotes').value,
+            evaluator: currentUser.username,
+            order_number: document.getElementById('evalOrderNumber').value || null
+        };
+        const res = await sb.from('supplier_evaluations').insert(row);
+        error = res.error;
+    }
     if (error) { alert(msg('تعذّر حفظ التقييم: ') + error.message); return; }
     await loadAllFromCloud();
+    recordAction((editingId ? 'تعديل تقييم مورد ' : 'إضافة تقييم مورد ') + (sup ? sup.name : ''), editingId ? 'update' : 'create');
     closeEvalModal();
     alert(currentLanguage === 'en' ? 'Evaluation saved successfully.' : 'تم حفظ التقييم بنجاح.');
     // تحديث صفحة الموردين إن كانت مفتوحة
@@ -6097,6 +6894,9 @@ async function saveEvaluation() {
 }
 // ===================== POPULATE ALL FILTERS (Strict dropdowns) =====================
 function populateAllFilters() {
+    // فلاتر أرقام الأوامر/المسودات (قوائم متعددة الاختيار قابلة للبحث)
+    msSetOptions('msOrderNum', lpoDrafts.map(l => ({ value: l.number, label: l.number })));
+    msSetOptions('msDraftNum', draftSaves.map(d => ({ value: d.draftNumber, label: d.draftNumber })));
     // فلتر المورد (قوائم متعددة الاختيارات): أوامر الشراء + المسودات + التقارير
     const supMsOpts = suppliers.map(s => ({ value: s.id, label: s.name }));
     msSetOptions('msSupplier', supMsOpts);
@@ -6135,9 +6935,19 @@ function populateAllFilters() {
     msSetOptions('msDepartment', deptMsOpts);
     msSetOptions('msDraftDept', deptMsOpts);
 
+    // فلاتر صفحة الموردين (كلها قوائم متعددة الاختيار قابلة للبحث)
+    msSetOptions('msSupName', suppliers.map(s => ({ value: s.id, label: s.name })));
+    msSetOptions('msSupSvc', svcMsOpts);
     const citySet = [...new Set(suppliers.map(s => s.city).filter(Boolean))];
-    const cityEl = document.getElementById('filterSupCity');
-    if (cityEl) { const v = cityEl.value; cityEl.innerHTML = '<option value="">-- كل المدن --</option>' + citySet.map(c => `<option value="${c}">${c}</option>`).join(''); cityEl.value = v; }
+    msSetOptions('msSupCity', citySet.map(c => ({ value: c, label: c })));
+    const classSet = [...new Set(suppliers.map(s => s.supplierType || 'Local Supplier').filter(Boolean))];
+    msSetOptions('msSupClass', classSet.map(c => ({ value: c, label: c })));
+    msSetOptions('msSupRating', [
+        { value: '5', label: '★★★★★ (5)' }, { value: '4', label: '★★★★ (4)' }, { value: '3', label: '★★★ (3)' },
+        { value: '2', label: '★★ (2)' }, { value: '1', label: '★ (1)' }, { value: '0', label: currentLanguage === 'en' ? 'No rating' : 'بلا تقييم' }
+    ]);
+    msSetOptions('msSupCr', [...new Set(suppliers.map(s => s.crNo).filter(Boolean))].map(c => ({ value: c, label: c })));
+    msSetOptions('msSupPhone', [...new Set(suppliers.map(s => s.phone).filter(Boolean))].map(p => ({ value: p, label: p })));
 
     // السنوات (قائمة متعددة الاختيار في التقارير)
     const yearSet = [...new Set(lpoDrafts.map(l => new Date(l.date).getFullYear()))];
@@ -6147,13 +6957,8 @@ function populateAllFilters() {
     // قائمة المورد المنسدلة المقيدة في نافذة أمر الشراء
     populateSupplierSelect();
 
-    // قائمة القسم/الغرض المنسدلة المقيدة في نافذة أمر الشراء
-    const deptEl = document.getElementById('lpoDepartment');
-    if (deptEl) {
-        const v = deptEl.value;
-        deptEl.innerHTML = '<option value="">-- اختر القسم / الغرض --</option>' + departments.map(d => `<option value="${d.name}">${d.name}</option>`).join('');
-        deptEl.value = v;
-    }
+    // قائمة القسم/الغرض أصبحت combobox قابلة للكتابة والبحث؛ خياراتها تُبنى عند الفتح من departments
+    // (لا حاجة لإعادة بناء options — نُبقي القيمة الحالية كما هي)
 
     // قائمة نوع الخدمة متعددة الاختيار في نافذة إضافة مورد (تُحدَّث عناصرها)
     if (MS['msNewSupplierSvc']) {
@@ -6682,15 +7487,15 @@ function downloadFullBackup() {
 async function downloadSupplierTemplate() {
     if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
     try {
-        const headers = ['اسم المورد', 'نوع الخدمة', 'التصنيف', 'الهاتف', 'البريد', 'المدينة', 'الرقم الضريبي', 'السجل التجاري', 'تاريخ انتهاء السجل التجاري', 'ملاحظات أخرى'];
+        const headers = ['Supplier Name', 'Service Type', 'Classification', 'Phone', 'Email', 'City', 'VAT No', 'C.R No', 'C.R Expiry', 'Notes'];
         const example = [
-            { 'اسم المورد': 'شركة المثال للتجارة', 'نوع الخدمة': 'قرطاسية، طباعة', 'التصنيف': 'Local Supplier', 'الهاتف': '24xxxxxx', 'البريد': 'info@example.com', 'المدينة': 'مسقط', 'الرقم الضريبي': 'OMxxxxxxxx', 'السجل التجاري': '1xxxxxx', 'تاريخ انتهاء السجل التجاري': '2027-12-31', 'ملاحظات أخرى': 'مورد معتمد' }
+            { 'Supplier Name': 'Example Trading Co.', 'Service Type': 'Stationery, Printing', 'Classification': 'Local Supplier', 'Phone': '24xxxxxx', 'Email': 'info@example.com', 'City': 'Muscat', 'VAT No': 'OMxxxxxxxx', 'C.R No': '1xxxxxx', 'C.R Expiry': '2027-12-31', 'Notes': 'Approved supplier' }
         ];
         const ws = XLSX.utils.json_to_sheet(example, { header: headers });
         ws['!cols'] = headers.map(() => ({ wch: 20 }));
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'الموردون');
-        XLSX.writeFile(wb, 'قالب_بيانات_الموردين.xlsx');
+        XLSX.utils.book_append_sheet(wb, ws, 'Suppliers');
+        XLSX.writeFile(wb, 'Suppliers_Template.xlsx');
     } catch (e) {
         alert(msg('تعذّر إنشاء القالب: ') + e.message);
     }
@@ -6760,13 +7565,13 @@ async function importSuppliersFromExcel() {
 async function downloadServiceTypeTemplate() {
     if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
     try {
-        const headers = ['نوع الخدمة'];
-        const example = [{ 'نوع الخدمة': 'قرطاسية' }, { 'نوع الخدمة': 'طباعة' }, { 'نوع الخدمة': 'صيانة' }];
+        const headers = ['Service Type'];
+        const example = [{ 'Service Type': 'Stationery' }, { 'Service Type': 'Printing' }, { 'Service Type': 'Maintenance' }];
         const ws = XLSX.utils.json_to_sheet(example, { header: headers });
         ws['!cols'] = [{ wch: 28 }];
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'أنواع الخدمات');
-        XLSX.writeFile(wb, 'قالب_أنواع_الخدمات.xlsx');
+        XLSX.utils.book_append_sheet(wb, ws, 'Service Types');
+        XLSX.writeFile(wb, 'Service_Types_Template.xlsx');
     } catch (e) { alert(msg('تعذّر إنشاء القالب: ') + e.message); }
 }
 
@@ -6783,13 +7588,13 @@ async function importServiceTypesFromExcel() {
 async function downloadDepartmentTemplate() {
     if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
     try {
-        const headers = ['القسم / الغرض'];
-        const example = [{ 'القسم / الغرض': 'المالية' }, { 'القسم / الغرض': 'تقنية المعلومات' }, { 'القسم / الغرض': 'التسويق' }];
+        const headers = ['Department / Purpose'];
+        const example = [{ 'Department / Purpose': 'Finance' }, { 'Department / Purpose': 'Information Technology' }, { 'Department / Purpose': 'Marketing' }];
         const ws = XLSX.utils.json_to_sheet(example, { header: headers });
         ws['!cols'] = [{ wch: 28 }];
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'الأقسام');
-        XLSX.writeFile(wb, 'قالب_الأقسام.xlsx');
+        XLSX.utils.book_append_sheet(wb, ws, 'Departments');
+        XLSX.writeFile(wb, 'Departments_Template.xlsx');
     } catch (e) { alert(msg('تعذّر إنشاء القالب: ') + e.message); }
 }
 
@@ -6806,13 +7611,13 @@ async function importDepartmentsFromExcel() {
 async function downloadDescriptionTemplate() {
     if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
     try {
-        const headers = ['الوصف / Description'];
-        const example = [{ 'الوصف / Description': 'توريد أجهزة حاسب محمولة' }, { 'الوصف / Description': 'صيانة أجهزة التكييف' }, { 'الوصف / Description': 'خدمات استشارية' }];
+        const headers = ['Description'];
+        const example = [{ 'Description': 'Supply of laptops' }, { 'Description': 'AC units maintenance' }, { 'Description': 'Consultancy services' }];
         const ws = XLSX.utils.json_to_sheet(example, { header: headers });
         ws['!cols'] = [{ wch: 44 }];
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, 'الأوصاف');
-        XLSX.writeFile(wb, 'قالب_نصوص_البنود.xlsx');
+        XLSX.utils.book_append_sheet(wb, ws, 'Descriptions');
+        XLSX.writeFile(wb, 'Descriptions_Template.xlsx');
     } catch (e) { alert(msg('تعذّر إنشاء القالب: ') + e.message); }
 }
 
@@ -7039,6 +7844,15 @@ function loadAdminPanel() {
 // ======================================================================
 let _realAdminUser = null; // يحفظ حساب مدير النظام الحقيقي أثناء المحاكاة
 
+// طي/إظهار قسم قابل للطي (ترويسة + محتوى)
+function toggleCollapse(bodyId, headEl) {
+    const body = document.getElementById(bodyId);
+    if (!body) return;
+    const isHidden = (body.style.display === 'none');
+    body.style.display = isHidden ? '' : 'none';
+    if (headEl) headEl.classList.toggle('collapsed', !isHidden);
+}
+
 function renderImpersonationList() {
     const box = document.getElementById('impersonationList');
     if (!box) return;
@@ -7117,19 +7931,20 @@ async function loadDbTable() {
     const table = sel ? sel.value : '';
     const content = document.getElementById('dbEditorContent');
     const status = document.getElementById('dbEditorStatus');
+    const en = currentLanguage === 'en';
     const setStatus = (html, color) => { if (status) { status.style.display = html ? 'block' : 'none'; status.style.color = color || '#666'; status.innerHTML = html; } };
-    if (!table) { if (content) content.innerHTML = '<div style="padding:14px; text-align:center; color:#999; font-size:13px;">اختر جدولاً لعرض بياناته وتعديلها.</div>'; setStatus('', ''); return; }
-    if (!(currentUser && currentUser.role === 'sysadmin') || _realAdminUser) { if (content) content.innerHTML = '<div style="padding:14px; text-align:center; color:#c0392b;">هذه الأداة لمدير النظام فقط.</div>'; return; }
+    if (!table) { if (content) content.innerHTML = `<div style="padding:14px; text-align:center; color:#999; font-size:13px;">${en ? 'Select a table to view and edit its data.' : 'اختر جدولاً لعرض بياناته وتعديلها.'}</div>`; setStatus('', ''); return; }
+    if (!(currentUser && currentUser.role === 'sysadmin') || _realAdminUser) { if (content) content.innerHTML = `<div style="padding:14px; text-align:center; color:#c0392b;">${en ? 'This tool is for the system administrator only.' : 'هذه الأداة لمدير النظام فقط.'}</div>`; return; }
     _dbTable = table;
-    setStatus('<i class="fas fa-spinner fa-spin"></i> جارٍ التحميل...', '#0093c4');
+    setStatus('<i class="fas fa-spinner fa-spin"></i> ' + (en ? 'Loading...' : 'جارٍ التحميل...'), '#0093c4');
     try {
         const { data, error } = await sb.from(table).select('*').limit(1000);
-        if (error) { setStatus('<i class="fas fa-times-circle"></i> تعذّر التحميل: ' + error.message, '#c0392b'); if (content) content.innerHTML = ''; return; }
+        if (error) { setStatus('<i class="fas fa-times-circle"></i> ' + (en ? 'Load failed: ' : 'تعذّر التحميل: ') + error.message, '#c0392b'); if (content) content.innerHTML = ''; return; }
         _dbRows = data || [];
         _dbPk = (_dbRows[0] && Object.prototype.hasOwnProperty.call(_dbRows[0], 'id')) ? 'id' : ((_dbRows[0] && Object.prototype.hasOwnProperty.call(_dbRows[0], 'key')) ? 'key' : 'id');
-        setStatus('<i class="fas fa-check-circle"></i> تم تحميل ' + _dbRows.length + ' سجل.', '#2e7d32');
+        setStatus('<i class="fas fa-check-circle"></i> ' + (en ? ('Loaded ' + _dbRows.length + ' records.') : ('تم تحميل ' + _dbRows.length + ' سجل.')), '#2e7d32');
         renderDbTable();
-    } catch (e) { setStatus('<i class="fas fa-times-circle"></i> خطأ: ' + e.message, '#c0392b'); }
+    } catch (e) { setStatus('<i class="fas fa-times-circle"></i> ' + (en ? 'Error: ' : 'خطأ: ') + e.message, '#c0392b'); }
 }
 
 function _dbCellValue(v) {
@@ -7142,14 +7957,15 @@ function _dbIsComplex(v) { return v !== null && typeof v === 'object'; }
 function renderDbTable() {
     const content = document.getElementById('dbEditorContent');
     if (!content) return;
-    if (!_dbRows.length) { content.innerHTML = '<div style="padding:14px; text-align:center; color:#999; font-size:13px;">لا توجد سجلات في هذا الجدول.</div>'; return; }
+    const en = currentLanguage === 'en';
+    if (!_dbRows.length) { content.innerHTML = `<div style="padding:14px; text-align:center; color:#999; font-size:13px;">${en ? 'No records in this table.' : 'لا توجد سجلات في هذا الجدول.'}</div>`; return; }
     const q = (document.getElementById('dbSearch') ? (document.getElementById('dbSearch').value || '') : '').trim().toLowerCase();
     const cols = Object.keys(_dbRows[0]);
     const rows = q ? _dbRows.filter(r => cols.some(c => _dbCellValue(r[c]).toLowerCase().includes(q))) : _dbRows;
     const esc = (s) => escapeHtml(String(s));
     let html = '<table class="db-grid"><thead><tr>';
     cols.forEach(c => { html += `<th>${esc(c)}</th>`; });
-    html += '<th class="db-actions-cell">إجراءات</th></tr></thead><tbody>';
+    html += `<th class="db-actions-cell">${en ? 'Actions' : 'إجراءات'}</th></tr></thead><tbody>`;
     rows.forEach(r => {
         const pkVal = r[_dbPk];
         html += `<tr data-pk="${esc(pkVal)}">`;
@@ -7246,6 +8062,7 @@ async function changeUserRole(id, newRole) {
         loadAdminPanel(); return;
     }
     await loadAllFromCloud();
+    recordAction('تغيير دور المستخدم ' + (user.email || user.username || id) + ' إلى ' + roleLabel(newRole), 'permissions');
     loadAdminPanel();
     alert(currentLanguage === 'en' ? 'Role updated successfully.' : 'تم تحديث الصلاحية بنجاح.');
 }
@@ -7619,11 +8436,31 @@ function renderProfileSwitchList(q) {
     if (!users.length) {
         list.innerHTML = `<div class="psw-empty">${en ? 'No matching users' : 'لا يوجد مستخدمون مطابقون'}</div>`;
     } else {
-        list.innerHTML = users.slice(0, 60).map(u =>
+        list.innerHTML = users.slice(0, 200).map(u =>
             `<div class="psw-item" onmousedown="selectProfileUser('${u.id}')"><i class="fas fa-user-circle"></i> <span>${escapeHtml(u.username || '—')}</span> <small dir="ltr">${escapeHtml(u.email || '')}</small></div>`
         ).join('');
     }
     list.style.display = 'block';
+    // تموضع بـ fixed محسوب من موضع الحقل حتى لا يُقص أسفل بطاقة الترويسة
+    const box = list.parentElement; // .profile-switch-box
+    if (box) {
+        const r = box.getBoundingClientRect();
+        list.style.position = 'fixed';
+        list.style.insetInlineStart = 'auto';
+        list.style.insetInlineEnd = 'auto';
+        list.style.left = r.left + 'px';
+        list.style.width = r.width + 'px';
+        list.style.zIndex = '4000';
+        const spaceBelow = window.innerHeight - r.bottom - 10;
+        const desired = Math.min(list.scrollHeight || 260, 300);
+        if (spaceBelow < desired && r.top - 10 > spaceBelow) {
+            list.style.maxHeight = Math.min(desired, r.top - 10) + 'px';
+            list.style.top = (r.top - Math.min(desired, r.top - 10) - 4) + 'px';
+        } else {
+            list.style.maxHeight = Math.min(desired, spaceBelow) + 'px';
+            list.style.top = (r.bottom + 4) + 'px';
+        }
+    }
 }
 function selectProfileUser(id) {
     _profileViewUserId = id;
@@ -7914,6 +8751,7 @@ async function addUser(event) {
     const { error } = await sb.from('app_users').insert(row);
     if (error) { alert(msg('تعذّر إضافة المستخدم: ') + error.message); return; }
     await loadAllFromCloud();
+    recordAction('إضافة مستخدم ' + email, 'create');
     alert(msg('تمت إضافة ملف المستخدم (الصلاحية).\n\nمهم: لتمكين الدخول، أنشئ هذا البريد في Supabase:\nAuthentication > Users > Add user\nبنفس البريد: ') + email);
     closeUserModal();
     loadAdminPanel();
@@ -7922,9 +8760,11 @@ async function addUser(event) {
 async function deleteUser(id) {
     if (!can('users', 'delete')) { alert(msg('غير مصرّح')); return; }
     if (confirm(msg('هل تريد حذف ملف هذا المستخدم؟'))) {
+        const _u = registeredUsers.find(x => String(x.id) === String(id));
         const { error } = await sb.from('app_users').delete().eq('id', id);
         if (error) { alert(msg('تعذّر الحذف: ') + error.message); return; }
         await loadAllFromCloud();
+        recordAction('حذف مستخدم ' + ((_u && (_u.email || _u.username)) || id), 'delete');
         loadAdminPanel();
     }
 }
@@ -7946,18 +8786,18 @@ function renderCtrlList(tbodySel, items, searchId, delFn, editFn) {
     const filtered = q ? items.filter(x => (x.name || '').toLowerCase().includes(q)) : items;
     tbody.innerHTML = '';
     if (!filtered.length) {
-        tbody.innerHTML = `<tr><td colspan="2" style="text-align:center; color:#999; padding:14px;">${items.length ? (en ? 'No matches' : 'لا توجد نتائج مطابقة') : (en ? 'No data yet' : 'لا توجد بيانات بعد')}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999; padding:14px;">${items.length ? (en ? 'No matches' : 'لا توجد نتائج مطابقة') : (en ? 'No data yet' : 'لا توجد بيانات بعد')}</td></tr>`;
         return;
     }
-    filtered.forEach(x => {
+    filtered.forEach((x, i) => {
         const editBtn = editFn ? `<button class="btn btn-small" onclick="${editFn}('${x.id}')" title="${en ? 'Edit' : 'تعديل'}" style="color:#f0ad4e;"><i class="fas fa-edit"></i></button> ` : '';
-        tbody.insertRow().innerHTML = `<td>${escapeHtml(x.name || '')}</td><td style="white-space:nowrap;">${editBtn}<button class="btn btn-small" onclick="${delFn}('${x.id}')" title="${en ? 'Delete' : 'حذف'}" style="color:#e74c3c;"><i class="fas fa-trash"></i></button></td>`;
+        tbody.insertRow().innerHTML = `<td style="text-align:center; color:#8aa2b0; width:44px;">${i + 1}</td><td>${escapeHtml(x.name || '')}</td><td style="white-space:nowrap;">${editBtn}<button class="btn btn-small" onclick="${delFn}('${x.id}')" title="${en ? 'Delete' : 'حذف'}" style="color:#e74c3c;"><i class="fas fa-trash"></i></button></td>`;
     });
 }
 
 function loadControlPanel() {
-    renderCtrlList('#serviceTypesTable tbody', serviceTypes, 'svcSearch', 'deleteServiceType', null);
-    renderCtrlList('#departmentsTable tbody', departments, 'deptSearch', 'deleteDepartment', null);
+    renderCtrlList('#serviceTypesTable tbody', serviceTypes, 'svcSearch', 'deleteServiceType', 'editServiceTypePrompt');
+    renderCtrlList('#departmentsTable tbody', departments, 'deptSearch', 'deleteDepartment', 'editDepartmentPrompt');
     renderCtrlList('#descriptionsTable tbody', descriptions, 'descSearch', 'deleteDescription', 'editDescriptionPrompt');
     // عدّادات
     const setC = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n; };
@@ -7998,6 +8838,7 @@ async function addDescription() {
     if (error) { alert(msg('تعذّر الإضافة: ') + error.message); return; }
     input.value = '';
     await loadAllFromCloud();
+    recordAction('إضافة نص بند ' + name, 'create');
     loadControlPanel();
     populateDescDatalist();
 }
@@ -8007,6 +8848,7 @@ async function deleteDescription(id) {
         const { error } = await sb.from('descriptions').delete().eq('id', id);
         if (error) { alert(msg('تعذّر الحذف: ') + error.message); return; }
         await loadAllFromCloud();
+        recordAction('حذف نص بند', 'delete');
         loadControlPanel();
         populateDescDatalist();
     }
@@ -8022,8 +8864,43 @@ async function editDescriptionPrompt(id) {
     const { error } = await sb.from('descriptions').update({ name }).eq('id', id);
     if (error) { alert(msg('تعذّر التعديل: ') + error.message); return; }
     await loadAllFromCloud();
+    recordAction('تعديل نص بند إلى ' + name, 'update');
     loadControlPanel();
     populateDescDatalist();
+}
+
+async function editServiceTypePrompt(id) {
+    if (!can('control', 'edit')) { alert(msg('غير مصرّح')); return; }
+    const s = serviceTypes.find(x => String(x.id) === String(id));
+    if (!s) return;
+    const nv = prompt(msg('تعديل نوع الخدمة:'), s.name);
+    if (nv === null) return;
+    const name = nv.trim();
+    if (!name) { alert(msg('لا يمكن ترك النص فارغاً')); return; }
+    if (serviceTypes.some(x => String(x.id) !== String(id) && (x.name || '').toLowerCase() === name.toLowerCase())) { alert(msg('هذا النوع موجود مسبقاً')); return; }
+    const { error } = await sb.from('service_types').update({ name }).eq('id', id);
+    if (error) { alert(msg('تعذّر التعديل: ') + error.message); return; }
+    await loadAllFromCloud();
+    recordAction('تعديل نوع خدمة إلى ' + name, 'update');
+    loadControlPanel();
+    populateAllFilters();
+}
+
+async function editDepartmentPrompt(id) {
+    if (!can('control', 'edit')) { alert(msg('غير مصرّح')); return; }
+    const d = departments.find(x => String(x.id) === String(id));
+    if (!d) return;
+    const nv = prompt(msg('تعديل القسم / الغرض:'), d.name);
+    if (nv === null) return;
+    const name = nv.trim();
+    if (!name) { alert(msg('لا يمكن ترك النص فارغاً')); return; }
+    if (departments.some(x => String(x.id) !== String(id) && (x.name || '').toLowerCase() === name.toLowerCase())) { alert(msg('هذا القسم موجود مسبقاً')); return; }
+    const { error } = await sb.from('departments').update({ name }).eq('id', id);
+    if (error) { alert(msg('تعذّر التعديل: ') + error.message); return; }
+    await loadAllFromCloud();
+    recordAction('تعديل قسم / غرض إلى ' + name, 'update');
+    loadControlPanel();
+    populateAllFilters();
 }
 
 async function addServiceType() {
@@ -8035,15 +8912,18 @@ async function addServiceType() {
     if (error) { alert(msg('تعذّر الإضافة: ') + error.message); return; }
     input.value = '';
     await loadAllFromCloud();
+    recordAction('إضافة نوع خدمة ' + name, 'create');
     loadControlPanel();
     populateAllFilters();
 }
 
 async function deleteServiceType(id) {
     if (confirm(msg('هل تريد حذف نوع الخدمة هذا؟'))) {
+        const _st = serviceTypes.find(x => String(x.id) === String(id));
         const { error } = await sb.from('service_types').delete().eq('id', id);
         if (error) { alert(msg('تعذّر الحذف: ') + error.message); return; }
         await loadAllFromCloud();
+        recordAction('حذف نوع خدمة ' + ((_st && _st.name) || id), 'delete');
         loadControlPanel();
         populateAllFilters();
     }
@@ -8058,15 +8938,18 @@ async function addDepartment() {
     if (error) { alert(msg('تعذّر الإضافة: ') + error.message); return; }
     input.value = '';
     await loadAllFromCloud();
+    recordAction('إضافة قسم / غرض ' + name, 'create');
     loadControlPanel();
     populateAllFilters();
 }
 
 async function deleteDepartment(id) {
     if (confirm(msg('هل تريد حذف هذا القسم / الغرض؟'))) {
+        const _dp = departments.find(x => String(x.id) === String(id));
         const { error } = await sb.from('departments').delete().eq('id', id);
         if (error) { alert(msg('تعذّر الحذف: ') + error.message); return; }
         await loadAllFromCloud();
+        recordAction('حذف قسم / غرض ' + ((_dp && _dp.name) || id), 'delete');
         loadControlPanel();
         populateAllFilters();
     }
@@ -8074,6 +8957,7 @@ async function deleteDepartment(id) {
 // ===================== PREVIEW / PDF =====================
 let previewLPOData = null;
 let previewIsDraft = false;  // هل المعاينة الحالية لمسودة؟ (لإظهار العلامة المائية)
+let showRecipientName = true; // إظهار "اسم المستلم / Received by" في طباعة أمر الشراء (افتراضي: مُمكّن)
 
 // بيانات تكافل عمان الرسمية الثابتة (تظهر في كل أمر شراء)
 const COMPANY_INFO = {
@@ -8266,7 +9150,7 @@ function buildLPOHtml(data, isDraft) {
                     ${data.approvalStatus === 'approved' ? `<div style="position:absolute; top:223px; left:0; right:0; text-align:left; font-size:10px; font-weight:400; color:#555;">${escapeHtml(data.staff || '')}</div>` : ''}
                 </div>
                 <div style="flex:1; position:relative; text-align:center;">
-                    <div style="font-weight:700; font-size:12px; padding-top:40px; margin-bottom:${data.approvalStatus === 'approved' ? '181px' : '160px'};">Received by: &nbsp;<span style="direction:rtl; color:#555;">المُستلم</span></div>
+                    <div style="font-weight:700; font-size:12px; padding-top:40px; margin-bottom:${data.approvalStatus === 'approved' ? '181px' : '160px'};">${showRecipientName ? 'Received by: &nbsp;<span style="direction:rtl; color:#555;">المُستلم</span>' : '&nbsp;'}</div>
                     <div style="${data.approvalStatus === 'approved' ? 'position:absolute; top:218px; left:0; right:0;' : ''} border-top:1px solid #333;"></div>
                 </div>
             </div>
@@ -8516,9 +9400,94 @@ function previewDraft(id) {
 let currentChatRef = null;
 let currentChatType = 'order';
 let chatChannel = null;
-let chatMode = 'docked';        // 'floating' | 'docked' | 'hidden'
 let chatMessagesCache = [];     // الرسائل المحمّلة حالياً
 let replyingTo = null;          // { id, author, snippet }
+
+// ===================== حفظ/استعادة حالة نافذة المحادثة =====================
+// يُحفظ الوضع الأخير + الحجم والموضع لكل وضع في localStorage ويُستعاد عند إعادة الفتح
+const CHAT_STATE_KEY = 'chatWidgetState';
+function loadChatState() {
+    try { return JSON.parse(localStorage.getItem(CHAT_STATE_KEY) || '{}') || {}; } catch (e) { return {}; }
+}
+function saveChatState(patch) {
+    try {
+        const st = loadChatState();
+        Object.keys(patch || {}).forEach(k => {
+            if (patch[k] && typeof patch[k] === 'object') st[k] = Object.assign({}, st[k], patch[k]);
+            else st[k] = patch[k];
+        });
+        localStorage.setItem(CHAT_STATE_KEY, JSON.stringify(st));
+    } catch (e) {}
+}
+function resetChatWidgetState() {
+    try { localStorage.removeItem(CHAT_STATE_KEY); } catch (e) {}
+    chatMode = 'floating';
+    const panel = document.getElementById('chatSection');
+    if (panel && panel.style.display !== 'none' && !panel.classList.contains('chat-mode-hidden')) {
+        setChatMode('floating');
+    }
+    // إعادة الزر العائم إلى موضعه الافتراضي
+    const fab = document.getElementById('chatFab');
+    if (fab) { fab.style.left = ''; fab.style.top = ''; fab.style.right = ''; fab.style.bottom = ''; }
+}
+// تطبيق الحجم/الموضع المحفوظ للوضع الحالي بعد تعيين الوضع
+function applyChatSavedSize(mode) {
+    const panel = document.getElementById('chatSection');
+    if (!panel) return;
+    const st = loadChatState();
+    const s = st[mode];
+    if (!s) return;
+    if (mode === 'docked') {
+        if (s.w) { panel.style.width = s.w; panel.style.maxWidth = 'none'; }
+    } else if (mode === 'floating') {
+        if (s.w) { panel.style.width = s.w; panel.style.maxWidth = 'none'; }
+        if (s.h) { panel.style.height = s.h; panel.style.maxHeight = 'none'; }
+        if (s.left != null && s.top != null) {
+            panel.style.left = s.left + 'px'; panel.style.top = s.top + 'px';
+            panel.style.right = 'auto'; panel.style.bottom = 'auto';
+            // إبقاء النافذة داخل الشاشة
+            const w = panel.offsetWidth, h = panel.offsetHeight;
+            let L = Math.max(0, Math.min(parseFloat(panel.style.left), window.innerWidth - w));
+            let T = Math.max(0, Math.min(parseFloat(panel.style.top), window.innerHeight - h));
+            panel.style.left = L + 'px'; panel.style.top = T + 'px';
+        }
+    }
+}
+// الوضع الأولي: آخر وضع محفوظ أو "عائم" افتراضياً
+let chatMode = (function () { const m = (loadChatState().mode); return (m === 'docked' || m === 'floating') ? m : 'floating'; })();
+
+// أزرار إعادة التعيين في الملف الشخصي
+function resetChatFromProfile() {
+    resetChatWidgetState();
+    const el = document.getElementById('profileResetMsg');
+    if (el) el.textContent = currentLanguage === 'en' ? 'Chat window reset to default. ✅' : 'تمت إعادة نافذة المحادثة إلى الوضع الافتراضي ✅';
+}
+function resetLpoTableFromProfile() {
+    try {
+        localStorage.removeItem('colorder_lpoListTable');
+        localStorage.removeItem('colwidths_lpoListTable');
+        if (typeof COL_ORDER !== 'undefined') delete COL_ORDER['lpoListTable'];
+        if (typeof COL_WIDTHS !== 'undefined') delete COL_WIDTHS['lpoListTable'];
+    } catch (e) {}
+    // إعادة الرسم فوراً إن كانت صفحة أوامر الشراء مفتوحة (وإلا يُطبَّق عند فتحها لاحقاً)
+    const active = document.querySelector('.page.active');
+    if (active && active.id === 'page-lpo-management') { try { loadLPOList(); } catch (e) {} }
+    const el = document.getElementById('profileResetMsg');
+    if (el) el.textContent = currentLanguage === 'en' ? 'Purchase Orders table columns reset to default. ✅' : 'تمت إعادة أعمدة جدول أوامر الشراء إلى الوضع الافتراضي ✅';
+}
+function resetSuppliersTableFromProfile() {
+    try {
+        localStorage.removeItem('colorder_suppliersTable');
+        localStorage.removeItem('colwidths_suppliersTable');
+        if (typeof COL_ORDER !== 'undefined') delete COL_ORDER['suppliersTable'];
+        if (typeof COL_WIDTHS !== 'undefined') delete COL_WIDTHS['suppliersTable'];
+    } catch (e) {}
+    // إعادة الرسم فوراً إن كانت صفحة الموردين مفتوحة (وإلا يُطبَّق عند فتحها لاحقاً)
+    const active = document.querySelector('.page.active');
+    if (active && active.id === 'page-suppliers') { try { loadSuppliersList(); } catch (e) {} }
+    const el = document.getElementById('profileResetMsg');
+    if (el) el.textContent = currentLanguage === 'en' ? 'Suppliers table columns reset to default. ✅' : 'تمت إعادة أعمدة جدول الموردين إلى الوضع الافتراضي ✅';
+}
 
 // تبديل وضع صندوق المحادثة
 function setChatMode(mode) {
@@ -8543,6 +9512,9 @@ function setChatMode(mode) {
     panel.classList.add(mode === 'floating' ? 'chat-mode-floating' : 'chat-mode-docked');
     panel.style.display = 'flex';
     if (fab) fab.style.display = 'none';
+    // استعادة الحجم/الموضع المحفوظ لهذا الوضع، وتذكّر الوضع الحالي
+    applyChatSavedSize(mode);
+    saveChatState({ mode: mode });
     // إعادة الإظهار تُصفّر عداد الرسائل غير المقروءة
     chatUnread = 0;
     updateChatBadge();
@@ -8609,6 +9581,10 @@ function closeChatPanel() {
             panel.style.top = newTop + 'px';
         }
         function onUp() {
+            if (dragging && panel.classList.contains('chat-mode-floating')) {
+                // حفظ موضع النافذة العائمة لاستعادته لاحقاً
+                saveChatState({ floating: { left: parseFloat(panel.style.left) || 0, top: parseFloat(panel.style.top) || 0 } });
+            }
             dragging = false;
             document.body.style.userSelect = '';
         }
@@ -8634,6 +9610,7 @@ function closeChatPanel() {
         const panel = document.getElementById('chatSection');
         const edge = document.getElementById('chatResizeX');
         const corner = document.getElementById('chatResizeCorner');
+        const cornerTop = document.getElementById('chatResizeCornerTop');
         if (!panel || !edge || !corner) return;
         const isRtl = () => (document.documentElement.dir === 'rtl');
         let rs = null;
@@ -8641,12 +9618,12 @@ function closeChatPanel() {
         function start(handle, e) {
             const p = e.touches ? e.touches[0] : e;
             const rect = panel.getBoundingClientRect();
-            // في الوضع العائم: نثبّت الحافة العلوية بالبكسل حتى ينمو الارتفاع للأسفل باتجاه المؤشر
+            // في الوضع العائم: نثبّت الحافة العلوية والسفلية بالبكسل للتحكّم الدقيق في الارتفاع
             if (panel.classList.contains('chat-mode-floating')) {
                 panel.style.top = rect.top + 'px';
                 panel.style.bottom = 'auto';
             }
-            rs = { handle, x: p.clientX, y: p.clientY, w: rect.width, h: rect.height, rtl: isRtl() };
+            rs = { handle, x: p.clientX, y: p.clientY, w: rect.width, h: rect.height, top: rect.top, rtl: isRtl() };
             document.body.classList.add('chat-resizing');
             e.preventDefault(); e.stopPropagation();
         }
@@ -8654,29 +9631,44 @@ function closeChatPanel() {
             if (!rs) return;
             const p = e.touches ? e.touches[0] : e;
             const dx = p.clientX - rs.x, dy = p.clientY - rs.y;
-            // العرض: الحافة الداخلية هي inline-end؛ في RTL السحب لليسار يوسّع، في LTR السحب لليمين يوسّع
             const dw = rs.rtl ? -dx : dx;
             const maxW = Math.min(window.innerWidth - 16, 900);
             const newW = Math.max(300, Math.min(rs.w + dw, maxW));
             panel.style.width = newW + 'px';
             panel.style.maxWidth = 'none';
             if (rs.handle === 'corner') {
+                // الزاوية السفلية: يكبر الارتفاع للأسفل
                 const newH = Math.max(320, Math.min(rs.h + dy, window.innerHeight - 16));
                 panel.style.height = newH + 'px';
+                panel.style.maxHeight = 'none';
+            } else if (rs.handle === 'cornerTop') {
+                // الزاوية العلوية: يتحرّك الحد العلوي ويكبر الارتفاع للأعلى
+                let newH = Math.max(320, Math.min(rs.h - dy, window.innerHeight - 16));
+                let newTop = rs.top + (rs.h - newH);
+                if (newTop < 0) { newH += newTop; newTop = 0; }
+                panel.style.height = newH + 'px';
+                panel.style.top = newTop + 'px';
+                panel.style.bottom = 'auto';
                 panel.style.maxHeight = 'none';
             }
         }
         function end() {
-            if (rs) { try { localStorage.setItem('chatPanelSize', JSON.stringify({ w: panel.style.width, h: panel.style.height, mode: panel.classList.contains('chat-mode-floating') ? 'floating' : 'docked' })); } catch(_) {} }
+            if (rs) {
+                const floating = panel.classList.contains('chat-mode-floating');
+                if (floating) saveChatState({ floating: { w: panel.style.width, h: panel.style.height, left: parseFloat(panel.style.left) || 0, top: parseFloat(panel.style.top) || 0 } });
+                else saveChatState({ docked: { w: panel.style.width } });
+            }
             rs = null;
             document.body.classList.remove('chat-resizing');
         }
         edge.addEventListener('mousedown', e => start('edge', e));
         corner.addEventListener('mousedown', e => start('corner', e));
+        if (cornerTop) cornerTop.addEventListener('mousedown', e => start('cornerTop', e));
         document.addEventListener('mousemove', move);
         document.addEventListener('mouseup', end);
         edge.addEventListener('touchstart', e => start('edge', e), { passive: false });
         corner.addEventListener('touchstart', e => start('corner', e), { passive: false });
+        if (cornerTop) cornerTop.addEventListener('touchstart', e => start('cornerTop', e), { passive: false });
         document.addEventListener('touchmove', move, { passive: false });
         document.addEventListener('touchend', end);
     }
@@ -8685,6 +9677,60 @@ function closeChatPanel() {
     } else {
         initChatResize();
     }
+})();
+
+// نقر الزر العائم: يفتح المحادثة إلا إذا كان المستخدم يسحبه
+let _fabMoved = false;
+function fabClick() { if (_fabMoved) { _fabMoved = false; return; } setChatMode('floating'); }
+
+// ===================== سحب الزر العائم لإعادة الإظهار =====================
+(function () {
+    function initFabDrag() {
+        const fab = document.getElementById('chatFab');
+        if (!fab) return;
+        let dragging = false, moved = false, sx = 0, sy = 0, sl = 0, st = 0;
+        function down(e) {
+            const p = e.touches ? e.touches[0] : e;
+            const r = fab.getBoundingClientRect();
+            fab.style.left = r.left + 'px'; fab.style.top = r.top + 'px';
+            fab.style.right = 'auto'; fab.style.bottom = 'auto';
+            sl = r.left; st = r.top; sx = p.clientX; sy = p.clientY;
+            dragging = true; moved = false; _fabMoved = false;
+            fab.classList.add('chat-fab-dragging');
+            // لا نمنع الحدث الافتراضي حتى يبقى النقر يعمل
+        }
+        function move(e) {
+            if (!dragging) return;
+            const p = e.touches ? e.touches[0] : e;
+            const dx = p.clientX - sx, dy = p.clientY - sy;
+            if (Math.abs(dx) > 4 || Math.abs(dy) > 4) { moved = true; _fabMoved = true; }
+            let L = Math.max(4, Math.min(sl + dx, window.innerWidth - fab.offsetWidth - 4));
+            let T = Math.max(4, Math.min(st + dy, window.innerHeight - fab.offsetHeight - 4));
+            fab.style.left = L + 'px'; fab.style.top = T + 'px';
+            if (moved) e.preventDefault();
+        }
+        function up() {
+            if (!dragging) return;
+            dragging = false;
+            fab.classList.remove('chat-fab-dragging');
+            if (moved) saveChatState({ fab: { left: parseFloat(fab.style.left) || 0, top: parseFloat(fab.style.top) || 0 } });
+        }
+        fab.addEventListener('mousedown', down);
+        document.addEventListener('mousemove', move);
+        document.addEventListener('mouseup', up);
+        fab.addEventListener('touchstart', down, { passive: true });
+        document.addEventListener('touchmove', move, { passive: false });
+        document.addEventListener('touchend', up);
+        // استعادة موضع الزر المحفوظ
+        const s = loadChatState().fab;
+        if (s && s.left != null) {
+            fab.style.left = Math.max(4, Math.min(s.left, window.innerWidth - 60)) + 'px';
+            fab.style.top = Math.max(4, Math.min(s.top, window.innerHeight - 60)) + 'px';
+            fab.style.right = 'auto'; fab.style.bottom = 'auto';
+        }
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initFabDrag);
+    else initFabDrag();
 })();
 
 async function openChat(refNumber, refType) {
@@ -8703,7 +9749,7 @@ async function openChat(refNumber, refType) {
     }
 
     // إظهار الصندوق بالوضع الأخير المستخدم (افتراضياً: مثبت جانبي)
-    setChatMode(chatMode === 'hidden' ? 'docked' : chatMode);
+    setChatMode(chatMode === 'hidden' ? 'floating' : chatMode);
 
     await loadChatMessages(refNumber);
     subscribeChat(refNumber);
@@ -8885,6 +9931,15 @@ function printPDF() {
     setTimeout(downloadPreviewPDF, 300);
 }
 
+// إظهار/إخفاء اسم المستلم في معاينة وطباعة أمر الشراء ثم إعادة بناء المعاينة
+function toggleShowRecipient(checked) {
+    showRecipientName = !!checked;
+    if (previewLPOData) {
+        const el = document.getElementById('previewContent');
+        if (el) el.innerHTML = buildLPOHtml(previewLPOData, previewIsDraft);
+    }
+}
+
 async function downloadPreviewPDF() {
     const el = document.getElementById('lpoPrintArea');
     if (!el) { alert(msg('لا يوجد محتوى للطباعة')); return; }
@@ -8941,11 +9996,19 @@ async function quickPrintLPO(id) {
 window.addEventListener('load', async function() {
     applyLogo();
     // تهيئة قوائم التصفية متعددة الاختيارات (المورد / المستخدم / نوع الخدمة)
+    msSetup('msOrderNum', '-- كل أرقام الأوامر --', filterLPOs);
     msSetup('msSupplier', '-- كل الموردين --', filterLPOs);
     msSetup('msUser', '-- كل المستخدمين --', filterLPOs);
     msSetup('msService', '-- كل أنواع الخدمات --', filterLPOs);
     msSetup('msDepartment', '-- كل الأقسام --', filterLPOs);
+    msSetup('msSupName', '-- كل الموردين --', filterSuppliers);
     msSetup('msSupSvc', '-- كل أنواع الخدمات --', filterSuppliers);
+    msSetup('msSupCity', '-- كل المدن --', filterSuppliers);
+    msSetup('msSupClass', '-- كل التصنيفات --', filterSuppliers);
+    msSetup('msSupRating', '-- كل التقييمات --', filterSuppliers);
+    msSetup('msSupCr', '-- كل أرقام السجل --', filterSuppliers);
+    msSetup('msSupPhone', '-- كل الأرقام --', filterSuppliers);
+    msSetup('msDraftNum', '-- كل أرقام المسودات --', loadDrafts);
     msSetup('msDraftSupplier', '-- كل الموردين --', loadDrafts);
     msSetup('msDraftService', '-- كل أنواع الخدمات --', loadDrafts);
     msSetup('msDraftDept', '-- كل الأقسام --', loadDrafts);
