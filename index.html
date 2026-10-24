@@ -212,7 +212,7 @@
         .topbar-titles { display: flex; flex-direction: column; gap: 1px; }
         .topbar-main-title { font-size: 15px; font-weight: 700; color: #0093c4; line-height: 1.2; }
         .topbar-sub-title { font-size: 11px; color: #7cb342; font-weight: 600; line-height: 1.2; }
-        .topbar-page-title { font-size: 15.5px; font-weight: 700; color: #0093c4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; letter-spacing: 0.2px; }
+        .topbar-page-title { font-size: 18px; font-weight: 700; color: #14181c; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; letter-spacing: 0.2px; }
         /* جرس الإشعارات */
         .notif-wrap { position: relative; }
         .notif-bell { position: relative; background: #f1f6f9; border: 1px solid #e0e9ef; color: #0093c4; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
@@ -495,7 +495,24 @@
         .ops-empty { padding: 1.4rem; text-align: center; color: #9fb0bc; font-size: 13px; }
 
         /* ===== زر النقاط + قائمة إجراءات الصف ===== */
-        #lpoListTable .col-actions, #suppliersTable .col-actions { width: 38px; min-width: 38px; max-width: 38px; text-align: center; padding-left: 2px; padding-right: 2px; white-space: nowrap; }
+        /* إخفاء مؤقت لأعمدة جدول أوامر الشراء (لا يُحفظ — يعود كل شيء ظاهراً بعد التحديث) */
+        .col-hidden { display: none !important; }
+        .col-hide-btn { position: absolute; top: 1px; inset-inline-start: 2px; width: 16px; height: 16px; padding: 0; border: none; border-radius: 4px; background: transparent; color: #8a98a3; font-size: 10px; line-height: 16px; text-align: center; cursor: pointer; opacity: 0; transition: opacity .15s, background .15s; }
+        th:hover > .col-hide-btn { opacity: .9; }
+        .col-hide-btn:hover { background: rgba(0,147,196,.14); color: #0093c4; opacity: 1; }
+        @media (hover: none) { .col-hide-btn { opacity: .55; } }
+        .hidden-cols-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 8px; padding: 6px 10px; background: #f4f9fc; border: 1px dashed #bcd9e6; border-radius: 8px; font-size: 12px; color: #4a5b66; }
+        .hidden-cols-bar .hc-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border: 1px solid #cfe3ec; border-radius: 14px; background: #fff; color: #0a7396; cursor: pointer; font-family: inherit; font-size: 12px; }
+        .hidden-cols-bar .hc-chip:hover { background: #e6f4fa; }
+        .hidden-cols-bar .hc-all { margin-inline-start: auto; color: #0093c4; cursor: pointer; text-decoration: underline; background: none; border: none; font-family: inherit; font-size: 12px; }
+        #lpoListTable .col-actions, #suppliersTable .col-actions, #draftsTable .col-actions { width: 38px; min-width: 38px; max-width: 38px; text-align: center; padding-left: 2px; padding-right: 2px; white-space: nowrap; }
+        /* ===== أعراض افتراضية طبيعية لأعمدة جدول الموردين (تُستعاد عند إعادة التعيين لأنها CSS وليست inline) =====
+           نضبط width + min-width + max-width معاً لأن تخطيط الجدول التلقائي يتجاهل width وحده إن كان المحتوى أضيق */
+        #suppliersTable thead th[data-colid="0"] { width: 100px; min-width: 100px; max-width: 100px; }   /* تاريخ التسجيل: أصغر قليلاً */
+        #suppliersTable thead th[data-colid="2"] { width: 220px; min-width: 220px; max-width: 220px; }   /* اسم المورد: مضاعف */
+        #suppliersTable thead th[data-colid="6"] { width: 105px; min-width: 105px; max-width: 105px; }   /* الهاتف: يتسع لنحو 10 أرقام */
+        /* السماح بتحجيم عمود الهاتف للأصغر مثل باقي الأعمدة (الأرقام لا تنكسر تلقائياً فتمنع التقليص عند السحب) */
+        #suppliersTable td.col-phone { overflow-wrap: anywhere; word-break: break-word; }
         .kebab-btn { background: #f1f5f8; border: 1px solid #e1e8ee; color: #5a6b7a; width: 30px; height: 30px; border-radius: 7px; cursor: pointer; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; transition: background 0.15s, color 0.15s; }
         .kebab-btn:hover { background: #0093c4; color: #fff; border-color: #0093c4; }
         .row-action-menu { position: fixed; background: #fff; border: 1px solid #e3eaf0; border-radius: 10px; box-shadow: 0 12px 34px rgba(0,0,0,0.17); padding: 6px; z-index: 3000; animation: ramIn 0.14s ease-out; }
@@ -538,6 +555,8 @@
         .pager-btn:hover:not(:disabled) { border-color: #0093c4; color: #0093c4; }
         .pager-btn.active { background: #0093c4; color: #fff; border-color: #0093c4; }
         .pager-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        /* الواجهة الإنجليزية: أزرار التنقّل تلي كتلة قائمة عدد الصفوف مباشرةً (بدل أقصى اليمين) */
+        html[dir="ltr"] .pager-bar:not([style*="center"]) { justify-content: flex-start; gap: 18px; }
         .pager-ellipsis { padding: 0 4px; color: #9fb0bc; font-size: 12.5px; }
         /* جدول الموردين: صفوف أنحف مع الحفاظ على حجم الخط والأيقونات */
         #suppliersTable td { padding-top: 5px; padding-bottom: 5px; }
@@ -914,10 +933,6 @@
                 </div>
             </div>
 
-            <div class="form-group-item full">
-                <label><i class="fas fa-sticky-note"></i> ملاحظات</label>
-                <textarea id="generalNotes" style="height:60px;"></textarea>
-            </div>
         </div>
 
         <div class="card">
@@ -942,6 +957,13 @@
             <!-- قائمة اقتراحات نصوص البنود (Description) — تُغذّى تلقائياً من المُدخَلات السابقة -->
             <datalist id="itemDescList"></datalist>
             <div style="font-size:11px; color:#999; margin-top:8px;"><i class="fas fa-lightbulb"></i> أدخل السعر بالكسر العشري (مثال: 12.500 = 12 ريال و500 بيسة). فعّل علامة الصح لتطبيق الضريبة. اضغط Tab في آخر خانة لإضافة بند جديد.</div>
+        </div>
+
+        <div class="card">
+            <div class="form-group-item full">
+                <label><i class="fas fa-sticky-note"></i> ملاحظات</label>
+                <textarea id="generalNotes" style="height:60px;"></textarea>
+            </div>
         </div>
 
         <div class="card" style="background: linear-gradient(135deg, #0093c4 0%, #00a8bf 100%); color: white;">
@@ -1003,7 +1025,7 @@
         </div>
         <div class="table-responsive">
             <table id="draftsTable">
-                <thead><tr><th>تاريخ التسجيل</th><th>رقم المسودة</th><th>المورد</th><th>نوع الخدمة</th><th>القسم / الغرض</th><th>التاريخ</th><th>الإجمالي (ر.ع)</th><th>الموظف</th><th>الإجراءات</th></tr></thead>
+                <thead><tr><th class="col-actions">الإجراءات</th><th>تاريخ التسجيل</th><th>رقم المسودة</th><th>المورد</th><th>نوع الخدمة</th><th>القسم / الغرض</th><th>التاريخ</th><th>الإجمالي (ر.ع)</th><th>الموظف</th></tr></thead>
                 <tbody></tbody>
             </table>
         </div>
@@ -1067,10 +1089,26 @@
             </div>
             <div class="filter-actions">
                 <button type="button" class="btn btn-danger btn-small" onclick="clearLPOFilters()"><i class="fas fa-eraser"></i> مسح التصفية</button>
+                <button type="button" class="btn btn-small" style="background:#e67e22; color:#fff;" onclick="resetLpoTableFromProfile()"><i class="fas fa-table-columns"></i> إعادة تعيين الأعمدة</button>
                 <button type="button" class="btn btn-success btn-small" onclick="exportLPOList()"><i class="fas fa-file-excel"></i> تصدير Excel</button>
                 <button type="button" class="btn btn-small" style="background:#c0392b; color:#fff;" onclick="printLPOListPDF()"><i class="fas fa-file-pdf"></i> طباعة PDF</button>
             </div>
         </div>
+        <!-- شريط التحكم بالتقسيم إلى صفحات (أعلى الجدول) -->
+        <div class="pager-bar">
+            <div class="pager-left">
+                <span style="font-size:12.5px; color:#667;">عدد الصفوف:</span>
+                <select id="lpoPageSize" onchange="changeLpoPageSize(this.value)" style="padding:6px 10px; border:1.5px solid #ddd; border-radius:7px; font-size:13px; font-family:inherit;">
+                    <option value="10">10</option>
+                    <option value="50" selected>50</option>
+                    <option value="100">100</option>
+                    <option value="200">200</option>
+                </select>
+                <span id="lpoRangeInfo" style="font-size:12px; color:#8aa2b0;"></span>
+            </div>
+            <div class="pager-right" id="lpoPagerTop"></div>
+        </div>
+
         <div class="table-responsive">
             <table id="lpoListTable">
                 <thead>
@@ -1090,6 +1128,10 @@
                 </thead>
                 <tbody></tbody>
             </table>
+        </div>
+        <!-- شريط التنقّل بين الصفحات (أسفل الجدول) -->
+        <div class="pager-bar" style="justify-content:center; margin-top:10px;">
+            <div class="pager-right" id="lpoPagerBottom"></div>
         </div>
         <div style="text-align:center; margin-top:16px; padding-top:12px; border-top:1px dashed #d5dde3;">
             <a href="#" onclick="downloadOrdersExcel(); return false;" class="excel-link"><i class="fas fa-file-excel"></i> تنزيل البيانات Excel</a>
@@ -1139,6 +1181,7 @@
             </div>
             <div class="filter-actions">
                 <button type="button" class="btn btn-danger btn-small" onclick="clearSupplierFilters()"><i class="fas fa-eraser"></i> مسح التصفية</button>
+                <button type="button" class="btn btn-small" style="background:#e67e22; color:#fff;" onclick="resetSuppliersTableFromProfile()"><i class="fas fa-table-columns"></i> إعادة تعيين الأعمدة</button>
                 <button type="button" class="btn btn-small" style="background:#c0392b; color:#fff;" onclick="printSuppliersPDF()"><i class="fas fa-file-pdf"></i> طباعة PDF</button>
                 <button type="button" class="btn btn-success btn-small" onclick="downloadSuppliersExcel()"><i class="fas fa-file-excel"></i> تصدير Excel</button>
             </div>
@@ -2210,6 +2253,9 @@
                 <button type="button" onclick="closeEvalModal()" class="btn">تخطّي</button>
                 <button type="button" class="btn btn-success" onclick="saveEvaluation()"><i class="fas fa-save"></i> حفظ التقييم</button>
             </div>
+
+            <!-- سجل التقييمات (بعد نموذج التقييم الجديد) -->
+            <div id="evalHistory" style="margin-top:1.2rem; border-top:1px solid #e8eef5; padding-top:0.8rem;"></div>
         </div>
     </div>
 </div>
@@ -2286,7 +2332,8 @@ const PERM_MODULES = [
     { key: 'notifications', ar: 'الإشعارات',         en: 'Notifications' },
     { key: 'users',         ar: 'إدارة المستخدمين',  en: 'User Management' },
     { key: 'trash',         ar: 'سلة المهملات',      en: 'Recycle Bin', acts: ['view','restore','delete'] },
-    { key: 'profiles',      ar: 'تصفّح الملفات الشخصية', en: 'Browse Profiles', acts: ['view'] }
+    { key: 'profiles',      ar: 'تصفّح الملفات الشخصية', en: 'Browse Profiles', acts: ['view'] },
+    { key: 'profile',       ar: 'الملف الشخصي',       en: 'My Profile', acts: ['edit_display_name'] }
 ];
 // الإجراءات (CRUD + استرجاع + اعتماد)
 const PERM_ACTIONS = [
@@ -2296,7 +2343,8 @@ const PERM_ACTIONS = [
     { key: 'delete',  ar: 'حذف',     en: 'Delete' },
     { key: 'restore', ar: 'استرجاع', en: 'Restore' },
     { key: 'approve', ar: 'اعتماد',  en: 'Approve' },
-    { key: 'unapprove', ar: 'التراجع عن الاعتماد', en: 'Undo Approval' }
+    { key: 'unapprove', ar: 'التراجع عن الاعتماد', en: 'Undo Approval' },
+    { key: 'edit_display_name', ar: 'تعديل اسم العرض', en: 'Edit Display Name' }
 ];
 // الإجراءات الافتراضية المطبّقة على الوحدات التي لا تحدّد acts
 const DEFAULT_PERM_ACTS = ['view','create','edit','delete','approve'];
@@ -2338,6 +2386,8 @@ Object.keys(DEFAULT_PERMISSIONS).forEach(r => {
         ? { view: true, restore: true, delete: true }
         : { view: false, restore: false, delete: false };
     DEFAULT_PERMISSIONS[r].profiles = { view: (r === 'sysadmin') };
+    // صلاحية تعديل اسم العرض في البيانات الشخصية: افتراضياً لمدير النظام فقط
+    DEFAULT_PERMISSIONS[r].profile = { edit_display_name: (r === 'sysadmin') };
     // رؤية لوحة التحكم: متاحة افتراضياً لكل الأدوار (وقابلة للمنع من صفحة الصلاحيات)
     DEFAULT_PERMISSIONS[r].dashboard = { view: true };
     // صلاحيات المسودات: تُشتق افتراضياً من صلاحيات أوامر الشراء لنفس الدور (دون تغيير السلوك الحالي)،
@@ -2812,6 +2862,7 @@ const I18N = {
     'إعادة تعيين نافذة المحادثة': 'Reset chat window',
     'إعادة تعيين أعمدة جدول أوامر الشراء': 'Reset purchase orders table columns',
     'إعادة تعيين أعمدة جدول الموردين': 'Reset suppliers table columns',
+    'إعادة تعيين الأعمدة': 'Reset columns',
     'محاكاة المستخدم (تجربة الدخول كمستخدم)': 'User Impersonation (Log in as User)',
     'نص البند / الوصف': 'Description',
     'نصوص البنود (Description)': 'Line Item Descriptions',
@@ -3007,6 +3058,11 @@ const I18N = {
     'تغذية الأقسام / الغرض (Departments) من ملف إكسل': 'Import Departments from Excel',
     'نزّل القالب الجاهز، أدخل الأقسام/الأغراض فيه (عمود القسم / الغرض)، ثم ارفعه ليُضيفها النظام دفعةً واحدة. تُتجاهَل الأقسام المكرّرة تلقائياً.': 'Download the ready template, enter the departments/purposes (Department / Purpose column), then upload it to add them all at once. Duplicate departments are skipped automatically.',
     'تحميل ملف الأقسام': 'Upload Departments File',
+    'تغذية نصوص البنود (Description / Particulars) من ملف إكسل': 'Import Line Item Descriptions from Excel',
+    'نزّل القالب الجاهز، أدخل نصوص بنود الوصف فيه (عمود الوصف)، ثم ارفعه ليُضيفها النظام دفعةً واحدة، فتظهر كاقتراحات في حقل الوصف بنافذة أمر الشراء. تُتجاهَل النصوص المكرّرة تلقائياً.': 'Download the ready template, enter the description texts (Description column), then upload it to add them all at once — they will appear as suggestions in the Description field of the Purchase Order form. Duplicate texts are skipped automatically.',
+    'تحميل ملف نصوص البنود': 'Upload Descriptions File',
+    'تُحفظ هنا تلقائياً نصوص بنود أوامر الشراء التي يُدخلها المستخدمون، وتظهر كاقتراحات في حقل الوصف بنافذة أمر الشراء. يمكنك إضافتها أو تعديلها أو حذفها.': 'Purchase order line item descriptions entered by users are automatically saved here and appear as suggestions in the Description field of the Purchase Order form. You can add, edit or delete them.',
+    'إذا تغيّر حجم أو موضع نافذة المحادثة أو ترتيب أعمدة جدول أوامر الشراء بشكل غير مرغوب، يمكنك إعادتها إلى الوضع الافتراضي من هنا.': 'If the chat window size or position, or the purchase orders table column order has changed unexpectedly, you can reset them to defaults from here.',
     'تاريخ انتهاء السجل التجاري': 'C.R Expiry Date',
     'ملاحظات أخرى': 'Other Notes',
     'أدخل أي ملاحظات إضافية عن المورد...': 'Enter any additional notes about the supplier...',
@@ -3787,7 +3843,20 @@ function generateLPONumber() {
 function setTodayDate() {
     document.getElementById('lpoDate').value = new Date().toISOString().split('T')[0];
 }
-function fmt(n) { return (parseFloat(n) || 0).toFixed(3); }
+// تنسيق المبالغ المالية: ثلاث خانات عشرية + فاصلة الآلاف (مثال: 6,825.000) — أرقام إنجليزية دائماً
+function fmt(n) { return fmtDec3(parseFloat(n) || 0); }
+// مبلغ صحيح (بطاقات الإحصاءات): بدون كسور مع فاصلة الآلاف (مثال: 6,825)
+function fmtInt(n) { const v = Math.round(Number(n) || 0); return (v < 0 ? '-' : '') + grpThousands(Math.abs(v)); }
+// خيارات الرسوم البيانية للمبالغ: محور القيم وتلميح القيمة بفاصلة الآلاف
+function chartMoneyTick(v) { return grpThousands(v); }
+const chartMoneyTooltip = { callbacks: { label: function(ctx) {
+    const v = (ctx.parsed !== null && typeof ctx.parsed === 'object') ? (ctx.parsed.y !== undefined ? ctx.parsed.y : ctx.parsed.x) : ctx.parsed;
+    return ' ' + (ctx.dataset.label || ctx.label || '') + ': ' + fmt(v);
+} } };
+// أرقام Chart.js الافتراضية (محاور/تلميحات) بالإنجليزية وفاصلة الآلاف
+window.addEventListener('load', function() { try { if (window.Chart && Chart.defaults) Chart.defaults.locale = 'en-US'; } catch (e) {} });
+// قراءة مبلغ معروض بفاصلة الآلاف (6,825.000) كرقم صحيح (parseFloat وحدها تتوقف عند الفاصلة)
+function readTotalNum(id) { const el = document.getElementById(id); return parseFloat(((el && el.textContent) || '').replace(/,/g, '')); }
 // تنسيق تاريخ ووقت التسجيل (تاريخ الإنشاء) — يظهر التاريخ والوقت معاً
 function fmtRecordDate(iso) {
     if (!iso) return '<span style="color:#bbb;">—</span>';
@@ -3805,17 +3874,32 @@ function numToWordsAr(num) {
     const tens = ['','','عشرون','ثلاثون','أربعون','خمسون','ستون','سبعون','ثمانون','تسعون'];
     const hundreds = ['','مائة','مئتان','ثلاثمائة','أربعمائة','خمسمائة','ستمائة','سبعمائة','ثمانمائة','تسعمائة'];
     let w = '';
-    if (num >= 1000) { w += numToWordsAr(Math.floor(num/1000)) + ' ألف '; num %= 1000; }
-    if (num >= 100) { w += hundreds[Math.floor(num/100)] + ' '; num %= 100; }
-    if (num >= 20) { w += tens[Math.floor(num/10)]; if (num%10) w += ' و' + ones[num%10]; }
-    else if (num > 0) { w += ones[num]; }
-    return w.trim();
+    const parts = [];
+    if (num >= 1000000) {
+        const m = Math.floor(num/1000000); num %= 1000000;
+        parts.push(m === 1 ? 'مليون' : m === 2 ? 'مليونان' : (m <= 10 ? numToWordsAr(m) + ' ملايين' : numToWordsAr(m) + ' مليون'));
+    }
+    if (num >= 1000) {
+        const t = Math.floor(num/1000); num %= 1000;
+        parts.push(t === 1 ? 'ألف' : t === 2 ? 'ألفان' : (t <= 10 ? numToWordsAr(t) + ' آلاف' : numToWordsAr(t) + ' ألف'));
+    }
+    let r = '';
+    if (num >= 100) { r += hundreds[Math.floor(num/100)]; num %= 100; }
+    if (num > 0) {
+        let low = '';
+        if (num >= 20) { low = (num%10 ? ones[num%10] + ' و' : '') + tens[Math.floor(num/10)]; }
+        else { low = ones[num]; }
+        r += (r ? ' و' : '') + low;
+    }
+    if (r) parts.push(r);
+    return parts.join(' و');
 }
 function numToWordsEn(num) {
     if (num === 0) return 'Zero';
     const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
     const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
     let w = '';
+    if (num >= 1000000) { w += numToWordsEn(Math.floor(num/1000000)) + ' Million '; num %= 1000000; }
     if (num >= 1000) { w += numToWordsEn(Math.floor(num/1000)) + ' Thousand '; num %= 1000; }
     if (num >= 100) { w += ones[Math.floor(num/100)] + ' Hundred '; num %= 100; }
     if (num >= 20) { w += tens[Math.floor(num/10)]; if (num%10) w += '-' + ones[num%10]; }
@@ -4006,6 +4090,34 @@ function supplierComboKey(e) {
 }
 
 // ===================== ITEMS =====================
+// حقول أرقام جدول البنود: أرقام إنجليزية فقط — تحويل فوري للأرقام العربية/الهندية (٠-٩ و۰-۹) والفاصلة العشرية العربية
+// وإزالة أي حرف غير رقمي (يُسمح بإشارة - في البداية ونقطة عشرية واحدة). يعمل بالكتابة واللصق قبل حساب الإجماليات.
+function toEnglishDigits(str) {
+    return String(str)
+        .replace(/[\u0660-\u0669]/g, d => String(d.charCodeAt(0) - 0x0660))
+        .replace(/[\u06F0-\u06F9]/g, d => String(d.charCodeAt(0) - 0x06F0))
+        .replace(/[\u066B\u066C\u060C]/g, '.')   // ٫ ٬ ،
+        .replace(/[\u2212\u2013\u2014\u200E\u200F\u061C]/g, m => (m === '\u2212' || m === '\u2013' || m === '\u2014') ? '-' : '');
+}
+function sanitizeNumericInput(el) {
+    const isInt = el.classList.contains('item-qty');
+    let v = toEnglishDigits(el.value);
+    const neg = v.trim().charAt(0) === '-';
+    v = v.replace(/[^0-9.]/g, '');
+    if (isInt) v = v.replace(/\./g, '');
+    else { const i = v.indexOf('.'); if (i !== -1) v = v.slice(0, i + 1) + v.slice(i + 1).replace(/\./g, ''); }
+    const out = (neg && !el.classList.contains('item-tax-rate') ? '-' : '') + v;
+    if (out !== el.value) {
+        const pos = el.selectionStart, delta = el.value.length - out.length;
+        el.value = out;
+        try { const p = Math.max(0, (pos || 0) - delta); el.setSelectionRange(p, p); } catch (e) {}
+    }
+}
+document.addEventListener('input', function(e) {
+    const t = e.target;
+    if (t && t.matches && t.matches('#itemsBody .item-qty, #itemsBody .item-price, #itemsBody .item-tax-rate')) sanitizeNumericInput(t);
+}, true);
+
 function addItemRow(data) {
     const tbody = document.getElementById('itemsBody');
     const n = tbody.children.length + 1;
@@ -4021,11 +4133,11 @@ function addItemRow(data) {
     tr.innerHTML = `
         <td class="col-num"><span class="row-grip" title="${currentLanguage==='en'?'Drag to reorder':'اسحب لإعادة الترتيب'}"><i class="fas fa-grip-vertical"></i></span><span class="row-no">${n}</span></td>
         <td class="col-desc"><input type="text" class="item-desc" list="itemDescList" autocomplete="off" oninput="calculateTotals()" placeholder="${currentLanguage==='en'?'Description... (type or pick)':'الوصف... (اكتب أو اختر من السابق)'}" value="${data ? escapeHtml(data.desc||'') : ''}"></td>
-        <td class="col-qty"><input type="number" class="item-qty" dir="ltr" lang="en" inputmode="numeric" style="text-align:center;" value="${data ? data.qty : 1}" step="1" oninput="calculateTotals()" onkeydown="handleTab(event)" title="${currentLanguage==='en'?'You can enter a negative value for a discount line':'يمكن إدخال قيمة سالبة لبند الخصم'}"></td>
-        <td class="col-price"><input type="number" class="item-price" dir="ltr" lang="en" inputmode="decimal" style="text-align:center;" value="${priceVal}" step="0.001" placeholder="0.000" oninput="calculateTotals()" onkeydown="handleTab(event)" title="${currentLanguage==='en'?'You can enter a negative value for a discount (e.g. -10.000)':'يمكن إدخال قيمة سالبة للخصم (مثال: 10.000-)'}"></td>
+        <td class="col-qty"><input type="text" class="item-qty" dir="ltr" lang="en" inputmode="numeric" autocomplete="off" style="text-align:center;" value="${data ? data.qty : 1}" oninput="calculateTotals()" onkeydown="handleTab(event)" title="${currentLanguage==='en'?'You can enter a negative value for a discount line':'يمكن إدخال قيمة سالبة لبند الخصم'}"></td>
+        <td class="col-price"><input type="text" class="item-price" dir="ltr" lang="en" inputmode="decimal" autocomplete="off" style="text-align:center;" value="${priceVal}" placeholder="0.000" oninput="calculateTotals()" onkeydown="handleTab(event)" title="${currentLanguage==='en'?'You can enter a negative value for a discount (e.g. -10.000)':'يمكن إدخال قيمة سالبة للخصم (مثال: 10.000-)'}"></td>
         <td class="col-taxchk"><div class="tax-cell">
             <input type="checkbox" class="item-tax-check" ${checked} onchange="calculateTotals()">
-            <input type="number" class="tax-pct item-tax-rate" dir="ltr" lang="en" inputmode="decimal" value="${tax}" min="0" max="100" step="0.5" oninput="calculateTotals()" onkeydown="handleTab(event)">
+            <input type="text" class="tax-pct item-tax-rate" dir="ltr" lang="en" inputmode="decimal" autocomplete="off" value="${tax}" oninput="calculateTotals()" onkeydown="handleTab(event)">
             <span style="font-size:11px;color:#999;">%</span>
         </div></td>
         <td class="col-total"><span class="item-total">0.000</span></td>
@@ -4115,9 +4227,9 @@ function calculateTotals() {
         subtotal += line; totalTax += lineTax;
     });
     const final = subtotal + totalTax;
-    document.getElementById('totalSubtotal').textContent = fmt(subtotal);
-    document.getElementById('totalTax').textContent = fmt(totalTax);
-    document.getElementById('totalFinal').textContent = fmt(final);
+    document.getElementById('totalSubtotal').textContent = fmtDec3(subtotal);
+    document.getElementById('totalTax').textContent = fmtDec3(totalTax);
+    document.getElementById('totalFinal').textContent = fmtDec3(final);
 
     // دعم المجموع السالب (في حال كان الخصم أكبر من قيمة البنود)
     const absFinal = Math.abs(final);
@@ -4150,6 +4262,13 @@ function collectItems() {
 }
 
 // ===================== SAVE =====================
+// تحديث جدولَي أوامر الشراء والمسودات معاً (يُستدعى بعد أي حفظ/تحويل/حذف)
+function refreshOrdersAndDrafts() {
+    try { loadLPOList(); } catch (e) { console.warn(e); }
+    try { loadDrafts(); } catch (e) { console.warn(e); }
+    try { if (typeof updateNotifBadge === 'function') updateNotifBadge(); } catch (e) {}
+}
+
 async function saveDraft() {
     if (isGuest) { alert(msg('الزائر لا يملك صلاحية الحفظ')); return; }
     if (!document.getElementById('supplierId').value) { alert(msg('يرجى اختيار مورد من القائمة')); return; }
@@ -4170,9 +4289,9 @@ async function saveDraft() {
         department: document.getElementById('lpoDepartment').value || '',
         lpo_ref: draftRefVal ? ('Ref-' + draftRefVal) : '',
         items: collectItems(),
-        subtotal: parseFloat(document.getElementById('totalSubtotal').textContent),
-        tax: parseFloat(document.getElementById('totalTax').textContent),
-        total: parseFloat(document.getElementById('totalFinal').textContent),
+        subtotal: readTotalNum('totalSubtotal'),
+        tax: readTotalNum('totalTax'),
+        total: readTotalNum('totalFinal'),
         notes: document.getElementById('generalNotes').value,
         staff: currentUser.username
     };
@@ -4192,7 +4311,7 @@ async function saveDraft() {
     alert(msg('تم حفظ المسودة بنجاح في السحابة'));
     resetForm();
     closeNewLPO();
-    loadDrafts();
+    refreshOrdersAndDrafts();
 }
 
 // علامة لمنع تكرار التنبيه الخاص بغياب عمود lpo_ref
@@ -4245,9 +4364,9 @@ async function saveLPO(event) {
         department: document.getElementById('lpoDepartment').value || '',
         lpo_ref: lpoRefVal ? ('Ref-' + lpoRefVal) : '',
         items: collectItems(),
-        subtotal: parseFloat(document.getElementById('totalSubtotal').textContent),
-        tax: parseFloat(document.getElementById('totalTax').textContent),
-        total: parseFloat(document.getElementById('totalFinal').textContent),
+        subtotal: readTotalNum('totalSubtotal'),
+        tax: readTotalNum('totalTax'),
+        total: readTotalNum('totalFinal'),
         notes: document.getElementById('generalNotes').value,
         staff: currentUser.username,
         status: 'موقعة',
@@ -4285,7 +4404,7 @@ async function saveLPO(event) {
     alert(msg((prevOrderId ? 'تم تحديث أمر الشراء بنجاح: ' : 'تم حفظ أمر الشراء بنجاح في السحابة: ')) + row.number);
     resetForm();
     closeNewLPO();
-    loadLPOList();
+    refreshOrdersAndDrafts();
     // إظهار نافذة تقييم المورد تلقائياً بعد الحفظ لأمر جديد فقط (ليس عند التعديل)
     if (!prevOrderId && savedSupId && isUuid(savedSupId)) {
         openEvalModal(savedSupId, savedSupName, savedOrderNum);
@@ -4347,8 +4466,8 @@ function loadDashboard() {
     const allTotal = lpoDrafts.reduce((s, l) => s + l.total, 0);
 
     document.getElementById('dashOrderCount').textContent = monthOrders.length;
-    document.getElementById('dashTotalAmount').textContent = monthTotal.toFixed(0);
-    document.getElementById('dashAvgOrder').textContent = lpoDrafts.length ? (allTotal / lpoDrafts.length).toFixed(0) : '0';
+    document.getElementById('dashTotalAmount').textContent = fmtInt(monthTotal);
+    document.getElementById('dashAvgOrder').textContent = lpoDrafts.length ? fmtInt(allTotal / lpoDrafts.length) : '0';
     document.getElementById('dashSuppliers').textContent = (typeof suppliers !== 'undefined' && suppliers) ? suppliers.length : 0;
     document.getElementById('dashAllOrders').textContent = lpoDrafts.length;
 
@@ -4392,7 +4511,7 @@ function drawDashDeptChart() {
     chartInstances.dashDept = new Chart(el.getContext('2d'), {
         type: 'bar',
         data: { labels: depts, datasets: [{ label: en ? 'Amount (OMR)' : 'المبلغ (ر.ع)', data: depts.map(d => +byDept[d].toFixed(3)), backgroundColor: depts.map((_, i) => palette[i % palette.length]), borderRadius: 6, maxBarThickness: 48 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
     });
 }
 
@@ -4409,7 +4528,7 @@ function drawDashSupplierSpend() {
     chartInstances.dashSupplierSpend = new Chart(el.getContext('2d'), {
         type: 'bar',
         data: { labels: sups, datasets: [{ label: currentLanguage === 'en' ? 'Spending (OMR)' : 'الإنفاق (ر.ع)', data: sups.map(s => +bySup[s].toFixed(3)), backgroundColor: '#7cb342', borderRadius: 6, maxBarThickness: 45 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
     });
 }
 
@@ -4505,7 +4624,7 @@ function drawServiceTypeChart() {
             labels: Object.keys(svc),
             datasets: [{ label: 'الإنفاق (ر.ع)', data: Object.values(svc).map(v => +v.toFixed(3)), backgroundColor: '#7cb342', borderRadius: 6, maxBarThickness: 50 }]
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
     });
 }
 
@@ -4522,7 +4641,7 @@ function drawMonthlyChart() {
             labels: monthNames,
             datasets: [{ label: 'الإنفاق (ر.ع)', data: monthly.map(v => +v.toFixed(3)), borderColor: '#0093c4', backgroundColor: 'rgba(0,147,196,0.1)', tension: 0.4, fill: true, pointBackgroundColor: '#0093c4', pointRadius: 4 }]
         },
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
     });
 }
 
@@ -4553,6 +4672,15 @@ function isTodayDate(d) {
 }
 
 function loadDrafts() {
+    // ترحيل لمرة واحدة: عمود الإجراءات انتقل إلى أول الجدول، فيُمسح ترتيب/عروض الأعمدة المحفوظة قديماً لتفادي اختلاط الأعمدة
+    try {
+        if (!localStorage.getItem('drafts_actions_first_v1')) {
+            localStorage.removeItem('colorder_draftsTable'); localStorage.removeItem('colwidths_draftsTable');
+            if (typeof COL_ORDER !== 'undefined') delete COL_ORDER['draftsTable'];
+            if (typeof COL_WIDTHS !== 'undefined') delete COL_WIDTHS['draftsTable'];
+            localStorage.setItem('drafts_actions_first_v1', '1');
+        }
+    } catch (e) {}
     initColumnDrag('draftsTable', loadDrafts);
     const numF = msGet('msDraftNum');          // مصفوفة أرقام مسودات مختارة
     const supF = msGet('msDraftSupplier');     // مصفوفة معرّفات موردين
@@ -4579,16 +4707,14 @@ function loadDrafts() {
         tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#999;">لا توجد مسودات</td></tr>';
     } else {
         filtered.forEach(d => {
-            const dEdit = can('drafts','edit') ? `<button class="btn btn-small" style="background:#f0ad4e; color:#fff;" onclick="editDraft('${d.id}')" title="${currentLanguage==='en'?'Edit':'تعديل'}"><i class="fas fa-edit"></i></button>` : '';
-            const dDel = can('drafts','delete') ? `<button class="btn btn-small" onclick="deleteDraft('${d.id}')" title="${currentLanguage==='en'?'Delete':'حذف'}" style="color:#e74c3c;"><i class="fas fa-trash"></i></button>` : '';
+            const dKebab = `<button class="kebab-btn" title="${currentLanguage==='en'?'Actions':'إجراءات'}" onclick="event.stopPropagation(); openDraftRowMenu(event, '${d.id}')"><i class="fas fa-ellipsis-v"></i></button>`;
             const svcLabel = escapeHtml(orderServiceType(d)) || '<span style="color:#bbb;">—</span>';
             const deptLabel = escapeHtml(d.department || '') || '<span style="color:#bbb;">—</span>';
             const row = tbody.insertRow();
             row.style.cursor = 'pointer';
             row.setAttribute('onclick', `previewDraft('${d.id}')`);
             const bwD = (isTodayDate(d.createdAt) || isTodayDate(d.date)) ? ' style="font-weight:800;"' : '';
-            row.innerHTML = `<td${bwD}>${fmtRecordDate(d.createdAt)}</td><td${bwD}>${d.draftNumber}</td><td>${d.supplierName}</td><td>${svcLabel}</td><td>${deptLabel}</td><td>${d.date}</td><td>${fmt(d.total)}</td><td>${d.staff}</td>
-            <td style="white-space:nowrap;" onclick="event.stopPropagation();"><button class="btn btn-small" onclick="previewDraft('${d.id}')" title="${currentLanguage==='en'?'Preview':'معاينة'}"><i class="fas fa-eye"></i></button>${dEdit}${dDel}</td>`;
+            row.innerHTML = `<td class="col-actions" style="text-align:center; white-space:nowrap;" onclick="event.stopPropagation();">${dKebab}</td><td${bwD}>${fmtRecordDate(d.createdAt)}</td><td${bwD}>${d.draftNumber}</td><td>${d.supplierName}</td><td>${svcLabel}</td><td>${deptLabel}</td><td>${d.date}</td><td>${fmt(d.total)}</td><td>${d.staff}</td>`;
         });
     }
     applyColumnOrder('draftsTable');
@@ -4683,7 +4809,7 @@ async function deleteDraft(id) {
         if (error) { alert(msg('تعذّر الحذف: ') + error.message); return; }
         await loadAllFromCloud();
         recordAction('حذف مسودة ' + ((d && d.draftNumber) || id));
-        loadDrafts();
+        refreshOrdersAndDrafts();
     }
 }
 
@@ -4839,7 +4965,7 @@ async function deleteLPO(id) {
     await loadAllFromCloud();
     recordAction('حذف أمر ' + l.number);
     alert(msg('تم نقل الأمر إلى سلة المهملات.'));
-    renderLPOList();
+    refreshOrdersAndDrafts();
     loadDashboard();
 }
 
@@ -4918,6 +5044,75 @@ function _initColResizeGlobal() {
         _colResize = null;
     });
 }
+// ===== إخفاء مؤقت للأعمدة (في الذاكرة فقط — يُفرَّغ عند تحديث الصفحة) =====
+const HIDDEN_COLS = {};   // tableId -> Set(colid)
+function _colLabel(th) {
+    const c = th.cloneNode(true);
+    c.querySelectorAll('.sort-arrow, .col-resize-handle, .col-hide-btn').forEach(x => x.remove());
+    return (c.textContent || '').replace(/\s+/g, ' ').trim();
+}
+function toggleColHidden(tableId, colid) {
+    const set = HIDDEN_COLS[tableId] || (HIDDEN_COLS[tableId] = new Set());
+    colid = String(colid);
+    if (set.has(colid)) set.delete(colid); else set.add(colid);
+    applyHiddenCols(tableId);
+}
+function showAllCols(tableId) {
+    if (HIDDEN_COLS[tableId]) HIDDEN_COLS[tableId].clear();
+    applyHiddenCols(tableId);
+}
+function applyHiddenCols(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table || !table.tHead || !table.tBodies[0]) return;
+    const set = HIDDEN_COLS[tableId] || new Set();
+    const headCells = Array.from(table.tHead.rows[0].cells);
+    const colCount = headCells.length;
+    const hiddenIdx = [];
+    headCells.forEach((th, i) => {
+        const hid = set.has(th.getAttribute('data-colid'));
+        th.classList.toggle('col-hidden', hid);
+        if (hid) hiddenIdx.push(i);
+    });
+    const visible = colCount - hiddenIdx.length;
+    Array.from(table.tBodies[0].rows).forEach(row => {
+        if (row.cells.length !== colCount) {            // صف "لا نتائج" (colspan)
+            if (row.cells.length === 1) row.cells[0].colSpan = Math.max(1, visible);
+            return;
+        }
+        Array.from(row.cells).forEach((td, i) => td.classList.toggle('col-hidden', hiddenIdx.indexOf(i) !== -1));
+    });
+    // شريط الأعمدة المخفية (يظهر فقط عند وجود عمود مخفي) لإعادة إظهارها
+    const host = table.closest('.table-responsive') || table;
+    let bar = document.getElementById(tableId + 'HiddenBar');
+    if (!hiddenIdx.length) { if (bar) bar.remove(); return; }
+    if (!bar) {
+        bar = document.createElement('div');
+        bar.id = tableId + 'HiddenBar';
+        bar.className = 'hidden-cols-bar';
+        host.parentNode.insertBefore(bar, host);
+    }
+    const en = currentLanguage === 'en';
+    bar.innerHTML = '';
+    const lab = document.createElement('span');
+    lab.innerHTML = '<i class="fas fa-eye-slash"></i> ' + (en ? 'Hidden columns:' : 'أعمدة مخفية:');
+    bar.appendChild(lab);
+    hiddenIdx.forEach(i => {
+        const th = headCells[i];
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'hc-chip';
+        b.title = en ? 'Show this column' : 'إظهار هذا العمود';
+        b.innerHTML = '<i class="fas fa-eye"></i> ';
+        b.appendChild(document.createTextNode(_colLabel(th)));
+        b.onclick = () => toggleColHidden(tableId, th.getAttribute('data-colid'));
+        bar.appendChild(b);
+    });
+    const all = document.createElement('button');
+    all.type = 'button'; all.className = 'hc-all';
+    all.textContent = en ? 'Show all' : 'إظهار الكل';
+    all.onclick = () => showAllCols(tableId);
+    bar.appendChild(all);
+}
+
 // تطبيق الترتيب الحالي للأعمدة على الجدول (يُستدعى بعد كل إعادة رسم لجسم الجدول)
 function applyColumnOrder(tableId) {
     const table = document.getElementById(tableId);
@@ -4936,6 +5131,7 @@ function applyColumnOrder(tableId) {
         order.forEach(origIdx => { if (cells[origIdx]) row.appendChild(cells[origIdx]); });
     });
     applyColumnWidths(tableId);   // الحفاظ على عروض الأعمدة المخصّصة
+    if (HIDDEN_COLS[tableId] && HIDDEN_COLS[tableId].size) applyHiddenCols(tableId);
 }
 
 // ===================== فرز عام لأي جدول (User Management / Recycle Bin ...) =====================
@@ -5047,6 +5243,18 @@ function initColumnDrag(tableId, rerenderFn) {
             document.body.classList.add('col-resizing');
         });
         th.appendChild(handle);
+        // زر إخفاء العمود مؤقتاً (جدولا أوامر الشراء والموردين فقط، ما عدا عمود الإجراءات)
+        if ((tableId === 'lpoListTable' || tableId === 'suppliersTable') && !th.classList.contains('col-actions')) {
+            const hb = document.createElement('button');
+            hb.type = 'button'; hb.className = 'col-hide-btn';
+            hb.setAttribute('draggable', 'false');
+            hb.title = currentLanguage === 'en' ? 'Hide this column' : 'إخفاء هذا العمود';
+            hb.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            hb.addEventListener('mousedown', ev => ev.stopPropagation());
+            hb.addEventListener('dragstart', ev => { ev.preventDefault(); ev.stopPropagation(); });
+            hb.addEventListener('click', ev => { ev.stopPropagation(); ev.preventDefault(); toggleColHidden(tableId, th.getAttribute('data-colid')); });
+            th.appendChild(hb);
+        }
     });
     applyColumnWidths(tableId);   // استعادة العروض المحفوظة عند التهيئة
 }
@@ -5232,7 +5440,25 @@ function getFilteredLPOs() {
     );
 }
 
+// حالة التقسيم إلى صفحات لجدول أوامر الشراء (الافتراضي 50 صفاً)
+let _lpoPage = 1;
+let _lpoPageSize = 50;
+
+// تغيير عدد الصفوف في الصفحة (يعيد للصفحة الأولى)
+function changeLpoPageSize(v) {
+    _lpoPageSize = parseInt(v, 10) || 50;
+    _lpoPage = 1;
+    renderLPOList();
+}
+// الانتقال إلى صفحة محددة
+function goLpoPage(n) {
+    _lpoPage = n;
+    renderLPOList();
+}
+
+// نقطة الدخول عند تغيّر الفلاتر/الفرز: تعيد للصفحة الأولى ثم ترسم
 function filterLPOs() {
+    _lpoPage = 1;
     renderLPOList();
 }
 
@@ -5373,6 +5599,48 @@ function openSupplierRowMenu(ev, id) {
     document.addEventListener('keydown', _rowMenuKey, true);
 }
 
+// قائمة إجراءات المسودة (قائمة منسدلة من أيقونة النقاط)
+function buildDraftActionItems(d) {
+    const en = currentLanguage === 'en';
+    const did = String(d.id).replace(/'/g, "\\'");
+    const items = [];
+    items.push({ icon: 'fa-eye', color: '#0093c4', label: en ? 'Preview' : 'معاينة', fn: `previewDraft('${did}')` });
+    if (can('drafts', 'edit'))
+        items.push({ icon: 'fa-edit', color: '#f0ad4e', label: en ? 'Edit' : 'تعديل', fn: `editDraft('${did}')` });
+    if (can('drafts', 'delete'))
+        items.push({ icon: 'fa-trash', color: '#c0392b', label: en ? 'Delete' : 'حذف', fn: `deleteDraft('${did}')` });
+    return items;
+}
+function openDraftRowMenu(ev, id) {
+    ev.stopPropagation();
+    const sameBtn = _rowMenuEl && _rowMenuEl.getAttribute('data-for') === ('draft-' + id);
+    closeRowMenu();
+    if (sameBtn) return;
+    const d = draftSaves.find(x => String(x.id) === String(id));
+    if (!d) return;
+    const items = buildDraftActionItems(d);
+    const menu = document.createElement('div');
+    menu.className = 'row-action-menu';
+    menu.setAttribute('data-for', 'draft-' + id);
+    menu.innerHTML = items.map(it => `<button class="ram-item" onclick="closeRowMenu(); ${it.fn}"><i class="fas ${it.icon}" style="color:${it.color};"></i> <span>${it.label}</span></button>`).join('');
+    document.body.appendChild(menu);
+    _rowMenuEl = menu;
+    const r = ev.currentTarget.getBoundingClientRect();
+    const mw = 196;
+    menu.style.width = mw + 'px';
+    let left = r.right - mw;
+    if (left < 8) left = 8;
+    if (left + mw > window.innerWidth - 8) left = window.innerWidth - mw - 8;
+    menu.style.left = left + 'px';
+    const h = menu.offsetHeight;
+    let top = r.bottom + 4;
+    if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 4);
+    menu.style.top = top + 'px';
+    setTimeout(() => { document.addEventListener('click', closeRowMenu, { once: true }); }, 0);
+    window.addEventListener('scroll', closeRowMenu, { once: true, capture: true });
+    document.addEventListener('keydown', _rowMenuKey, true);
+}
+
 function renderLPOList() {
     const list = getSortedLPOs();
     // الإحصائيات (تعتمد على المصفّاة وليس المرتّبة، والنتيجة نفسها)
@@ -5380,18 +5648,28 @@ function renderLPOList() {
     const total = filtered.reduce((s, l) => s + l.total, 0);
     const uniqueSup = new Set(filtered.map(l => l.supplierId)).size;
     document.getElementById('lpoStatCount').textContent = filtered.length;
-    document.getElementById('lpoStatTotal').textContent = total.toFixed(0);
-    document.getElementById('lpoStatAvg').textContent = filtered.length ? (total / filtered.length).toFixed(0) : '0';
+    document.getElementById('lpoStatTotal').textContent = fmtInt(total);
+    document.getElementById('lpoStatAvg').textContent = filtered.length ? fmtInt(total / filtered.length) : '0';
     document.getElementById('lpoStatSuppliers').textContent = uniqueSup;
 
     const tbody = document.querySelector('#lpoListTable tbody');
     tbody.innerHTML = '';
-    if (list.length === 0) {
+
+    // حساب التقسيم إلى صفحات (البطاقات الإحصائية أعلاه تعكس كامل النتيجة المصفّاة وليس الصفحة فقط)
+    const totalRows = list.length;
+    const pageSize = _lpoPageSize || 50;
+    const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+    if (_lpoPage > totalPages) _lpoPage = totalPages;
+    if (_lpoPage < 1) _lpoPage = 1;
+    const startIdx = (_lpoPage - 1) * pageSize;
+    const pageList = list.slice(startIdx, startIdx + pageSize);
+
+    if (totalRows === 0) {
         tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; color:#999;">لا توجد أوامر مطابقة</td></tr>';
     } else {
         const en = currentLanguage === 'en';
         const actEntries = getActivityEntries(); // تُحسب مرة واحدة لكل الصفوف (أداء)
-        list.forEach(l => {
+        pageList.forEach(l => {
             const reasonLine = (l.approvalStatus === 'rejected' && l.rejectionReason)
                 ? `<div style="font-size:10px; color:#c0392b; margin-top:3px; max-width:230px; white-space:normal;" title="${escapeHtml(l.rejectionReason)}"><i class="fas fa-comment-dots"></i> ${escapeHtml(l.rejectionReason)}</div>`
                 : '';
@@ -5413,6 +5691,50 @@ function renderLPOList() {
     updateSortArrows();
     animateTableRows('#lpoListTable');
     applyColumnOrder('lpoListTable');
+
+    // تحديث معلومات النطاق وأدوات التنقّل
+    const enL = currentLanguage === 'en';
+    const info = document.getElementById('lpoRangeInfo');
+    if (info) {
+        if (totalRows === 0) info.textContent = '';
+        else info.textContent = (enL ? `Showing ${startIdx + 1}–${startIdx + pageList.length} of ${totalRows}` : `عرض ${startIdx + 1}–${startIdx + pageList.length} من ${totalRows}`);
+    }
+    // مزامنة قيمة قائمة عدد الصفوف
+    const ps = document.getElementById('lpoPageSize'); if (ps && String(ps.value) !== String(pageSize)) ps.value = String(pageSize);
+    renderLpoPager(totalPages);
+}
+
+// بناء أزرار التنقّل بين الصفحات (أعلى وأسفل جدول أوامر الشراء)
+function renderLpoPager(totalPages) {
+    const en = currentLanguage === 'en';
+    const cur = _lpoPage;
+    const mk = (label, page, opts) => {
+        opts = opts || {};
+        const dis = opts.disabled ? ' disabled' : '';
+        const act = opts.active ? ' active' : '';
+        return `<button class="pager-btn${act}" onclick="goLpoPage(${page})"${dis}>${label}</button>`;
+    };
+    let html = '';
+    if (totalPages > 1) {
+        html += mk((en ? '‹ Prev' : 'السابق ›'), cur - 1, { disabled: cur <= 1 });
+        // أرقام الصفحات مع اختصار بالنقاط عند كثرتها
+        const pages = [];
+        const add = (p) => { if (!pages.includes(p) && p >= 1 && p <= totalPages) pages.push(p); };
+        add(1); add(2);
+        for (let p = cur - 1; p <= cur + 1; p++) add(p);
+        add(totalPages - 1); add(totalPages);
+        pages.sort((a, b) => a - b);
+        let prev = 0;
+        pages.forEach(p => {
+            if (prev && p - prev > 1) html += `<span class="pager-ellipsis">…</span>`;
+            html += mk(String(p), p, { active: p === cur });
+            prev = p;
+        });
+        html += mk((en ? 'Next ›' : '‹ التالي'), cur + 1, { disabled: cur >= totalPages });
+    }
+    html += `<span style="font-size:12px; color:#667; margin-inline-start:8px;">${en ? `Page ${cur} of ${totalPages}` : `صفحة ${cur} من ${totalPages}`}</span>`;
+    const top = document.getElementById('lpoPagerTop'); if (top) top.innerHTML = html;
+    const bottom = document.getElementById('lpoPagerBottom'); if (bottom) bottom.innerHTML = html;
 }
 
 // تحديث أسهم الاتجاه في رؤوس الأعمدة
@@ -5438,7 +5760,7 @@ function sortLPOTable(col) {
         lpoSortCol = col;
         lpoSortAsc = true; // أول نقرة: تصاعدي
     }
-    renderLPOList();
+    filterLPOs();   // الفرز يعيد إلى الصفحة الأولى (كما في جدول الموردين)
 }
 
 function clearLPOFilters() {
@@ -5530,6 +5852,7 @@ function printSuppliersPDF() {
             <div style="width:90px;">${logoImg}</div>
             <div style="text-align:center; flex:1;">
                 <div style="font-size:21px; font-weight:800; color:#0093c4;">${en ? 'Suppliers List' : 'كشف قائمة الموردين'}</div>
+                <div style="font-size:12px; color:#555; margin-top:2px;">Local Purchase Order System</div>
                 <div style="font-size:12px; color:#555; margin-top:2px;">${en ? 'Takaful Oman Insurance' : 'تكافل عمان للتأمين'}</div>
             </div>
             <div style="width:190px; text-align:${en ? 'right' : 'left'}; font-size:11px; color:#555; line-height:1.7;">
@@ -5538,6 +5861,18 @@ function printSuppliersPDF() {
             </div>
         </div>
         <table>
+            <colgroup>
+                <col style="width:3%;">   <!-- # -->
+                <col style="width:22%;">  <!-- اسم المورد (أوسع) -->
+                <col style="width:17%;">  <!-- نوع الخدمة (أوسع) -->
+                <col style="width:9%;">   <!-- التصنيف -->
+                <col style="width:8%;">   <!-- الهاتف (نحو 12 رقماً) -->
+                <col style="width:8%;">   <!-- VAT -->
+                <col style="width:6%;">   <!-- رقم السجل C.R (نحو 7 أرقام) -->
+                <col style="width:9%;">   <!-- انتهاء السجل التجاري (أوسع قليلاً) -->
+                <col style="width:7%;">   <!-- التقييم -->
+                <col style="width:11%;">  <!-- أُنشئ بواسطة -->
+            </colgroup>
             <thead><tr>
                 ${th('#')}${th(en ? 'Supplier' : 'المورد')}${th(en ? 'Service Type' : 'نوع الخدمة')}${th(en ? 'Classification' : 'التصنيف')}${th(en ? 'Phone' : 'الهاتف')}${th('VAT')}${th('C.R')}${th(en ? 'C.R Expiry' : 'انتهاء السجل')}${th(en ? 'Rating' : 'التقييم')}${th(en ? 'Created By' : 'أُنشئ بواسطة')}
             </tr></thead>
@@ -5550,10 +5885,10 @@ function printSuppliersPDF() {
   * { box-sizing: border-box; } html, body { margin:0; padding:0; }
   body { font-family: Arial, 'Segoe UI', Tahoma, sans-serif; color:#222; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding:4px; }
   .pdf-head { display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:3px solid #0093c4; padding-bottom:10px; margin-bottom:12px; }
-  table { width:100%; border-collapse:collapse; font-size:11px; }
+  table { width:100%; border-collapse:collapse; font-size:11px; table-layout:fixed; }
   thead { display: table-header-group; }
-  th { background:#0093c4; color:#fff; padding:7px 5px; border:1px solid #cfe0ea; }
-  td { border:1px solid #e1e8ee; padding:5px; }
+  th { background:#0093c4; color:#fff; padding:7px 5px; border:1px solid #cfe0ea; word-wrap:break-word; overflow-wrap:anywhere; }
+  td { border:1px solid #e1e8ee; padding:5px; word-wrap:break-word; overflow-wrap:anywhere; }
   tbody tr:nth-child(even) { background:#f7fafc; }
   tr { page-break-inside: avoid; }
   .pdf-foot { margin-top:10px; font-size:9.5px; color:#8aa2b0; text-align:center; }
@@ -5624,6 +5959,7 @@ function printLPOListPDF() {
             <div style="width:90px;">${logoImg}</div>
             <div style="text-align:center; flex:1;">
                 <div style="font-size:21px; font-weight:800; color:#0093c4;">${en ? 'Purchase Orders Report' : 'تقرير أوامر الشراء المحلية'}</div>
+                <div style="font-size:12px; color:#555; margin-top:2px;">Local Purchase Order System</div>
                 <div style="font-size:12px; color:#555; margin-top:2px;">${en ? 'Takaful Oman Insurance' : 'تكافل عمان للتأمين'}</div>
             </div>
             <div style="width:190px; text-align:${en ? 'right' : 'left'}; font-size:11px; color:#555; line-height:1.7;">
@@ -6313,7 +6649,7 @@ function renderSuppliersTable() {
             row.setAttribute('onclick', `viewSupplierDetails('${sid}')`);
             row.innerHTML = `<td>${fmtRecordDate(s.createdAt)}</td>`
                 + `<td class="col-actions" style="text-align:center; white-space:nowrap;" onclick="event.stopPropagation();">${kebab}</td>`
-                + `<td>${escapeHtml(s.name||'')}</td><td>${supplierRatingLabel(s.id)}</td><td>${escapeHtml(s.serviceType||'')||'-'}</td><td>${escapeHtml(s.supplierType||'')||'-'}</td><td dir="ltr">${escapeHtml(s.phone||'')||'-'}</td><td>${escapeHtml(s.vatNo||'')||'-'}</td><td>${escapeHtml(s.crNo||'')||'-'}</td><td>${crExpiryCell(s.crExpiry)}</td><td style="font-size:11.5px; color:#667;" dir="ltr">${escapeHtml(s.createdBy||'')||'-'}</td><td style="font-size:16px;" onclick="event.stopPropagation();">${filesHtml}</td>`;
+                + `<td>${escapeHtml(s.name||'')}</td><td>${supplierRatingLabel(s.id)}</td><td>${escapeHtml(s.serviceType||'')||'-'}</td><td>${escapeHtml(s.supplierType||'')||'-'}</td><td class="col-phone" dir="ltr">${escapeHtml(s.phone||'')||'-'}</td><td>${escapeHtml(s.vatNo||'')||'-'}</td><td>${escapeHtml(s.crNo||'')||'-'}</td><td>${crExpiryCell(s.crExpiry)}</td><td style="font-size:11.5px; color:#667;" dir="ltr">${escapeHtml(s.createdBy||'')||'-'}</td><td style="font-size:16px;" onclick="event.stopPropagation();">${filesHtml}</td>`;
         });
     }
     updateSupplierSortArrows();
@@ -6774,6 +7110,7 @@ function cancelEvalEdit() {
 // سجل متابعة تقييمات المورد: العدد + المتوسط التراكمي + قائمة بكل التقييمات
 function renderEvalTracker(supplierId) {
     const box = document.getElementById('evalTracker'); if (!box) return;
+    const hbox = document.getElementById('evalHistory') || box;
     const en = currentLanguage === 'en';
     const evals = evaluations.filter(e => String(e.supplierId) === String(supplierId))
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -6788,7 +7125,8 @@ function renderEvalTracker(supplierId) {
             <div style="font-size:16px; font-weight:800; color:#0093c4;">${stat.count ? renderStarsDisplay(stat.avg) + ' ' + stat.avg.toFixed(1) : '—'}</div></div>
     </div>`;
     if (!evals.length) {
-        box.innerHTML = head + `<div style="font-size:12px; color:#999; text-align:center; padding:6px;">${en ? 'No previous evaluations for this supplier.' : 'لا توجد تقييمات سابقة لهذا المورد.'}</div>`;
+        box.innerHTML = head;
+        hbox.innerHTML = `<div style="font-size:12px; color:#999; text-align:center; padding:6px;">${en ? 'No previous evaluations for this supplier.' : 'لا توجد تقييمات سابقة لهذا المورد.'}</div>`;
         return;
     }
     const rows = evals.map(e => {
@@ -6803,7 +7141,8 @@ function renderEvalTracker(supplierId) {
             <td style="white-space:nowrap;">${editBtn}</td>
         </tr>`;
     }).join('');
-    box.innerHTML = head + `<div style="font-size:12px; font-weight:700; color:#2a3b47; margin-bottom:5px;"><i class="fas fa-history"></i> ${en ? 'Evaluation history' : 'سجل التقييمات'}</div>
+    box.innerHTML = head;
+    hbox.innerHTML = `<div style="font-size:12px; font-weight:700; color:#2a3b47; margin-bottom:5px;"><i class="fas fa-history"></i> ${en ? 'Evaluation history' : 'سجل التقييمات'}</div>
         <div class="ctrl-list-scroll" style="max-height:170px;">
           <table style="width:100%; border-collapse:collapse; font-size:12px;">
             <thead><tr style="background:#f6f9fb;">
@@ -6827,7 +7166,7 @@ function editEvaluation(evalId) {
     document.getElementById('evalNotes').value = e.notes || '';
     buildEvalStars();
     updateEvalFormMode();
-    const body = document.querySelector('#evalModal .modal-body'); if (body) body.scrollTop = body.scrollHeight;
+    const ft = document.getElementById('evalFormTitle'); if (ft) ft.scrollIntoView({block:'start'});
 }
 
 function setStar(criterion, value) {
@@ -7044,9 +7383,9 @@ function generateReport() {
     const total = list.reduce((s, l) => s + l.total, 0);
     const tax = list.reduce((s, l) => s + (l.tax || 0), 0);
     document.getElementById('repStatCount').textContent = list.length;
-    document.getElementById('repStatTotal').textContent = total.toFixed(0);
-    document.getElementById('repStatTax').textContent = tax.toFixed(0);
-    document.getElementById('repStatAvg').textContent = list.length ? (total / list.length).toFixed(0) : '0';
+    document.getElementById('repStatTotal').textContent = fmtInt(total);
+    document.getElementById('repStatTax').textContent = fmtInt(tax);
+    document.getElementById('repStatAvg').textContent = list.length ? fmtInt(total / list.length) : '0';
 
     // إحصائية حسب حالة الأوامر (بانتظار / معتمدة / مرفوضة)
     const byStatus = { pending: { c: 0, t: 0 }, approved: { c: 0, t: 0 }, rejected: { c: 0, t: 0 } };
@@ -7058,7 +7397,7 @@ function generateReport() {
     const setStat = (idC, idA, s) => {
         const c = document.getElementById(idC), a = document.getElementById(idA);
         if (c) c.textContent = byStatus[s].c;
-        if (a) a.textContent = byStatus[s].t.toFixed(0) + (currentLanguage === 'en' ? ' OMR' : ' ر.ع');
+        if (a) a.textContent = fmtInt(byStatus[s].t) + (currentLanguage === 'en' ? ' OMR' : ' ر.ع');
     };
     setStat('repStatPending', 'repStatPendingAmt', 'pending');
     setStat('repStatApproved', 'repStatApprovedAmt', 'approved');
@@ -7072,7 +7411,7 @@ function generateReport() {
     chartInstances.report = new Chart(document.getElementById('reportChart').getContext('2d'), {
         type: 'bar',
         data: { labels: dates, datasets: [{ label: 'الإنفاق (ر.ع)', data: dates.map(d => +byDate[d].toFixed(3)), backgroundColor: '#0093c4', borderRadius: 6, maxBarThickness: 45 }] },
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
     });
     // جدول ملخص الإنفاق حسب التاريخ (بنفس أسلوب جدول نوع الخدمة)
     fillSpendTable('reportDateTable', dates.map(d => ({ label: d, amount: byDate[d] })), null);
@@ -7085,7 +7424,7 @@ function generateReport() {
     chartInstances.reportSupplier = new Chart(document.getElementById('reportSupplierChart').getContext('2d'), {
         type: 'bar',
         data: { labels: sups, datasets: [{ label: 'الإنفاق (ر.ع)', data: sups.map(s => +bySup[s].toFixed(3)), backgroundColor: '#7cb342', borderRadius: 6, maxBarThickness: 45 }] },
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
     });
     // جدول ملخص الإنفاق حسب المورد (مرتّب تنازلياً حسب المبلغ)
     const supRanked = sups.slice().sort((a, b) => bySup[b] - bySup[a]);
@@ -7148,7 +7487,7 @@ function renderServiceTypeChart(list) {
     chartInstances.reportService = new Chart(document.getElementById('reportServiceChart').getContext('2d'), {
         type: 'doughnut',
         data: { labels: labels, datasets: [{ data: labels.map(s => +byService[s].toFixed(3)), backgroundColor: labels.map((_, i) => palette[i % palette.length]) }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: chartMoneyTooltip } },
         plugins: [doughnutPercentPlugin]
     });
 
@@ -7184,7 +7523,7 @@ function renderMonthlyAvgChart(list) {
     chartInstances.reportMonthly = new Chart(document.getElementById('reportMonthlyChart').getContext('2d'), {
         type: 'line',
         data: { labels: monthNames, datasets: [{ label: currentLanguage === 'en' ? 'Avg Expense (OMR)' : 'متوسط الإنفاق (ر.ع)', data: avgByMonth, borderColor: '#0093c4', backgroundColor: 'rgba(0,147,196,0.1)', fill: true, tension: 0.3, pointRadius: 4 }] },
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+        options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
     });
 }
 
@@ -7224,7 +7563,7 @@ function renderDepartmentStats(list) {
         chartInstances.reportDept = new Chart(deptChartEl.getContext('2d'), {
             type: 'bar',
             data: { labels: depts, datasets: [{ label: currentLanguage === 'en' ? 'Amount (OMR)' : 'المبلغ (ر.ع)', data: depts.map(d => +byDept[d].total.toFixed(3)), backgroundColor: depts.map((_, i) => palette[i % palette.length]), borderRadius: 6, maxBarThickness: 48 }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
         });
     }
 
@@ -7286,6 +7625,7 @@ async function exportReportPDF() {
             <div style="width:92px;">${typeof LOGO_DATA !== 'undefined' ? `<img src="${LOGO_DATA}" style="width:100%;">` : ''}</div>
             <div style="text-align:center; flex:1;">
                 <div style="font-size:22px; font-weight:800; color:#0093c4;">${en ? 'Purchase Orders Report' : 'تقرير أوامر الشراء المحلية'}</div>
+                <div style="font-size:13px; color:#555; margin-top:2px;">Local Purchase Order System</div>
                 <div style="font-size:13px; color:#555; margin-top:2px;">${en ? 'Takaful Oman Insurance' : 'تكافل عمان للتأمين'}</div>
             </div>
             <div style="width:150px; text-align:${en ? 'right' : 'left'}; font-size:11px; color:#555; line-height:1.6;">
@@ -7398,6 +7738,20 @@ function clearReportFilters() {
     generateReport();
 }
 
+// تطبيق تنسيق الأرقام (فاصلة الآلاف + 3 خانات) على أعمدة المبالغ في ورقة SheetJS
+function applyMoneyFormat(ws, moneyHeaders) {
+    if (!ws || !ws['!ref']) return;
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    const cols = [];
+    for (let c = range.s.c; c <= range.e.c; c++) {
+        const h = ws[XLSX.utils.encode_cell({ r: range.s.r, c })];
+        if (h && moneyHeaders.indexOf(h.v) !== -1) cols.push(c);
+    }
+    cols.forEach(c => { for (let r = range.s.r + 1; r <= range.e.r; r++) {
+        const cell = ws[XLSX.utils.encode_cell({ r, c })];
+        if (cell && cell.t === 'n') cell.z = '#,##0.000';
+    } });
+}
 async function exportReportExcel() {
     if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
     const list = getReportFiltered();
@@ -7405,7 +7759,8 @@ async function exportReportExcel() {
     try {
         const rows = list.map(l => ({ 'رقم الأمر': l.number, 'المورد': l.supplierName, 'التاريخ': l.date, 'المبلغ': l.total, 'الضريبة': l.tax || 0, 'الحالة': l.status, 'الموظف': l.staff }));
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'التقرير');
+        const wsRep = XLSX.utils.json_to_sheet(rows); applyMoneyFormat(wsRep, ['المبلغ', 'الضريبة']);
+        XLSX.utils.book_append_sheet(wb, wsRep, 'التقرير');
         XLSX.writeFile(wb, `تقرير-${new Date().toISOString().split('T')[0]}.xlsx`);
     } catch (e) {
         alert(msg('تعذّر تصدير الملف: ') + e.message);
@@ -7418,7 +7773,8 @@ async function downloadAllData() {
     try {
         const rows = lpoDrafts.map(l => ({ 'رقم الأمر': l.number, 'المورد': l.supplierName, 'التاريخ': l.date, 'الإجمالي الجزئي': l.subtotal||0, 'الضريبة': l.tax||0, 'المبلغ الكلي': l.total, 'الحالة': l.status, 'الموظف': l.staff, 'ملاحظات': l.notes||'' }));
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'جميع الأوامر');
+        const wsAll = XLSX.utils.json_to_sheet(rows); applyMoneyFormat(wsAll, ['الإجمالي الجزئي', 'الضريبة', 'المبلغ الكلي']);
+        XLSX.utils.book_append_sheet(wb, wsAll, 'جميع الأوامر');
         const supRows = suppliers.map(s => ({ 'الاسم': s.name, 'نوع الخدمة': s.serviceType, 'الهاتف': s.phone, 'البريد': s.email, 'المدينة': s.city }));
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(supRows), 'الموردون');
         XLSX.writeFile(wb, `جميع_البيانات_${new Date().toISOString().split('T')[0]}.xlsx`);
@@ -8386,9 +8742,10 @@ function loadProfile() {
     setTxt('profileHeroPhone', t.phone || (en ? 'Not set' : 'غير مُسجّل'));
     setTxt('profileHeroSince', since);
 
-    // نموذج البيانات
+    // نموذج البيانات — اسم العرض: يُظهر البريد الإلكتروني كقيمة افتراضية إن لم يكن مُسجّلاً أو يساوي البريد
     const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
-    setVal('profileNameInput', t.username === '—' ? '' : t.username);
+    const nameVal = (t.username && t.username !== '—') ? t.username : (t.email && t.email !== '—' ? t.email : '');
+    setVal('profileNameInput', nameVal);
     setVal('profileEmailInput', t.email === '—' ? '' : t.email);
     setVal('profilePhoneInput', t.phone);
     setVal('profileJobInput', t.jobTitle);
@@ -8396,7 +8753,14 @@ function loadProfile() {
 
     // التحرير متاح فقط لصاحب الملف نفسه (غير الزائر)؛ عند تصفّح ملف آخر تكون القراءة فقط
     const editable = t.isSelf && !isGuest && !!(currentUser && currentUser.authId);
-    ['profileNameInput', 'profilePhoneInput', 'profileJobInput'].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = !editable; });
+    ['profilePhoneInput', 'profileJobInput'].forEach(id => { const el = document.getElementById(id); if (el) el.disabled = !editable; });
+    // اسم العرض: مُعطّل افتراضياً — يحتاج صلاحية profile:edit_display_name (مدير النظام يملكها دائماً)
+    const nameEl = document.getElementById('profileNameInput');
+    if (nameEl) {
+        const canEditName = editable && can('profile', 'edit_display_name');
+        nameEl.disabled = !canEditName;
+        nameEl.title = canEditName ? '' : (en ? 'Only users with permission can edit the Display Name.' : 'تعديل اسم العرض متاح لمن يملك الصلاحية فقط.');
+    }
     const saveBtn = document.getElementById('profileSaveBtn'); if (saveBtn) saveBtn.style.display = editable ? '' : 'none';
     const secCard = document.getElementById('profileSecurityCard'); if (secCard) secCard.style.display = t.isSelf ? '' : 'none';
 
@@ -8602,10 +8966,13 @@ async function downloadProfileActivity() {
 // حفظ البيانات الشخصية (اسم العرض + الهاتف + المسمى الوظيفي)
 async function saveProfile() {
     if (isGuest || !(currentUser && currentUser.authId) || !sb) { alert(msg('غير مصرّح')); return; }
-    const name = (document.getElementById('profileNameInput').value || '').trim();
     const phone = (document.getElementById('profilePhoneInput').value || '').trim();
     const job = (document.getElementById('profileJobInput').value || '').trim();
-    if (!name) { alert(msg('يرجى إدخال اسم العرض')); return; }
+    // اسم العرض لا يُحدَّث إلا لمن يملك الصلاحية — غير ذلك يبقى الاسم الحالي كما هو
+    const canEditName = can('profile', 'edit_display_name');
+    const typedName = (document.getElementById('profileNameInput').value || '').trim();
+    const name = canEditName ? typedName : (currentUser.username || currentUser.email || '');
+    if (canEditName && !typedName) { alert(msg('يرجى إدخال اسم العرض')); return; }
     const sm = document.getElementById('profileSaveMsg');
     const full = { username: name, phone: phone || null, job_title: job || null };
     // إسقاط الأعمدة غير الموجودة بعد (phone / job_title) بأمان ثم إعادة المحاولة
@@ -8972,6 +9339,18 @@ const COMPANY_INFO = {
     footer: 'P.O. Box 207, Postal Code 134, Sultanate of Oman | Tel: (968) 22701000 (Ext.:101) | Fax: (968) 24699511 | C.R No. 1190750'
 };
 
+// تنسيق الأرقام في طباعة أمر الشراء: إضافة فاصلة الآلاف (نظام ٣ خانات)
+// grp: يُجمّع الجزء الصحيح فقط (يعمل مع الأعداد الصحيحة والعشرية ويحافظ على الكسر كما هو)
+function grpThousands(v) { return String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+// fmtDec3: يُظهر العدد بثلاث خانات عشرية مع فاصلة الآلاف (مثال: 6825 → 6,825.000)
+function fmtDec3(n) {
+    const s = (Number(n) || 0).toFixed(3);
+    const neg = s.charAt(0) === '-';
+    const body = neg ? s.slice(1) : s;
+    const dot = body.indexOf('.');
+    return (neg ? '-' : '') + grpThousands(body.slice(0, dot)) + body.slice(dot);
+}
+
 function buildLPOHtml(data, isDraft) {
     const AZ = '#0093c4', GR = '#7cb342';
     // صفوف البنود: مع أعمدة ريال/بيسة الفرعية للسعر والمجموع
@@ -8986,18 +9365,21 @@ function buildLPOHtml(data, isDraft) {
         // الصف الأول يحمل خطاً علوياً صلباً ليتصل برؤوس الأعمدة بنظافة
         const topB = (i === 0) ? 'border-top:1px solid #c5ced6;' : '';
         const cellBase = 'border-left:1px solid #d5dde3; border-right:1px solid #d5dde3; border-bottom:1px dotted #a9cfe3; ' + topB + ' padding:7px 6px;';
+        // الفاصل بين عمودَي الريال والبيسة الفرعيَّين (داخل مجموعتَي السعر والمجموع) — منقّط ورفيع كما يفصل الصفوف
+        const rialRight  = cellBase + ' border-right:1px dotted #a9cfe3;';
+        const baizaLeft  = cellBase + ' border-left:1px dotted #a9cfe3;';
         // اتجاه النص حسب محتواه: عربي → يمين (RTL)، إنجليزي → يسار (LTR) — يمنع تلاصق الكلمات عند توليد PDF
         const descIsAr = /[؀-ۿ]/.test(it.desc || '');
         const descDir = descIsAr ? 'direction:rtl; text-align:right;' : 'direction:ltr; text-align:left;';
         return `<tr>
             <td style="${cellBase} text-align:center;">${i + 1}</td>
             <td style="${cellBase} padding:7px 10px; ${descDir} word-spacing:1px;">${escapeHtml(it.desc || '')}</td>
-            <td style="${cellBase} text-align:center;">${it.qty}</td>
-            <td style="${cellBase} text-align:center;">${priceRial}</td>
-            <td style="${cellBase} text-align:center;">${String(priceBaiza).padStart(3,'0')}</td>
-            <td style="${cellBase} text-align:center; color:${it.hasTax ? '#111' : '#aaa'};">${it.hasTax ? ((it.taxRate || 0) + '%') : '—'}</td>
-            <td style="${cellBase} text-align:center;">${amtRial}</td>
-            <td style="${cellBase} text-align:center;">${String(amtBaiza).padStart(3,'0')}</td>
+            <td style="${cellBase} text-align:center; font-size:10.5px; padding:7px 2px;">${grpThousands(it.qty)}</td>
+            <td style="${rialRight} text-align:center;">${grpThousands(priceRial)}</td>
+            <td style="${baizaLeft} text-align:center; padding:7px 2px;">${String(priceBaiza).padStart(3,'0')}</td>
+            <td style="${cellBase} text-align:center; font-size:10.5px; padding:7px 2px; color:${it.hasTax ? '#111' : '#aaa'};">${it.hasTax ? ((it.taxRate || 0) + '%') : '—'}</td>
+            <td style="${rialRight} text-align:center;">${grpThousands(amtRial)}</td>
+            <td style="${baizaLeft} text-align:center; padding:7px 2px;">${String(amtBaiza).padStart(3,'0')}</td>
         </tr>`;
     }).join('');
 
@@ -9055,9 +9437,9 @@ function buildLPOHtml(data, isDraft) {
                 <div style="width:82%; height:2px; background:linear-gradient(90deg, rgba(0,147,196,0) 0%, #0093c4 50%, rgba(0,147,196,0) 100%); margin:5px auto;"></div>
                 <div style="font-family:Arial,'Segoe UI',Tahoma,sans-serif; font-size:19px; font-weight:700; color:#444; letter-spacing:normal; line-height:1.1; white-space:nowrap;">LOCAL PURCHASE ORDER</div>
             </div>
-            <div style="flex:1.05; font-size:13px; text-align:right; padding-top:4px;">
-                <div style="margin-bottom:3px;"><span style="color:#666;">L.P.O Date:</span> <strong style="color:#111;">${(()=>{const d=new Date(data.date);const m=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];return String(d.getDate()).padStart(2,'0')+'/'+m[d.getMonth()]+'/'+d.getFullYear();})()}</strong></div>
-                <div style="margin-bottom:3px;"><span style="color:#666;">L.P.O Ref:</span> <strong style="color:#111;">${lpoRef}</strong></div>
+            <div style="flex:1.05; font-size:12px; text-align:right; padding-top:4px;">
+                <div style="margin-bottom:3px;"><span style="color:#666; font-weight:400;">L.P.O Date:</span> <span style="color:#111; font-weight:400;">${(()=>{const d=new Date(data.date);const m=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];return String(d.getDate()).padStart(2,'0')+'/'+m[d.getMonth()]+'/'+d.getFullYear();})()}</span></div>
+                <div style="margin-bottom:3px;"><span style="color:#666; font-weight:400;">L.P.O Ref:</span> <span style="color:#111; font-weight:400;">${lpoRef}</span></div>
                 <div style="margin-bottom:6px;"><span style="color:#666;">L.P.O No:</span> ${data.approvalStatus === 'approved' ? `<strong style="color:#111;">${data.number}</strong>` : data.approvalStatus === 'rejected' ? `<span style="color:#c0392b; font-style:italic; font-weight:600;">Rejected</span>` : `<span style="color:#b9b9b9; font-style:italic; font-weight:500;">Awaiting approval</span>`}</div>
             </div>
         </div>
@@ -9073,51 +9455,83 @@ function buildLPOHtml(data, isDraft) {
         </div>
 
         <!-- جدول البنود -->
-        <table style="width:100%; border-collapse:collapse; font-size:11.5px; margin-bottom:0; table-layout:fixed;">
+        ${(() => {
+            // تنسيق مرن لصف المجاميع: عند طول الأرقام يتقلّص الخط ويقل الحشو لمنع تداخل الخلايا
+            const grandRial = Math.floor(subtotal + taxTotal);
+            const grandBaiza = Math.round(((subtotal + taxTotal) - grandRial) * 1000);
+            // طول رقم الريال (الأكبر عادةً) يحدد سمك خط صف المجاميع الكلي: 11px → 10px → 9px → 8px
+            const rialLen = Math.max(grpThousands(subRial).length, grpThousands(grandRial).length);
+            const footerFs  = rialLen >= 12 ? '8.5px' : rialLen >= 10 ? '9.5px' : rialLen >= 8 ? '10.5px' : '11.5px';
+            const footerPad = rialLen >= 10 ? '5px 2px' : rialLen >= 8 ? '6px 3px' : '7px 4px';
+            // الضريبة لها خط مستقل أصغر درجة إضافية لأن قيمتها تحوي ثلاث خانات عشرية
+            const taxTxt = fmtDec3(taxTotal);
+            const taxFs = taxTxt.length >= 12 ? '7.5px' : taxTxt.length >= 10 ? '8.5px' : taxTxt.length >= 8 ? '9.5px' : '10.5px';
+            // عرض عمود الضريبة يتسع حسب طول الرقم (الطبيعي 5%، يتوسع تلقائياً عند كبر القيمة) — تؤخذ المساحة من عمود الوصف
+            const taxColW   = taxTxt.length >= 12 ? 8 : taxTxt.length >= 10 ? 7.5 : taxTxt.length >= 8 ? 7 : 5.5;
+            // عرض العمود الفرعي للمجموع بالريال: أضيق ما يكفي رقمه (يتوسع فقط عند طول الرقم)
+            const grandTxt   = grpThousands(grandRial);
+            const totalColW  = grandTxt.length >= 10 ? 12 : grandTxt.length >= 7 ? 10 : 8.5;
+            // الباقي كله لعمود التفاصيل (الثوابت: 3.5 م + 4 كمية + 11.5 سعر R.O + 5 سعر Bzs + 5 مجموع Bzs = 29)
+            const descColW  = 71 - taxColW - totalColW;
+            // ألوان حدود عناصر الحشو
+            const dottedDiv = 'border-right:1px dotted #a9cfe3;';
+            const dottedDivL = 'border-left:1px dotted #a9cfe3;';
+            return `<table style="width:100%; border-collapse:collapse; font-size:11.5px; margin-bottom:0; table-layout:fixed;">
+            <colgroup>
+                <col style="width:3.5%;">   <!-- م / S.N -->
+                <col style="width:${descColW}%;">    <!-- الوصف -->
+                <col style="width:4%;">     <!-- الكمية (أقل سمك) -->
+                <col style="width:11.5%;">  <!-- السعر R.O -->
+                <col style="width:5%;">     <!-- السعر Bzs (أضيق قليلاً) -->
+                <col style="width:${taxColW}%;">     <!-- الضريبة (أقل سمك، يتوسع إن كبرت القيمة) -->
+                <col style="width:${totalColW}%;">    <!-- المجموع R.O (أضيق، يتوسع إن طال الرقم) -->
+                <col style="width:5%;">     <!-- المجموع Bzs (أضيق قليلاً) -->
+            </colgroup>
             <thead>
                 <tr style="text-align:center; color:${AZ};">
-                    <th style="border:1px solid #c5ced6; padding:7px 2px; width:4%; font-weight:700; text-align:center; vertical-align:middle;"><div>الرقـم</div><div style="font-size:10px; white-space:nowrap;">SL NO</div></th>
-                    <th style="border:1px solid #c5ced6; padding:7px 4px; width:61%; font-weight:700; text-align:center; vertical-align:middle;"><div style="font-size:14px;">الـتفـــاصـــيـل</div><div style="font-size:10.5px; letter-spacing:2px;">DESCRIPTION</div></th>
-                    <th style="border:1px solid #c5ced6; padding:7px 4px; width:5%; font-weight:700; text-align:center; vertical-align:middle;"><div>الكمـية</div><div style="font-size:10px; letter-spacing:0.6px;">QTY</div></th>
-                    <th style="border:1px solid #c5ced6; padding:7px 4px; width:12%; font-weight:700; text-align:center; vertical-align:middle;" colspan="2"><div>السـعر</div><div style="font-size:10px; letter-spacing:0.6px;">PRICE</div></th>
-                    <th style="border:1px solid #c5ced6; padding:7px 4px; width:6%; font-weight:700; text-align:center; vertical-align:middle;" rowspan="2"><div>الضريبـة</div><div style="font-size:10px; letter-spacing:0.6px;">TAX</div></th>
-                    <th style="border:1px solid #c5ced6; padding:7px 2px; width:11%; font-weight:700; text-align:center; vertical-align:middle;" colspan="2"><div>المجمـوع</div><div style="font-size:10px; letter-spacing:0.6px;">TOTAL</div></th>
+                    <th style="border:1px solid #c5ced6; padding:7px 2px; font-weight:700; text-align:center; vertical-align:middle;"><div>م</div><div style="font-size:10px; white-space:nowrap;">S.N</div></th>
+                    <th style="border:1px solid #c5ced6; padding:7px 4px; font-weight:700; text-align:center; vertical-align:middle;"><div style="font-size:14px;">الـتفـــاصـــيـل</div><div style="font-size:10.5px; letter-spacing:2px;">DESCRIPTION</div></th>
+                    <th style="border:1px solid #c5ced6; padding:7px 2px; font-weight:700; text-align:center; vertical-align:middle;"><div style="font-size:10.5px;">الكمـية</div><div style="font-size:9px; letter-spacing:0.4px;">QTY</div></th>
+                    <th style="border:1px solid #c5ced6; padding:7px 4px; font-weight:700; text-align:center; vertical-align:middle;" colspan="2"><div>السـعر</div><div style="font-size:10px; letter-spacing:0.6px;">PRICE</div></th>
+                    <th style="border:1px solid #c5ced6; padding:7px 2px; font-weight:700; text-align:center; vertical-align:middle;" rowspan="2"><div style="font-size:10.5px;">الضريبـة</div><div style="font-size:9px; letter-spacing:0.4px;">TAX</div></th>
+                    <th style="border:1px solid #c5ced6; padding:7px 2px; font-weight:700; text-align:center; vertical-align:middle;" colspan="2"><div>المجمـوع</div><div style="font-size:10px; letter-spacing:0.6px;">TOTAL</div></th>
                 </tr>
                 <tr style="text-align:center; color:${AZ}; font-size:10px;">
                     <th style="border:1px solid #c5ced6; padding:3px;" colspan="3"></th>
-                    <th style="border:1px solid #c5ced6; padding:3px; font-weight:600;">R.O</th>
-                    <th style="border:1px solid #c5ced6; padding:3px; font-weight:600;">Bzs</th>
-                    <th style="border:1px solid #c5ced6; padding:3px; font-weight:600;">R.O</th>
-                    <th style="border:1px solid #c5ced6; padding:3px; font-weight:600;">Bzs</th>
+                    <th style="border-top:1px solid #c5ced6; border-bottom:1px solid #c5ced6; border-left:1px solid #c5ced6; ${dottedDiv} padding:3px; font-weight:600; text-align:center;">R.O</th>
+                    <th style="border-top:1px solid #c5ced6; border-bottom:1px solid #c5ced6; border-right:1px solid #c5ced6; ${dottedDivL} padding:3px; font-weight:600; text-align:center;">Bzs</th>
+                    <th style="border-top:1px solid #c5ced6; border-bottom:1px solid #c5ced6; border-left:1px solid #c5ced6; ${dottedDiv} padding:3px; font-weight:600; text-align:center;">R.O</th>
+                    <th style="border-top:1px solid #c5ced6; border-bottom:1px solid #c5ced6; border-right:1px solid #c5ced6; ${dottedDivL} padding:3px; font-weight:600; text-align:center;">Bzs</th>
                 </tr>
             </thead>
             <tbody>${itemsRows}</tbody>
             <tfoot>
-                <tr style="font-weight:700;">
-                    <td style="border:1px solid #c5ced6; padding:7px; text-align:center;" colspan="3"></td>
-                    <td style="border:1px solid #c5ced6; padding:7px; text-align:center;">${subRial}</td>
-                    <td style="border:1px solid #c5ced6; padding:7px; text-align:center;">${String(subBaiza).padStart(3,'0')}</td>
-                    <td style="border:1px solid #c5ced6; padding:7px; text-align:center; color:#111;">${taxTotal.toFixed(3)}</td>
-                    <td style="border:1px solid #c5ced6; padding:7px; text-align:center;">${Math.floor(subtotal+taxTotal)}</td>
-                    <td style="border:1px solid #c5ced6; padding:7px; text-align:center;">${String(Math.round(((subtotal+taxTotal)-Math.floor(subtotal+taxTotal))*1000)).padStart(3,'0')}</td>
+                <tr style="font-weight:700; font-size:${footerFs};">
+                    <td style="border:1px solid #c5ced6; padding:${footerPad}; text-align:center;" colspan="3"></td>
+                    <td style="border:1px solid #c5ced6; ${dottedDiv} padding:${footerPad}; text-align:center; white-space:nowrap;">${grpThousands(subRial)}</td>
+                    <td style="border:1px solid #c5ced6; ${dottedDivL} padding:${footerPad}; text-align:center; white-space:nowrap;">${String(subBaiza).padStart(3,'0')}</td>
+                    <td style="border:1px solid #c5ced6; padding:${footerPad}; text-align:center; color:#111; font-size:${taxFs}; white-space:nowrap;">${taxTxt}</td>
+                    <td style="border:1px solid #c5ced6; ${dottedDiv} padding:${footerPad}; text-align:center; white-space:nowrap;">${grpThousands(grandRial)}</td>
+                    <td style="border:1px solid #c5ced6; ${dottedDivL} padding:${footerPad}; text-align:center; white-space:nowrap;">${String(grandBaiza).padStart(3,'0')}</td>
                 </tr>
             </tfoot>
-        </table>
+        </table>`;
+        })()}
 
         <!-- المجموع الكلي -->
         <div style="display:flex; justify-content:space-between; align-items:center; background:#eaf6fb; border:1px solid #c5ced6; border-top:none; padding:9px 14px; font-weight:700; font-size:13px;">
             <span style="color:#111;">TOTAL (OMR)</span>
-            <span style="color:${AZ}; font-size:15px;">${data.total.toFixed(3)}</span>
+            <span style="color:${AZ}; font-size:15px;">${fmtDec3(data.total)}</span>
         </div>
 
         <!-- المبلغ بالكلمات -->
         <div style="display:flex; justify-content:space-between; border:1px solid #c5ced6; border-top:none; padding:7px 14px; font-size:10.5px;">
-            <span><strong>TOTAL IN WORDS OMR:</strong> ${numToWordsEn(totalRial)} Rials${totalBaiza>0 ? ' and '+String(totalBaiza).padStart(3,'0')+'/1000 Baisas':''} Only</span>
+            <span><strong>TOTAL IN WORDS OMR:</strong> ${(totalRial > 0 || totalBaiza === 0) ? numToWordsEn(totalRial) + (totalRial === 1 ? ' Rial' : ' Rials') : ''}${totalBaiza>0 ? ((totalRial > 0 ? ' and ' : '') + numToWordsEn(totalBaiza) + (totalBaiza === 1 ? ' Baisa' : ' Baisas')) : ''} Only</span>
             <span style="direction:rtl; color:#555;">المبلغ<span style="display:inline-block; width:7px;"></span>بالحروف</span>
         </div>
 
         <!-- عبارة تعليمات الدفع أسفل الجدول -->
-        <div style="margin-top:8px; font-size:11.5px; color:#333; direction:ltr; text-align:left; line-height:1.4;">
+        <div style="margin-top:8px; font-size:10.5px; color:#333; direction:ltr; text-align:left; line-height:1.4;">
             Please attach the Original Copy of the LPO along with the Invoice for payment. Standard Credit period is 90 days from date of invoice.
         </div>
 
@@ -9132,15 +9546,15 @@ function buildLPOHtml(data, isDraft) {
             <!-- التواقيع (مع ختم الشركة وصندوق الاعتماد تحت التوقيع المعتمد عند الاعتماد) -->
             <div style="display:flex; justify-content:space-between; font-size:10px; gap:60px;">
                 <div style="flex:1; position:relative; text-align:center;">
-                    <div style="font-weight:700; font-size:12px; padding-top:40px; margin-bottom:${data.approvalStatus === 'approved' ? '181px' : '160px'}; position:relative; z-index:7;">AUTHORIZED SIGNATURE &nbsp;<span style="direction:rtl; color:#555;">المخول<span style="display:inline-block; width:7px;"></span>بالتوقيع</span></div>
-                    ${data.approvalStatus === 'approved' ? `<img src="${STAMP_DATA}" alt="ختم الشركة" style="position:absolute; top:58px; left:67%; transform:translateX(-50%); height:138px; width:auto; opacity:1; z-index:5; pointer-events:none;">` : ''}
-                    ${data.approvalStatus === 'approved' ? `<div style="position:absolute; top:120px; left:6%; z-index:6; text-align:left;">
+                    <div style="font-weight:700; font-size:12px; padding-top:40px; margin-bottom:${data.approvalStatus === 'approved' ? '181px' : '160px'}; position:relative; top:18px; z-index:7;">AUTHORIZED SIGNATURE &nbsp;<span style="direction:rtl; color:#555;">المخول<span style="display:inline-block; width:7px;"></span>بالتوقيع</span></div>
+                    ${data.approvalStatus === 'approved' ? `<img src="${STAMP_DATA}" alt="ختم الشركة" style="position:absolute; top:76px; left:67%; transform:translateX(-50%); height:138px; width:auto; opacity:1; z-index:5; pointer-events:none;">` : ''}
+                    ${data.approvalStatus === 'approved' ? `<div style="position:absolute; top:138px; left:6%; z-index:6; text-align:left;">
                         <div style="display:inline-block; font-family:'Tajawal','Segoe UI',Arial,sans-serif; border:2px solid #2e7d32; color:#2e7d32; border-radius:6px; padding:3px 8px; font-weight:800; font-size:11px; direction:${currentLanguage === 'en' ? 'ltr' : 'rtl'};">
                             <i class="fas fa-check-circle"></i> ${currentLanguage === 'en' ? 'APPROVED' : 'معتمد'}
                             <div style="font-size:7.5px; font-weight:500; color:#8aa894; margin-top:1px; white-space:nowrap;">${currentLanguage === 'en' ? 'Date: ' : 'تاريخ الاعتماد: '}${data.approvedAt ? new Date(data.approvedAt).toLocaleDateString('en-GB') : '—'}</div>
                         </div>
                     </div>` : ''}
-                    ${data.approvalStatus === 'rejected' ? `<div style="position:absolute; top:78px; left:50%; transform:translateX(-50%) rotate(-10deg); z-index:6; text-align:center;">
+                    ${data.approvalStatus === 'rejected' ? `<div style="position:absolute; top:96px; left:50%; transform:translateX(-50%) rotate(-10deg); z-index:6; text-align:center;">
                         <div style="display:inline-block; border:3px solid #c0392b; color:#c0392b; border-radius:10px; padding:5px 18px; font-weight:800; font-size:18px; letter-spacing:1px; opacity:0.88; direction:${currentLanguage === 'en' ? 'ltr' : 'rtl'};">
                             <i class="fas fa-times-circle"></i> ${currentLanguage === 'en' ? 'REJECTED' : 'مرفوض'}
                         </div>
@@ -9150,7 +9564,7 @@ function buildLPOHtml(data, isDraft) {
                     ${data.approvalStatus === 'approved' ? `<div style="position:absolute; top:223px; left:0; right:0; text-align:left; font-size:10px; font-weight:400; color:#555;">${escapeHtml(data.staff || '')}</div>` : ''}
                 </div>
                 <div style="flex:1; position:relative; text-align:center;">
-                    <div style="font-weight:700; font-size:12px; padding-top:40px; margin-bottom:${data.approvalStatus === 'approved' ? '181px' : '160px'};">${showRecipientName ? 'Received by: &nbsp;<span style="direction:rtl; color:#555;">المُستلم</span>' : '&nbsp;'}</div>
+                    <div style="font-weight:700; font-size:12px; padding-top:40px; margin-bottom:${data.approvalStatus === 'approved' ? '181px' : '160px'}; position:relative; top:18px;">${showRecipientName ? 'Received by: &nbsp;<span style="direction:rtl; color:#555;">المُستلم</span>' : '&nbsp;'}</div>
                     <div style="${data.approvalStatus === 'approved' ? 'position:absolute; top:218px; left:0; right:0;' : ''} border-top:1px solid #333;"></div>
                 </div>
             </div>
@@ -9313,9 +9727,9 @@ function previewLPO() {
         supplierName: document.getElementById('supplierName').value,
         lpoRef: refV ? ('Ref-' + refV) : '',
         items: collectItems(),
-        subtotal: parseFloat(document.getElementById('totalSubtotal').textContent) || undefined,
-        tax: parseFloat(document.getElementById('totalTax').textContent) || 0,
-        total: parseFloat(document.getElementById('totalFinal').textContent),
+        subtotal: readTotalNum('totalSubtotal') || undefined,
+        tax: readTotalNum('totalTax') || 0,
+        total: readTotalNum('totalFinal'),
         notes: document.getElementById('generalNotes').value,
         staff: currentUser.username
     };
@@ -9347,27 +9761,21 @@ function viewLPO(id) {
     openChat(l.number, 'order');
 }
 
-// بناء شريط أزرار الإجراءات في نافذة المعاينة
-function buildPreviewActionBar(l) {
+// بناء شريط أزرار الإجراءات في نافذة المعاينة — نفس عناصر القائمة المنسدلة لعمود الإجراءات (بدون "معاينة")
+// l: أمر شراء أو مسودة؛ isDraft: true للمسودة
+function buildPreviewActionBar(l, isDraft) {
     const bar = document.getElementById('previewActionBar');
     const btns = document.getElementById('previewActionBtns');
     if (!bar || !btns) return;
     const en = currentLanguage === 'en';
-    const canApprove = (l.approvalStatus === 'pending') && can('orders','approve');
-    let html = '';
-    if (can('orders','edit')) {
-        html += `<button class="btn btn-small" style="background:#f0ad4e; color:#fff;" onclick="closePreview(); editLPO('${l.id}')" title="${en ? 'Edit order' : 'تعديل الأمر'}"><i class="fas fa-edit"></i> ${en ? 'Edit' : 'تعديل'}</button>`;
-    }
-    if (canApprove) {
-        html += `<button class="btn btn-small" style="background:#2e7d32; color:#fff;" onclick="closePreview(); approveOrder('${l.id}')" title="${en ? 'Approve' : 'اعتماد'}"><i class="fas fa-check"></i> ${en ? 'Approve' : 'اعتماد'}</button>`;
-        html += `<button class="btn btn-small" style="background:#c0392b; color:#fff;" onclick="closePreview(); rejectOrder('${l.id}')" title="${en ? 'Reject' : 'رفض'}"><i class="fas fa-times"></i> ${en ? 'Reject' : 'رفض'}</button>`;
-    }
-    if (html) {
-        btns.innerHTML = html;
-        bar.style.display = 'flex';
-    } else {
-        bar.style.display = 'none';
-    }
+    const items = (isDraft ? buildDraftActionItems(l) : buildRowActionItems(l)).filter(it => it.icon !== 'fa-eye');
+    const bg = { 'fa-print': '#6c757d' };
+    const keepOpen = it => it.icon === 'fa-print';   // تحميل PDF لا يغلق المعاينة
+    const html = items.map(it => `<button class="btn btn-small" style="background:${bg[it.icon] || it.color}; color:#fff;" onclick="${keepOpen(it) ? '' : 'closePreview(); '}${it.fn}" title="${it.label}"><i class="fas ${it.icon}"></i> ${it.label}</button>`).join('');
+    const lbl = bar.querySelector('span');
+    if (lbl) lbl.innerHTML = '<i class="fas fa-tools"></i> ' + (isDraft ? (en ? 'Draft actions:' : 'إجراءات المسودة:') : (en ? 'Order actions:' : 'إجراءات الأمر:'));
+    if (html) { btns.innerHTML = html; bar.style.display = 'flex'; }
+    else { btns.innerHTML = ''; bar.style.display = 'none'; }
 }
 
 // معاينة مسودة (مع المحادثة)
@@ -9392,6 +9800,7 @@ function previewDraft(id) {
     previewIsDraft = true;
     document.getElementById('previewContent').innerHTML = buildLPOHtml(previewLPOData, true);
     renderPreviewOpsLog(d, true, false); // كشف عمليات المسودة (بناءً على المسودة الأصلية)
+    buildPreviewActionBar(d, true);
     document.getElementById('previewModal').classList.add('active');
     openChat(d.draftNumber, 'draft');
 }
@@ -9462,27 +9871,42 @@ function resetChatFromProfile() {
     const el = document.getElementById('profileResetMsg');
     if (el) el.textContent = currentLanguage === 'en' ? 'Chat window reset to default. ✅' : 'تمت إعادة نافذة المحادثة إلى الوضع الافتراضي ✅';
 }
-function resetLpoTableFromProfile() {
+// إعادة ترتيب وعرض أعمدة جدول إلى الوضع الافتراضي فوراً (بدون تحديث الصفحة)
+function resetTableLayout(tableId) {
+    // 1) مسح الترتيب والعروض المحفوظة (التخزين + الذاكرة)
     try {
-        localStorage.removeItem('colorder_lpoListTable');
-        localStorage.removeItem('colwidths_lpoListTable');
-        if (typeof COL_ORDER !== 'undefined') delete COL_ORDER['lpoListTable'];
-        if (typeof COL_WIDTHS !== 'undefined') delete COL_WIDTHS['lpoListTable'];
+        localStorage.removeItem('colorder_' + tableId);
+        localStorage.removeItem('colwidths_' + tableId);
     } catch (e) {}
-    // إعادة الرسم فوراً إن كانت صفحة أوامر الشراء مفتوحة (وإلا يُطبَّق عند فتحها لاحقاً)
+    if (typeof COL_ORDER !== 'undefined') delete COL_ORDER[tableId];
+    if (typeof COL_WIDTHS !== 'undefined') delete COL_WIDTHS[tableId];
+    if (HIDDEN_COLS[tableId]) HIDDEN_COLS[tableId].clear();
+    // 2) مسح عروض الأعمدة المضمّنة من عناصر الرأس والجسم مباشرةً (تبقى عالقة بدون هذا)
+    const table = document.getElementById(tableId);
+    if (table) {
+        if (table.tHead && table.tHead.rows[0]) {
+            Array.from(table.tHead.rows[0].cells).forEach(th => { th.style.width = ''; th.style.minWidth = ''; th.style.maxWidth = ''; });
+        }
+        if (table.tBodies[0]) {
+            Array.from(table.tBodies[0].rows).forEach(row => Array.from(row.cells).forEach(td => { td.style.width = ''; td.style.minWidth = ''; td.style.maxWidth = ''; }));
+        }
+        // 3) استعادة ترتيب الأعمدة الأصلي (الهوية) فوراً إن كانت الأعمدة قد أُعيد ترتيبها
+        try { applyColumnOrder(tableId); } catch (e) {}
+        try { applyHiddenCols(tableId); } catch (e) {}
+    }
+}
+
+function resetLpoTableFromProfile() {
+    resetTableLayout('lpoListTable');
+    resetTableLayout('draftsTable');   // جدول المسودات (صفحة أوامر الشراء > المسودات) يُعاد تعيينه مع الزر نفسه
+    // إعادة رسم كاملة إن كانت صفحة أوامر الشراء مفتوحة (لإنعاش المحتوى والترتيب معاً)
     const active = document.querySelector('.page.active');
-    if (active && active.id === 'page-lpo-management') { try { loadLPOList(); } catch (e) {} }
+    if (active && active.id === 'page-lpo-management') { try { loadLPOList(); } catch (e) {} try { loadDrafts(); } catch (e) {} }
     const el = document.getElementById('profileResetMsg');
-    if (el) el.textContent = currentLanguage === 'en' ? 'Purchase Orders table columns reset to default. ✅' : 'تمت إعادة أعمدة جدول أوامر الشراء إلى الوضع الافتراضي ✅';
+    if (el) el.textContent = currentLanguage === 'en' ? 'Purchase Orders and Drafts table columns reset to default. ✅' : 'تمت إعادة أعمدة جدولَي أوامر الشراء والمسودات إلى الوضع الافتراضي ✅';
 }
 function resetSuppliersTableFromProfile() {
-    try {
-        localStorage.removeItem('colorder_suppliersTable');
-        localStorage.removeItem('colwidths_suppliersTable');
-        if (typeof COL_ORDER !== 'undefined') delete COL_ORDER['suppliersTable'];
-        if (typeof COL_WIDTHS !== 'undefined') delete COL_WIDTHS['suppliersTable'];
-    } catch (e) {}
-    // إعادة الرسم فوراً إن كانت صفحة الموردين مفتوحة (وإلا يُطبَّق عند فتحها لاحقاً)
+    resetTableLayout('suppliersTable');
     const active = document.querySelector('.page.active');
     if (active && active.id === 'page-suppliers') { try { loadSuppliersList(); } catch (e) {} }
     const el = document.getElementById('profileResetMsg');
