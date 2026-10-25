@@ -205,6 +205,7 @@
         .topbar { background: white; border-bottom: 2px solid #e8eef5; padding: 0.4rem 2rem; display: flex; align-items: center; gap: 1rem; }
         /* الشريط العلوي: الشعار يميناً، عنوان الصفحة في المنتصف تماماً، الجرس يساراً — دون تغيير ارتفاع/عرض الشريط */
         .topbar-left { flex: 1 1 0; display: flex; align-items: center; gap: 1rem; min-width: 0; }
+        .topbar-page-icon { color: #0093c4; font-size: 17px; flex-shrink: 0; }
         .topbar-center { flex: 0 1 auto; display: flex; align-items: center; justify-content: center; gap: 8px; min-width: 0; }
         .topbar-right { flex: 1 1 0; display: flex; align-items: center; justify-content: flex-end; gap: 18px; }
         .topbar-logo { display: flex; align-items: center; }
@@ -505,6 +506,15 @@
         .hidden-cols-bar .hc-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border: 1px solid #cfe3ec; border-radius: 14px; background: #fff; color: #0a7396; cursor: pointer; font-family: inherit; font-size: 12px; }
         .hidden-cols-bar .hc-chip:hover { background: #e6f4fa; }
         .hidden-cols-bar .hc-all { margin-inline-start: auto; color: #0093c4; cursor: pointer; text-decoration: underline; background: none; border: none; font-family: inherit; font-size: 12px; }
+        /* عروض افتراضية لأعمدة جدول أوامر الشراء (يتجاوزها التحجيم اليدوي المضمّن، وتعود عند إعادة التعيين) */
+        #lpoListTable th[data-colid="1"] { width: 90px; min-width: 90px; max-width: 90px; white-space: normal; }
+        #lpoListTable th[data-colid="3"] { width: 90px; min-width: 90px; max-width: 90px; white-space: normal; }
+        #lpoListTable th[data-colid="4"] { width: 272px; min-width: 272px; }
+        #lpoListTable th[data-colid="5"] { width: 92px; min-width: 92px; max-width: 92px; white-space: normal; }
+        #lpoListTable th[data-colid="6"] { width: 110px; min-width: 110px; max-width: 110px; white-space: normal; }
+        #lpoListTable th[data-colid="7"] { white-space: normal; }
+        #lpoListTable th[data-colid="8"] { width: 84px; min-width: 84px; max-width: 84px; white-space: normal; }
+        #lpoListTable th[data-colid="10"] { width: 74px; min-width: 74px; max-width: 74px; }
         #lpoListTable .col-actions, #suppliersTable .col-actions, #draftsTable .col-actions { width: 38px; min-width: 38px; max-width: 38px; text-align: center; padding-left: 2px; padding-right: 2px; white-space: nowrap; }
         /* ===== أعراض افتراضية طبيعية لأعمدة جدول الموردين (تُستعاد عند إعادة التعيين لأنها CSS وليست inline) =====
            نضبط width + min-width + max-width معاً لأن تخطيط الجدول التلقائي يتجاهل width وحده إن كان المحتوى أضيق */
@@ -596,7 +606,7 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: flex-start; overflow-y: auto; padding: 3vh 0; }
         .modal.active { display: flex; }
         /* نافذة التعديل/التقييم المفتوحة من فوق نافذة استعراض المورد تظهر أمامها دون إغلاقها */
-        #supplierModal.active, #evalModal.active { z-index: 1100; }
+        #supplierModal.active, #evalModal.active, #quickDeptModal.active { z-index: 1100; }
         .modal-content { background: white; width: 90%; max-width: 900px; max-height: none; overflow: visible; border-radius: 12px; }
         .modal-header { background: linear-gradient(135deg, #0093c4 0%, #00a8bf 100%); color: white; padding: 0.7rem 1.5rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 2; }
         .modal-header h2 { font-size: 17px; margin: 0; }
@@ -748,6 +758,7 @@
             <!-- عنوان الصفحة المختارة — في منتصف الشريط العلوي بنفس مستوى سطر الشعار -->
             <div class="topbar-center">
                 <span id="guestBadge" class="guest-badge" style="display:none;"><i class="fas fa-eye"></i> وضع الزائر</span>
+                <i id="pageTitleIcon" class="fas fa-chart-line topbar-page-icon" aria-hidden="true"></i>
                 <span id="pageTitle" class="topbar-page-title">لوحة التحكم</span>
             </div>
             <div class="topbar-right">
@@ -852,7 +863,6 @@
     <div class="tabs-bar">
         <button type="button" class="tab-btn active" onclick="showLpoTab('list', this)"><i class="fas fa-list-ul"></i> أوامر الشراء</button>
         <button type="button" class="tab-btn" onclick="showLpoTab('drafts', this)"><i class="fas fa-file-alt"></i> المسودات</button>
-        <button type="button" class="tab-btn hidden-for-guest new-lpo-btn" data-perm="orders:create" style="margin-right:auto;" onclick="goToNewLPO()"><i class="fas fa-plus-circle"></i> إصدار أمر شراء جديد</button>
     </div>
 
     <!-- نافذة أمر شراء جديد (Modal مستقلة) -->
@@ -898,6 +908,7 @@
                         <span class="combo-caret" onmousedown="event.preventDefault(); toggleDeptCombo(event)"><i class="fas fa-chevron-down"></i></span>
                         <div id="deptComboList" class="combo-list" style="display:none;"></div>
                     </div>
+                    <button type="button" class="btn btn-small hidden-for-guest" data-perm="control:create" onclick="openQuickDeptModal()" title="القسم غير موجود في القائمة؟ أضِفه الآن وسيظهر مباشرةً للاختيار" style="margin-top:8px; width:100%; background:#eaf7ee; color:#1f7a37; border:1px solid #bfe3c9; font-size:12px; font-weight:600;"><i class="fas fa-plus-circle"></i> إضافة قسم جديد</button>
                 </div>
                 <div class="form-group-item">
                     <label><i class="fas fa-hashtag"></i> L.P.O Ref</label>
@@ -1022,6 +1033,7 @@
                 <input type="date" lang="en" dir="ltr" id="filterDraftDate" onchange="loadDrafts()">
             </div>
             <div class="filter-actions">
+                <button type="button" class="btn btn-small hidden-for-guest" data-perm="orders:create" style="background:linear-gradient(135deg,#7cb342 0%,#5a9216 100%); color:#fff;" onclick="goToNewLPO()"><i class="fas fa-plus-circle"></i> إصدار أمر شراء جديد</button>
                 <button type="button" class="btn btn-danger btn-small" onclick="clearDraftFilters()"><i class="fas fa-eraser"></i> مسح التصفية</button>
             </div>
         </div>
@@ -1090,6 +1102,7 @@
                 <input type="date" lang="en" dir="ltr" id="filterToDate" onchange="filterLPOs()" title="إلى تاريخ">
             </div>
             <div class="filter-actions">
+                <button type="button" class="btn btn-small hidden-for-guest" data-perm="orders:create" style="background:linear-gradient(135deg,#7cb342 0%,#5a9216 100%); color:#fff;" onclick="goToNewLPO()"><i class="fas fa-plus-circle"></i> إصدار أمر شراء جديد</button>
                 <button type="button" class="btn btn-danger btn-small" onclick="clearLPOFilters()"><i class="fas fa-eraser"></i> مسح التصفية</button>
                 <button type="button" class="btn btn-small" style="background:#e67e22; color:#fff;" onclick="resetLpoTableFromProfile()"><i class="fas fa-table-columns"></i> إعادة تعيين الأعمدة</button>
                 <button type="button" class="btn btn-success btn-small" onclick="exportLPOList()"><i class="fas fa-file-excel"></i> تصدير Excel</button>
@@ -1122,10 +1135,10 @@
                         <th class="sortable" data-col="1" onclick="sortLPOTable(1)">المورد <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="2" onclick="sortLPOTable(2)">نوع الخدمة <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="8" onclick="sortLPOTable(8)">القسم / الغرض <span class="sort-arrow">⇅</span></th>
-                        <th class="sortable" data-col="3" onclick="sortLPOTable(3)">التاريخ <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-col="3" onclick="sortLPOTable(3)">تاريخ الأمر <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="4" onclick="sortLPOTable(4)">المبلغ (ر.ع) <span class="sort-arrow">⇅</span></th>
                         <th class="sortable" data-col="5" onclick="sortLPOTable(5)">الحالة <span class="sort-arrow">⇅</span></th>
-                        <th class="sortable" data-col="6" onclick="sortLPOTable(6)">الموظف <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-col="6" onclick="sortLPOTable(6)">أُنشِئ بواسطة <span class="sort-arrow">⇅</span></th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -1145,10 +1158,6 @@
 <!-- ============ SUPPLIERS ============ -->
 <div class="page" id="page-suppliers">
     <div class="card">
-        <div class="card-header">
-            <div class="card-title"><i class="fas fa-building"></i> إدارة الموردون</div>
-            <button type="button" class="btn btn-primary btn-small hidden-for-guest" data-perm="suppliers:create" onclick="openSupplierModal()"><i class="fas fa-plus"></i> مورد جديد</button>
-        </div>
         <div class="filter-section filter-section-compact">
             <div class="filter-title"><i class="fas fa-filter"></i> فلاتر البحث</div>
             <div class="filter-grid filter-grid-auto">
@@ -1182,6 +1191,7 @@
                 </div>
             </div>
             <div class="filter-actions">
+                <button type="button" class="btn btn-primary btn-small hidden-for-guest" data-perm="suppliers:create" onclick="openSupplierModal()"><i class="fas fa-plus"></i> مورد جديد</button>
                 <button type="button" class="btn btn-danger btn-small" onclick="clearSupplierFilters()"><i class="fas fa-eraser"></i> مسح التصفية</button>
                 <button type="button" class="btn btn-small" style="background:#e67e22; color:#fff;" onclick="resetSuppliersTableFromProfile()"><i class="fas fa-table-columns"></i> إعادة تعيين الأعمدة</button>
                 <button type="button" class="btn btn-small" style="background:#c0392b; color:#fff;" onclick="printSuppliersPDF()"><i class="fas fa-file-pdf"></i> طباعة PDF</button>
@@ -1880,6 +1890,10 @@
         </div>
         <div style="margin-top:1.1rem;">
             <button class="btn btn-success" id="profileSaveBtn" onclick="saveProfile()"><i class="fas fa-save"></i> حفظ البيانات</button>
+            <!-- تعديل بيانات مستخدم آخر (عند تصفّح ملفه) — لمن يملك صلاحية profiles:edit_others -->
+            <button class="btn" id="profileEditOtherBtn" style="display:none; background:#e67e22; color:#fff;" onclick="startEditOtherProfile()"><i class="fas fa-edit"></i> تعديل</button>
+            <button class="btn btn-success" id="profileSaveOtherBtn" style="display:none;" onclick="saveOtherProfile()"><i class="fas fa-save"></i> حفظ</button>
+            <button class="btn" id="profileCancelOtherBtn" style="display:none;" onclick="cancelEditOtherProfile()"><i class="fas fa-times"></i> إلغاء</button>
             <span id="profileSaveMsg" style="font-size:12.5px; margin-inline-start:12px;"></span>
         </div>
     </div>
@@ -1890,8 +1904,10 @@
         <p style="font-size:12.5px; color:#667; line-height:1.7; margin-bottom:1rem;">إذا تغيّر حجم أو موضع نافذة المحادثة أو ترتيب أعمدة جدول أوامر الشراء بشكل غير مرغوب، يمكنك إعادتها إلى الوضع الافتراضي من هنا.</p>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <button class="btn btn-small" style="background:#0093c4; color:#fff;" onclick="resetChatFromProfile()"><i class="fas fa-rotate-left"></i> إعادة تعيين نافذة المحادثة</button>
-            <button class="btn btn-small" style="background:#e67e22; color:#fff;" onclick="resetLpoTableFromProfile()"><i class="fas fa-table-columns"></i> إعادة تعيين أعمدة جدول أوامر الشراء</button>
+            <button class="btn btn-small" style="background:#e67e22; color:#fff;" onclick="resetLpoTableFromProfile()"><i class="fas fa-table-columns"></i> إعادة ضبط المصنع لأعمدة جداول أوامر الشراء</button>
             <button class="btn btn-small" style="background:#7cb342; color:#fff;" onclick="resetSuppliersTableFromProfile()"><i class="fas fa-table-columns"></i> إعادة تعيين أعمدة جدول الموردين</button>
+            <button class="btn btn-small perm-hidden sysadmin-only" style="background:#6c3fb5; color:#fff;" onclick="saveLpoTablesAsDefault()" title="يحفظ ترتيب وأحجام أعمدة جدولَي أوامر الشراء والمسودات كما تظهر لديك الآن كوضع افتراضي يُطبَّق على جميع المستخدمين"><i class="fas fa-floppy-disk"></i> حفظ أحجام وترتيب أعمدة جداول أوامر الشراء الحالية كوضع افتراضي</button>
+            <button class="btn btn-small perm-hidden sysadmin-only" style="background:#fff; color:#6c3fb5; border:1px solid #6c3fb5;" onclick="clearLpoTablesDefault()" title="يلغي الوضع الافتراضي المحفوظ ويعيد الوضع الأصلي لجميع المستخدمين"><i class="fas fa-rotate-left"></i> استعادة الوضع الأصلي للجميع</button>
         </div>
         <span id="profileResetMsg" style="font-size:12.5px; display:block; margin-top:10px; color:#2e7d32;"></span>
     </div>
@@ -2212,6 +2228,32 @@
     </div>
 </div>
 
+<!-- ============ QUICK ADD DEPARTMENT MODAL (نسخة من صندوق الأقسام / الغرض في صفحة الإدارة والتحكم) ============ -->
+<div id="quickDeptModal" class="modal" onclick="if(event.target===this) closeQuickDeptModal()">
+    <div class="modal-content" style="max-width:520px;">
+        <div class="modal-header">
+            <h2><i class="fas fa-sitemap"></i> الأقسام / الغرض <span class="ctrl-count" id="deptCountQ">0</span></h2>
+            <button class="modal-close" onclick="closeQuickDeptModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
+                <input type="text" id="newDepartmentQ" placeholder="أدخل قسماً أو غرضاً جديداً..." style="flex:1; padding:10px 12px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-family:inherit;" onkeydown="if(event.key==='Enter'){event.preventDefault();addDepartmentQuick();}">
+                <button type="button" class="btn btn-success" data-perm="control:create" onclick="addDepartmentQuick()"><i class="fas fa-plus"></i> إضافة</button>
+            </div>
+            <div class="ctrl-search"><input type="text" id="deptSearchQ" placeholder="بحث في الأقسام..." oninput="renderQuickDeptList()"><i class="fas fa-search"></i></div>
+            <div class="ctrl-list-scroll" style="max-height:320px;">
+                <table id="departmentsTableQ">
+                    <thead><tr><th style="width:44px;">#</th><th>القسم / الغرض</th><th style="width:70px;"></th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div style="display:flex; justify-content:flex-end; margin-top:1rem;">
+                <button type="button" onclick="closeQuickDeptModal()" class="btn">إغلاق</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ============ SUPPLIER EVALUATION MODAL ============ -->
 <div id="evalModal" class="modal" onclick="if(event.target===this) closeEvalModal()">
     <div class="modal-content" style="max-width:560px;">
@@ -2335,7 +2377,7 @@ const PERM_MODULES = [
     { key: 'notifications', ar: 'الإشعارات',         en: 'Notifications' },
     { key: 'users',         ar: 'إدارة المستخدمين',  en: 'User Management' },
     { key: 'trash',         ar: 'سلة المهملات',      en: 'Recycle Bin', acts: ['view','restore','delete'] },
-    { key: 'profiles',      ar: 'تصفّح الملفات الشخصية', en: 'Browse Profiles', acts: ['view'] },
+    { key: 'profiles',      ar: 'تصفّح الملفات الشخصية', en: 'Browse Profiles', acts: ['view','edit_others'] },
     { key: 'profile',       ar: 'الملف الشخصي',       en: 'My Profile', acts: ['edit_display_name'] }
 ];
 // الإجراءات (CRUD + استرجاع + اعتماد)
@@ -2347,7 +2389,8 @@ const PERM_ACTIONS = [
     { key: 'restore', ar: 'استرجاع', en: 'Restore' },
     { key: 'approve', ar: 'اعتماد',  en: 'Approve' },
     { key: 'unapprove', ar: 'التراجع عن الاعتماد', en: 'Undo Approval' },
-    { key: 'edit_display_name', ar: 'تعديل اسم العرض', en: 'Edit Display Name' }
+    { key: 'edit_display_name', ar: 'تعديل اسم العرض', en: 'Edit Display Name' },
+    { key: 'edit_others', ar: 'تعديل بيانات المستخدمين', en: "Edit Users' Info" }
 ];
 // الإجراءات الافتراضية المطبّقة على الوحدات التي لا تحدّد acts
 const DEFAULT_PERM_ACTS = ['view','create','edit','delete','approve'];
@@ -2388,7 +2431,8 @@ Object.keys(DEFAULT_PERMISSIONS).forEach(r => {
     DEFAULT_PERMISSIONS[r].trash = (r === 'sysadmin')
         ? { view: true, restore: true, delete: true }
         : { view: false, restore: false, delete: false };
-    DEFAULT_PERMISSIONS[r].profiles = { view: (r === 'sysadmin') };
+    // تعديل بيانات المستخدمين الآخرين (اسم العرض/الهاتف/المسمى الوظيفي) عند تصفّح ملفاتهم: افتراضياً لمدير النظام فقط
+    DEFAULT_PERMISSIONS[r].profiles = { view: (r === 'sysadmin'), edit_others: (r === 'sysadmin') };
     // صلاحية تعديل اسم العرض في البيانات الشخصية: افتراضياً لمدير النظام فقط
     DEFAULT_PERMISSIONS[r].profile = { edit_display_name: (r === 'sysadmin') };
     // رؤية لوحة التحكم: متاحة افتراضياً لكل الأدوار (وقابلة للمنع من صفحة الصلاحيات)
@@ -2504,6 +2548,11 @@ async function loadAllFromCloud() {
         try {
             const { data: al } = await sb.from('activity_log').select('*').order('created_at', { ascending: false }).limit(1000);
             if (al) activityLog = al.map(r => ({ id: r.id, username: r.username || '—', userEmail: r.user_email || '', actionType: r.action_type || 'other', details: r.details || '', createdAt: r.created_at }));
+        } catch (e) {}
+        // تحميل الوضع الافتراضي العام لأعمدة جداول أوامر الشراء (يحدّده مدير النظام)
+        try {
+            const { data: tl } = await sb.from('settings').select('value').eq('key', 'table_layout_defaults').maybeSingle();
+            applyTableLayoutDefaults(tl && tl.value ? JSON.parse(tl.value) : null);
         } catch (e) {}
         // تحميل مصفوفة الصلاحيات المحفوظة (إن وُجدت)
         await loadRolePermissions();
@@ -2784,6 +2833,10 @@ const I18N = {
     'المدينة': 'City',
     'إضافة مورد جديد': 'Add New Supplier',
     'المورد غير موجود؟ أضِف مورداً جديداً': 'Supplier not listed? Add a new one',
+    'إضافة قسم جديد': 'Add a new department',
+    'القسم غير موجود في القائمة؟ أضِفه الآن وسيظهر مباشرةً للاختيار': 'Not in the list? Add it now and it will appear instantly for selection',
+    'بحث في الأقسام...': 'Search departments...',
+    'لا تملك صلاحية إضافة الأقسام': 'You do not have permission to add departments',
     'المورد غير موجود في القائمة؟ أضِفه الآن وسيظهر مباشرةً للاختيار': 'Not in the list? Add it now and it will appear instantly for selection',
     'تم إضافة المورد ويمكنك الآن اختياره في أمر الشراء': 'Supplier added — you can now select it in the purchase order',
     'الإجراءات': 'Actions',
@@ -2862,6 +2915,14 @@ const I18N = {
     '-- كل أرقام الأوامر --': '-- All Order Numbers --',
     '-- كل أرقام المسودات --': '-- All Draft Numbers --',
     'تفضيلات العرض وإعادة التعيين': 'Display Preferences & Reset',
+    'أُنشِئ بواسطة': 'Created by',
+    'تعديل': 'Edit',
+    'إعادة ضبط المصنع لأعمدة جداول أوامر الشراء': 'Factory reset purchase orders table columns',
+    'حفظ أحجام وترتيب أعمدة جداول أوامر الشراء الحالية كوضع افتراضي': 'Save current purchase orders table column sizes & order as default',
+    'استعادة الوضع الأصلي للجميع': 'Restore original layout for everyone',
+    'يحفظ ترتيب وأحجام أعمدة جدولَي أوامر الشراء والمسودات كما تظهر لديك الآن كوضع افتراضي يُطبَّق على جميع المستخدمين': 'Saves the Purchase Orders and Drafts column order and widths exactly as you see them now as the default for all users',
+    'يلغي الوضع الافتراضي المحفوظ ويعيد الوضع الأصلي لجميع المستخدمين': 'Removes the saved default and restores the original layout for all users',
+    'هذا الإجراء متاح لمدير النظام فقط': 'This action is available to the system administrator only',
     'إعادة تعيين نافذة المحادثة': 'Reset chat window',
     'إعادة تعيين أعمدة جدول أوامر الشراء': 'Reset purchase orders table columns',
     'إعادة تعيين أعمدة جدول الموردين': 'Reset suppliers table columns',
@@ -3080,6 +3141,10 @@ const I18N = {
 // ===================== قاموس رسائل التنبيه والأخطاء =====================
 // يُستخدم عبر الدالة msg() لعرض الرسائل بلغة الواجهة المختارة
 const MSG_I18N = {
+    'يرجى إدخال اسم العرض': 'Please enter the display name',
+    'تم حفظ البيانات بنجاح ✅': 'Data saved successfully ✅',
+    'اسم العرض مستخدم لمستخدم آخر، الرجاء اختيار اسم مختلف': 'This display name is already used by another user, please choose a different one',
+    'لم يتم الحفظ: قاعدة البيانات لا تسمح لحسابك بتعديل بيانات هذا المستخدم.': 'Not saved: the database does not allow your account to edit this user\'s data.',
     'رقم L.P.O Ref مسجّل مسبقاً، الرجاء إدخال رقم مرجعي آخر غير مكرر': 'This L.P.O Ref already exists. Please enter a different, non-duplicate reference number.',
     'رقم السجل التجاري (C.R) مسجّل مسبقاً لمورد آخر، الرجاء إدخال رقم غير مكرر': 'This C.R number is already registered for another supplier. Please enter a non-duplicate number.',
     'هذا النوع من الخدمات غير مدرج سابقاً، هل تريد إضافته وحفظه؟': 'This service type is not listed yet. Do you want to add and save it?',
@@ -3702,6 +3767,14 @@ function showPage(pageId, navItem) {
     let pageTitle = titles[pageId] || '';
     if (currentLanguage === 'en' && I18N[pageTitle]) pageTitle = I18N[pageTitle];
     document.getElementById('pageTitle').textContent = pageTitle;
+    // أيقونة الصفحة بجانب العنوان في الشريط العلوي — نفس أيقونة عنصرها في الشريط الجانبي
+    const iconEl = document.getElementById('pageTitleIcon');
+    if (iconEl) {
+        const nav = Array.from(document.querySelectorAll('.nav-item')).find(n => (n.getAttribute('onclick') || '').indexOf("showPage('" + pageId + "'") !== -1);
+        const ni = nav && nav.querySelector('i');
+        if (ni) { iconEl.className = ni.className + ' topbar-page-icon'; iconEl.style.display = ''; }
+        else iconEl.style.display = 'none';
+    }
 
     if (pageId === 'dashboard') loadDashboard();
     if (pageId === 'lpo-management') {
@@ -4977,13 +5050,23 @@ const COL_ORDER = {};      // tableId -> مصفوفة معرّفات الأعم�
 let _colDragId = null;     // معرّف العمود الجاري سحبه
 let _colDragTable = null;  // الجدول الجاري السحب داخله
 
+// الوضع الافتراضي العام لأعمدة الجداول الذي يحدّده مدير النظام (يُحمَّل من جدول settings، مفتاح table_layout_defaults)
+// الشكل: { savedAt, savedBy, tables: { tableId: { order:[...], widths:{colid:px} } } }
+let TABLE_LAYOUT_DEFAULTS = null;
+function _validOrder(order, colCount) {
+    return Array.isArray(order) && order.length === colCount && order.slice().sort((a,b)=>a-b).every((v,i)=>v===i);
+}
 function _loadColOrder(tableId, colCount) {
     if (COL_ORDER[tableId] && COL_ORDER[tableId].length === colCount) return COL_ORDER[tableId];
     let order = null;
     try { const raw = localStorage.getItem('colorder_' + tableId); if (raw) order = JSON.parse(raw); } catch(_) {}
-    const valid = Array.isArray(order) && order.length === colCount &&
-                  order.slice().sort((a,b)=>a-b).every((v,i)=>v===i);
-    if (!valid) order = Array.from({length: colCount}, (_, i) => i);   // ترتيب الهوية 0..n
+    let valid = _validOrder(order, colCount);
+    // لا يوجد ترتيب شخصي → الترتيب الافتراضي الذي حدّده مدير النظام (إن وُجد)
+    if (!valid) {
+        const g = TABLE_LAYOUT_DEFAULTS && TABLE_LAYOUT_DEFAULTS.tables && TABLE_LAYOUT_DEFAULTS.tables[tableId];
+        if (g && _validOrder(g.order, colCount)) { order = g.order.slice(); valid = true; }
+    }
+    if (!valid) order = Array.from({length: colCount}, (_, i) => i);   // ترتيب الهوية 0..n (ضبط المصنع)
     COL_ORDER[tableId] = order;
     return order;
 }
@@ -5007,6 +5090,11 @@ function _loadColWidths(tableId) {
     if (COL_WIDTHS[tableId]) return COL_WIDTHS[tableId];
     let w = null;
     try { const raw = localStorage.getItem('colwidths_' + tableId); if (raw) w = JSON.parse(raw); } catch(_) {}
+    // لا توجد عروض شخصية → العروض الافتراضية التي حدّدها مدير النظام (إن وُجدت)
+    if (!(w && typeof w === 'object')) {
+        const g = TABLE_LAYOUT_DEFAULTS && TABLE_LAYOUT_DEFAULTS.tables && TABLE_LAYOUT_DEFAULTS.tables[tableId];
+        if (g && g.widths && typeof g.widths === 'object') w = Object.assign({}, g.widths);
+    }
     COL_WIDTHS[tableId] = (w && typeof w === 'object') ? w : {};
     return COL_WIDTHS[tableId];
 }
@@ -8104,6 +8192,8 @@ function applyPermissionsToUI() {
     // قائمة "مدير النظام": لمدير النظام فقط (غير مرتبطة بوحدة واحدة)
     const adminNav = document.getElementById('adminNav');
     if (adminNav) adminNav.classList.toggle('perm-hidden', !(currentUser && currentUser.role === 'sysadmin'));
+    // أزرار خاصة بمدير النظام فقط (مثل حفظ الوضع الافتراضي لأعمدة الجداول)
+    document.querySelectorAll('.sysadmin-only').forEach(el => el.classList.toggle('perm-hidden', !(currentUser && currentUser.role === 'sysadmin')));
     // قائمة "سلة المهملات" تُدار عبر صلاحية trash:view ضمن حلقة [data-perm] أعلاه
 }
 
@@ -8794,6 +8884,17 @@ function loadProfile() {
         nameEl.title = canEditName ? '' : (en ? 'Only users with permission can edit the Display Name.' : 'تعديل اسم العرض متاح لمن يملك الصلاحية فقط.');
     }
     const saveBtn = document.getElementById('profileSaveBtn'); if (saveBtn) saveBtn.style.display = editable ? '' : 'none';
+    // تصفّح ملف مستخدم آخر: زر "تعديل" يمكّن الحقول، ثم "حفظ" / "إلغاء"
+    const canEditOther = !t.isSelf && !isGuest && can('profiles', 'edit_others');
+    if (!canEditOther) _profileOtherEdit = false;
+    const inEdit = canEditOther && _profileOtherEdit;
+    if (!t.isSelf) {
+        ['profileNameInput', 'profilePhoneInput', 'profileJobInput'].forEach(id => { const el = document.getElementById(id); if (el) { el.disabled = !inEdit; if (inEdit) el.title = ''; } });
+    }
+    const showB = (id, on) => { const b = document.getElementById(id); if (b) b.style.display = on ? '' : 'none'; };
+    showB('profileEditOtherBtn', canEditOther && !inEdit);
+    showB('profileSaveOtherBtn', inEdit);
+    showB('profileCancelOtherBtn', inEdit);
     const secCard = document.getElementById('profileSecurityCard'); if (secCard) secCard.style.display = t.isSelf ? '' : 'none';
 
     // شريط "تعرض ملف مستخدم آخر"
@@ -8860,11 +8961,54 @@ function renderProfileSwitchList(q) {
 }
 function selectProfileUser(id) {
     _profileViewUserId = id;
+    _profileOtherEdit = false;
     const list = document.getElementById('profileSwitchList'); if (list) list.style.display = 'none';
     const inp = document.getElementById('profileSwitchInput'); if (inp) { inp.value = ''; inp.blur(); }
     loadProfile();
 }
-function profileViewSelf() { _profileViewUserId = null; loadProfile(); }
+function profileViewSelf() { _profileViewUserId = null; _profileOtherEdit = false; loadProfile(); }
+
+// ===== تعديل بيانات مستخدم آخر من صفحة الملف الشخصي (صلاحية profiles:edit_others) =====
+let _profileOtherEdit = false;
+function startEditOtherProfile() {
+    if (!can('profiles', 'edit_others')) { alert(msg('غير مصرّح')); return; }
+    _profileOtherEdit = true;
+    loadProfile();
+    const el = document.getElementById('profileNameInput'); if (el) el.focus();
+}
+function cancelEditOtherProfile() { _profileOtherEdit = false; loadProfile(); }
+async function saveOtherProfile() {
+    const t = profileTarget();
+    if (t.isSelf || !t.id || !can('profiles', 'edit_others') || isGuest || !sb) { alert(msg('غير مصرّح')); return; }
+    const name = (document.getElementById('profileNameInput').value || '').trim();
+    const phone = (document.getElementById('profilePhoneInput').value || '').trim();
+    const job = (document.getElementById('profileJobInput').value || '').trim();
+    if (!name) { alert(msg('يرجى إدخال اسم العرض')); return; }
+    if (registeredUsers.some(u => String(u.id) !== String(t.id) && (u.username || '').toLowerCase() === name.toLowerCase())) {
+        alert(msg('اسم العرض مستخدم لمستخدم آخر، الرجاء اختيار اسم مختلف')); return;
+    }
+    const sm = document.getElementById('profileSaveMsg');
+    const full = { username: name, phone: phone || null, job_title: job || null };
+    let res = await sb.from('app_users').update(full).eq('id', t.id).select();
+    if (res.error) {
+        const em = (res.error.message || '') + ' ' + (res.error.details || '');
+        const fb = { username: name };
+        if (!/phone/i.test(em)) fb.phone = phone || null;
+        if (!/job_title/i.test(em)) fb.job_title = job || null;
+        res = await sb.from('app_users').update(fb).eq('id', t.id).select();
+    }
+    if (res.error) { if (sm) { sm.style.color = '#c0392b'; sm.textContent = msg('تعذّر الحفظ: ') + res.error.message; } return; }
+    // لم يُحدَّث أي صف: غالباً تمنعه سياسات الأمان في قاعدة البيانات (RLS)
+    if (Array.isArray(res.data) && res.data.length === 0) {
+        if (sm) { sm.style.color = '#c0392b'; sm.textContent = msg('لم يتم الحفظ: قاعدة البيانات لا تسمح لحسابك بتعديل بيانات هذا المستخدم.'); }
+        return;
+    }
+    await loadAllFromCloud();
+    recordAction('تعديل بيانات المستخدم ' + name + ' (اسم العرض/الهاتف/المسمى الوظيفي)', 'update');
+    _profileOtherEdit = false;
+    loadProfile();
+    if (sm) { sm.style.color = '#2e7d32'; sm.textContent = msg('تم حفظ البيانات بنجاح ✅'); }
+}
 
 // عرض الصلاحيات المتاحة (حسب دور الملف المعروض)
 function renderProfilePermissions(role) {
@@ -9197,6 +9341,7 @@ function renderCtrlList(tbodySel, items, searchId, delFn, editFn) {
 function loadControlPanel() {
     renderCtrlList('#serviceTypesTable tbody', serviceTypes, 'svcSearch', 'deleteServiceType', 'editServiceTypePrompt');
     renderCtrlList('#departmentsTable tbody', departments, 'deptSearch', 'deleteDepartment', 'editDepartmentPrompt');
+    try { renderQuickDeptList(); } catch (e) {}
     renderCtrlList('#descriptionsTable tbody', descriptions, 'descSearch', 'deleteDescription', 'editDescriptionPrompt');
     // عدّادات
     const setC = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n; };
@@ -9340,6 +9485,50 @@ async function addDepartment() {
     recordAction('إضافة قسم / غرض ' + name, 'create');
     loadControlPanel();
     populateAllFilters();
+}
+
+// ===== نافذة إضافة قسم سريعة من نافذة أمر الشراء =====
+function renderQuickDeptList() {
+    const modal = document.getElementById('quickDeptModal');
+    if (!modal) return;
+    renderCtrlList('#departmentsTableQ tbody', departments, 'deptSearchQ', 'deleteDepartment', 'editDepartmentPrompt');
+    // إخفاء أزرار التعديل/الحذف لمن لا يملك صلاحيتها
+    const canEdit = can('control', 'edit'), canDel = can('control', 'delete');
+    modal.querySelectorAll('#departmentsTableQ tbody button').forEach(b => {
+        const oc = b.getAttribute('onclick') || '';
+        if ((/^editDepartmentPrompt/.test(oc) && !canEdit) || (/^deleteDepartment/.test(oc) && !canDel)) b.remove();
+    });
+    const c = document.getElementById('deptCountQ'); if (c) c.textContent = departments.length;
+}
+function openQuickDeptModal() {
+    if (!can('control', 'create')) { alert(msg('لا تملك صلاحية إضافة الأقسام')); return; }
+    const inp = document.getElementById('newDepartmentQ');
+    if (inp) inp.value = '';
+    const s = document.getElementById('deptSearchQ'); if (s) s.value = '';
+    renderQuickDeptList();
+    document.getElementById('quickDeptModal').classList.add('active');
+    setTimeout(() => { if (inp) inp.focus(); }, 50);
+}
+function closeQuickDeptModal() {
+    document.getElementById('quickDeptModal').classList.remove('active');
+}
+async function addDepartmentQuick() {
+    if (!can('control', 'create')) { alert(msg('لا تملك صلاحية إضافة الأقسام')); return; }
+    const input = document.getElementById('newDepartmentQ');
+    const name = (input ? input.value : '').trim();
+    if (!name) { alert(msg('يرجى إدخال اسم القسم / الغرض')); return; }
+    if (departments.some(d => (d.name || '').toLowerCase() === name.toLowerCase())) { alert(msg('هذا القسم موجود مسبقاً')); return; }
+    const { error } = await sb.from('departments').insert({ name });
+    if (error) { alert(msg('تعذّر الإضافة: ') + error.message); return; }
+    input.value = '';
+    await loadAllFromCloud();
+    recordAction('إضافة قسم / غرض ' + name, 'create');
+    try { loadControlPanel(); } catch (e) {}
+    try { populateAllFilters(); } catch (e) {}
+    // اختيار القسم الجديد مباشرةً في حقل القسم / الغرض بنافذة أمر الشراء
+    const f = document.getElementById('lpoDepartment');
+    if (f) { f.value = name; f.dispatchEvent(new Event('change', { bubbles: true })); }
+    closeQuickDeptModal();
 }
 
 async function deleteDepartment(id) {
@@ -9711,7 +9900,7 @@ function lastModifiedCell(order, actEntries) {
     return `${fmtRecordDate(last.createdAt)}` +
            `<div style="margin-top:3px; display:flex; align-items:center; gap:5px; flex-wrap:wrap;">` +
            `<span style="background:${color}22; color:${color}; border:1px solid ${color}55; border-radius:10px; padding:1px 7px; font-size:10px; font-weight:700; white-space:nowrap;">${activityTypeLabel(last.actionType)}</span>` +
-           (last.username && last.username !== '—' ? `<span style="font-size:10px; color:#8aa2b0; white-space:nowrap;"><i class="fas fa-user"></i> ${escapeHtml(last.username)}</span>` : '') +
+           (last.username && last.username !== '—' ? `<span style="font-size:10px; color:#8aa2b0; line-height:1.35;"><i class="fas fa-user"></i> ${escapeHtml(last.username)}</span>` : '') +
            `</div>`;
 }
 
@@ -9937,6 +10126,84 @@ function resetLpoTableFromProfile() {
     const el = document.getElementById('profileResetMsg');
     if (el) el.textContent = currentLanguage === 'en' ? 'Purchase Orders and Drafts table columns reset to default. ✅' : 'تمت إعادة أعمدة جدولَي أوامر الشراء والمسودات إلى الوضع الافتراضي ✅';
 }
+// ===== الوضع الافتراضي العام لأعمدة جداول أوامر الشراء (مدير النظام) =====
+const LPO_LAYOUT_TABLES = ['lpoListTable', 'draftsTable'];
+function _clearInlineColWidths(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    const rows = [];
+    if (table.tHead && table.tHead.rows[0]) rows.push(table.tHead.rows[0]);
+    if (table.tBodies[0]) rows.push(...Array.from(table.tBodies[0].rows));
+    rows.forEach(r => Array.from(r.cells).forEach(c => { c.style.width = ''; c.style.minWidth = ''; c.style.maxWidth = ''; }));
+}
+// تطبيق الوضع الافتراضي المحمَّل من السحابة. عند صدور وضع افتراضي جديد (savedAt مختلف عمّا بُني عليه
+// تخصيص المستخدم) تُمسح تخصيصات المستخدم الشخصية لهذه الجداول مرة واحدة ليُثبَّت الوضع الجديد للجميع.
+function applyTableLayoutDefaults(def) {
+    TABLE_LAYOUT_DEFAULTS = (def && typeof def === 'object') ? def : null;
+    const stamp = TABLE_LAYOUT_DEFAULTS && TABLE_LAYOUT_DEFAULTS.savedAt ? String(TABLE_LAYOUT_DEFAULTS.savedAt) : '';
+    LPO_LAYOUT_TABLES.forEach(tableId => {
+        let base = '';
+        try { base = localStorage.getItem('colbase_' + tableId) || ''; } catch (e) {}
+        if (stamp && base !== stamp) {
+            try {
+                localStorage.removeItem('colorder_' + tableId);
+                localStorage.removeItem('colwidths_' + tableId);
+                localStorage.setItem('colbase_' + tableId, stamp);
+            } catch (e) {}
+        }
+        // إعادة القراءة عند العرض التالي (من التخصيص الشخصي أو من الوضع الافتراضي)
+        delete COL_ORDER[tableId]; delete COL_WIDTHS[tableId];
+        // التطبيق الفوري فقط إن كان الجدول مهيّأً (رؤوسه تحمل data-colid)؛ وإلا يُطبَّق عند أول عرض
+        const t = document.getElementById(tableId);
+        const ready = t && t.tHead && t.tHead.rows[0] && Array.from(t.tHead.rows[0].cells).every(c => c.hasAttribute('data-colid'));
+        if (ready) { _clearInlineColWidths(tableId); try { applyColumnOrder(tableId); } catch (e) {} }
+    });
+}
+function _isSysadmin() { return !!(currentUser && currentUser.role === 'sysadmin'); }
+// حفظ ترتيب وأحجام أعمدة جدولَي أوامر الشراء والمسودات الحالية كوضع افتراضي لجميع المستخدمين
+async function saveLpoTablesAsDefault() {
+    const en = currentLanguage === 'en';
+    const el = document.getElementById('profileResetMsg');
+    if (!_isSysadmin()) { alert(msg('هذا الإجراء متاح لمدير النظام فقط')); return; }
+    if (!confirm(en ? 'Save the current column order and widths of the Purchase Orders and Drafts tables as the default for ALL users?\nUsers who customized these tables will be switched to this layout.'
+                    : 'حفظ ترتيب وأحجام أعمدة جدولَي أوامر الشراء والمسودات الحالية كوضع افتراضي لجميع المستخدمين؟\nسيتحوّل المستخدمون الذين خصّصوا هذه الجداول إلى هذا الوضع.')) return;
+    const tables = {};
+    LPO_LAYOUT_TABLES.forEach(tableId => {
+        const t = document.getElementById(tableId);
+        if (!t || !t.tHead || !t.tHead.rows[0]) return;
+        const n = t.tHead.rows[0].cells.length;
+        tables[tableId] = { order: _loadColOrder(tableId, n).slice(), widths: Object.assign({}, _loadColWidths(tableId)) };
+    });
+    const def = { savedAt: new Date().toISOString(), savedBy: (currentUser && (currentUser.username || currentUser.email)) || '', tables };
+    if (sb) {
+        const { error } = await sb.from('settings').upsert({ key: 'table_layout_defaults', value: JSON.stringify(def) });
+        if (error) { alert(msg('تعذّر الحفظ: ') + error.message); return; }
+    }
+    // المدير نفسه: تخصيصه الحالي أصبح هو الوضع الافتراضي
+    try { LPO_LAYOUT_TABLES.forEach(id => localStorage.setItem('colbase_' + id, def.savedAt)); } catch (e) {}
+    TABLE_LAYOUT_DEFAULTS = def;
+    try { recordAction('حفظ ترتيب وأحجام أعمدة جداول أوامر الشراء كوضع افتراضي لجميع المستخدمين', 'update'); } catch (e) {}
+    if (el) el.textContent = en ? 'Current Purchase Orders & Drafts column layout saved as the default for all users. ✅' : 'تم حفظ ترتيب وأحجام أعمدة جدولَي أوامر الشراء والمسودات كوضع افتراضي لجميع المستخدمين ✅';
+}
+// إلغاء الوضع الافتراضي المحفوظ والعودة إلى الوضع الأصلي (ضبط المصنع) لجميع المستخدمين
+async function clearLpoTablesDefault() {
+    const en = currentLanguage === 'en';
+    const el = document.getElementById('profileResetMsg');
+    if (!_isSysadmin()) { alert(msg('هذا الإجراء متاح لمدير النظام فقط')); return; }
+    if (!confirm(en ? 'Remove the saved default and return the Purchase Orders and Drafts tables to the original factory layout for ALL users?'
+                    : 'إلغاء الوضع الافتراضي المحفوظ وإعادة جدولَي أوامر الشراء والمسودات إلى الوضع الأصلي (ضبط المصنع) لجميع المستخدمين؟')) return;
+    const def = { savedAt: new Date().toISOString(), savedBy: (currentUser && (currentUser.username || currentUser.email)) || '', tables: {} };
+    if (sb) {
+        const { error } = await sb.from('settings').upsert({ key: 'table_layout_defaults', value: JSON.stringify(def) });
+        if (error) { alert(msg('تعذّر الحفظ: ') + error.message); return; }
+    }
+    applyTableLayoutDefaults(def);
+    try { recordAction('إعادة أعمدة جداول أوامر الشراء إلى ضبط المصنع لجميع المستخدمين', 'update'); } catch (e) {}
+    const active = document.querySelector('.page.active');
+    if (active && active.id === 'page-lpo-management') { try { loadLPOList(); } catch (e) {} try { loadDrafts(); } catch (e) {} }
+    if (el) el.textContent = en ? 'Saved default removed — original factory layout restored for all users. ✅' : 'تم إلغاء الوضع الافتراضي المحفوظ وإعادة الوضع الأصلي لجميع المستخدمين ✅';
+}
+
 function resetSuppliersTableFromProfile() {
     resetTableLayout('suppliersTable');
     const active = document.querySelector('.page.active');
