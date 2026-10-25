@@ -3031,6 +3031,7 @@ const I18N = {
     'معايير التقرير والتصفية': 'Report Criteria & Filters',
     'أكبر 5 أوامر شراء (Top 5)': 'Top 5 Purchase Orders',
     'إحصائيات حسب القسم المعني': 'Statistics by Department',
+    'مبالغ أوامر الشراء حسب القسم المعني (ر.ع)': 'Purchase Order Amounts by Department (OMR)',
     'الإنفاق حسب نوع الخدمة': 'Spending by Service Type',
     'متوسط الإنفاق الشهري': 'Average Monthly Spending',
     'مؤشر أداء الموردين (Vendor Performance Index)': 'Vendor Performance Index',
@@ -5915,7 +5916,170 @@ document.addEventListener('click', function(e) {
 // تعتمد على محرّك الطباعة الأصلي في المتصفح عبر iframe مخفي (بدل html2canvas الذي كان
 // يُنتج صفحة بيضاء على بعض الأجهزة) — موثوق على الحاسوب والجوال، ونص قابل للتحديد، وعدة صفحات.
 // طباعة قائمة الموردين (حسب الفلترة والفرز) كتقرير A4 أفقي احترافي عبر محرّك الطباعة الأصلي
-function printSuppliersPDF() {
+// ===== تنزيل كشف (HTML) كملف PDF مباشرةً — A4 أفقي بهوامش رفيعة وترقيم صفحات =====
+// يُقسَّم الكشف إلى صفحات جاهزة بمقاس الصفحة تماماً (ترويسة + رأس جدول مكرّر في كل صفحة)، وتُلتقط كل صفحة على حدة.
+// هذا يمنع الاقتصاص والإزاحة ويضمن ملاءمة العرض الكامل للصفحة. أثناء الالتقاط يُحوَّل اتجاه المستند مؤقتاً إلى LTR
+// (خلل معروف في html2canvas مع الصفحات RTL يسبّب انزياح المحتوى)، بينما يبقى اتجاه محتوى الكشف نفسه كما هو.
+// html2canvas يرسم النص كلمةً كلمة فتسقط المسافات بين الكلمات العربية ويختلّ ترتيبها مع الأرقام والرموز.
+// الحل: استبدال المسافات داخل النص العربي بمسافة غير منقسمة (NBSP) فتُرسَم العبارة كاملة دفعة واحدة
+// بتشكيل واتجاه صحيحين. النصوص الطويلة جداً تبقى كما هي حتى تلتف داخل خلايا الجدول.
+function fixArabicSpacesForCanvas(root) {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    const nodes = [];
+    while (walker.nextNode()) {
+        const t = walker.currentNode;
+        if (t.parentNode && t.parentNode.nodeName === 'STYLE') continue;
+        if (t.nodeValue.trim()) nodes.push(t);
+    }
+    nodes.forEach(t => {
+        const v = t.nodeValue;
+        const lead = (v.match(/^\s*/) || [''])[0], trail = (v.match(/\s*$/) || [''])[0];
+        const core = v.trim();
+        if (/[\u0600-\u06FF]/.test(core)) {
+            // عبارة عربية: مسافات غير منقسمة + علامة RLM في الطرفين لتثبيت موضع الرموز (: ( ) …) في الاتجاه الصحيح
+            // العبارات الطويلة (مثل أسماء الموردين) تُعطى فرصة التفاف عند الكلمات (ZWSP) دون فقدان المسافة
+            const sep = core.length > 24 ? '\u00A0\u200B' : '\u00A0';
+            t.nodeValue = lead + '\u200F' + core.replace(/ +/g, sep) + '\u200F' + trail;
+        } else if (/ /.test(core) && /^[\d\s\/:.\-,+()%]+$/.test(core)) {
+            // تاريخ/وقت/أرقام: تُرسم كقطعة واحدة بترتيبها الصحيح دون فقدان المسافة
+            t.nodeValue = lead + core.replace(/ +/g, '\u00A0') + trail;
+        }
+    });
+}
+async function downloadListPdf(bodyHtml, css, rootClass, filename, en) {
+    if (!(await ensureLib('html2pdf'))) { alert(msg('تعذّر تحميل مكتبة الطباعة. تأكد من اتصالك بالإنترنت وأعد المحاولة.')); return false; }
+    const M = 5, MB = 9;                       // الهوامش بالملّيمتر: رفيعة، مع مساحة صغيرة أسفل الصفحة لرقم الصفحة
+    const mm2px = (v) => v * 96 / 25.4;
+    const pageW = Math.floor(mm2px(297 - 2 * M));          // العرض الداخلي لصفحة A4 الأفقية بالبكسل
+    const pageH = Math.floor(mm2px(210 - M - MB)) - 3;     // الارتفاع الداخلي (مع هامش أمان صغير)
+    const dirAttr = `dir="${en ? 'ltr' : 'rtl'}" lang="${en ? 'en' : 'ar'}"`;
+    const pageCss = css + `
+  .${rootClass}.pdf-page { width:${pageW}px; height:${pageH}px; overflow:hidden; background:#fff; padding:0; }
+  .${rootClass}.pdf-page .pdf-head { margin-bottom:8px; padding-bottom:8px; }
+  .${rootClass}.pdf-page .pdf-filters { margin-bottom:8px; }
+  .${rootClass}.pdf-page .pdf-foot { margin-top:8px; }`;
+
+    // غطاء "جاري إنشاء الملف" يُخفي أي وميض أثناء التحويل المؤقت للاتجاه
+    const cover = document.createElement('div');
+    cover.style.cssText = 'position:fixed; inset:0; z-index:5000; background:rgba(255,255,255,0.94); display:flex; align-items:center; justify-content:center; font:600 15px Arial,Tahoma,sans-serif; color:#0093c4;';
+    cover.innerHTML = '<div><i class="fas fa-spinner fa-spin"></i> ' + (en ? 'Generating PDF…' : 'جاري إنشاء ملف PDF…') + '</div>';
+    document.body.appendChild(cover);
+    const holder = document.createElement('div');
+    holder.style.cssText = 'position:absolute; left:0; top:0; width:' + pageW + 'px; z-index:-1; pointer-events:none;';
+    document.body.appendChild(holder);
+
+    const html = document.documentElement;
+    const prevDir = html.getAttribute('dir');
+    const sx = window.scrollX, sy = window.scrollY;
+    let ok = false;
+    try {
+        // 1) تفكيك الكشف: ما قبل الجدول (الترويسة/الفلاتر) + الجدول + ما بعده (التذييل)
+        const src = document.createElement('div');
+        src.innerHTML = bodyHtml;
+        fixArabicSpacesForCanvas(src);
+        const table = src.querySelector('table');
+        const headEl = src.querySelector('.pdf-head');
+        const preEls = [], postEls = [];
+        let afterTable = false;
+        Array.from(src.children).forEach(ch => {
+            if (ch === table) { afterTable = true; return; }
+            (afterTable ? postEls : preEls).push(ch);
+        });
+        const theadHtml = table && table.tHead ? table.tHead.outerHTML : '';
+        const tfootHtml = table && table.tFoot ? table.tFoot.outerHTML : '';
+        const colgroupHtml = table ? Array.from(table.querySelectorAll('colgroup')).map(c => c.outerHTML).join('') : '';
+        const tableAttrs = table ? Array.from(table.attributes).map(a => `${a.name}="${a.value.replace(/"/g, '&quot;')}"`).join(' ') : '';
+        const rows = table && table.tBodies[0] ? Array.from(table.tBodies[0].rows).map(r => r.outerHTML) : [];
+
+        // 2) بناء صفحة جديدة (الترويسة في كل صفحة، والفلاتر في الأولى فقط)
+        const newPage = (first) => {
+            const pg = document.createElement('div');
+            pg.className = rootClass + ' pdf-page';
+            pg.setAttribute('dir', en ? 'ltr' : 'rtl'); pg.setAttribute('lang', en ? 'en' : 'ar');
+            const pre = first ? preEls.map(e => e.outerHTML).join('') : (headEl ? headEl.outerHTML : '');
+            pg.innerHTML = `<style>${pageCss}</style>${pre}<table ${tableAttrs}>${colgroupHtml}${theadHtml}<tbody></tbody></table>`;
+            pg.style.height = 'auto';              // ارتفاع حر أثناء القياس
+            holder.appendChild(pg);
+            return pg;
+        };
+        const fits = (pg) => pg.scrollHeight <= pageH;
+        const pages = [];
+        let pg = newPage(true); pages.push(pg);
+        let tb = pg.querySelector('tbody');
+        rows.forEach(rh => {
+            tb.insertAdjacentHTML('beforeend', rh);
+            if (!fits(pg) && tb.rows.length > 1) {
+                const last = tb.rows[tb.rows.length - 1];
+                pg = newPage(false); pages.push(pg);
+                tb = pg.querySelector('tbody');
+                tb.appendChild(last);
+            }
+        });
+        // 3) الإجمالي والتذييل في الصفحة الأخيرة (مع نقل صفوف لصفحة جديدة إن لزم)
+        const addTail = (p) => {
+            const t = p.querySelector('table');
+            if (tfootHtml) t.insertAdjacentHTML('beforeend', tfootHtml);
+            postEls.forEach(e => p.insertAdjacentHTML('beforeend', e.outerHTML));
+        };
+        const removeTail = (p) => {
+            const t = p.querySelector('table'); if (t.tFoot) t.tFoot.remove();
+            while (p.lastElementChild && p.lastElementChild !== t) p.lastElementChild.remove();
+        };
+        addTail(pg);
+        if (!fits(pg)) {
+            removeTail(pg);
+            const np = newPage(false); pages.push(np);
+            const ntb = np.querySelector('tbody');
+            addTail(np);
+            // نقل صفّين من نهاية الصفحة السابقة حتى لا تبقى صفحة الإجمالي بلا صفوف (مع بقاء الصفحة السابقة ممتلئة)
+            for (let k = 0; k < 2 && tb.rows.length > 1; k++) {
+                ntb.insertBefore(tb.rows[tb.rows.length - 1], ntb.firstChild);
+                if (!fits(np)) { tb.appendChild(ntb.rows[0]); break; }
+            }
+        }
+        pages.forEach(p => { p.style.height = pageH + 'px'; });
+
+        // 4) الالتقاط: كل صفحة على حدة داخل ملف PDF واحد
+        html.setAttribute('dir', 'ltr');
+        window.scrollTo(0, 0);
+        await new Promise(r => setTimeout(r, 120)); // اكتمال التخطيط وفك ترميز الشعار
+        const opt = {
+            margin: [M, M, MB, M],
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.97 },
+            html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+            pagebreak: { mode: [] }
+        };
+        let worker = html2pdf().set(opt).from(pages[0]).toPdf();
+        pages.slice(1).forEach(p => {
+            worker = worker.get('pdf').then(pdf => { pdf.addPage(); }).from(p).toContainer().toCanvas().toPdf();
+        });
+        await worker.get('pdf').then(function (pdf) {
+            // ترقيم الصفحات + خط رفيع أعلى التذييل
+            const n = pdf.internal.getNumberOfPages();
+            const W = pdf.internal.pageSize.getWidth(), H = pdf.internal.pageSize.getHeight();
+            for (let i = 1; i <= n; i++) {
+                pdf.setPage(i);
+                pdf.setDrawColor(0, 147, 196); pdf.setLineWidth(0.3);
+                pdf.line(M, H - MB + 2, W - M, H - MB + 2);
+                pdf.setFontSize(8); pdf.setTextColor(120, 140, 155);
+                pdf.text(i + ' / ' + n, W / 2, H - MB + 5.6, { align: 'center' });
+            }
+        }).save();
+        ok = true;
+    } catch (e) {
+        alert(msg('تعذّرت الطباعة: ') + (e && e.message ? e.message : ''));
+    } finally {
+        if (prevDir === null) html.removeAttribute('dir'); else html.setAttribute('dir', prevDir);
+        window.scrollTo(sx, sy);
+        if (holder.parentNode) holder.parentNode.removeChild(holder);
+        if (cover.parentNode) cover.parentNode.removeChild(cover);
+    }
+    return ok;
+}
+
+async function printSuppliersPDF() {
     const en = currentLanguage === 'en';
     const list = getFilteredSuppliers();
     if (!list.length) { alert(en ? 'No suppliers to print.' : 'لا يوجد موردون للطباعة.'); return; }
@@ -5970,42 +6134,25 @@ function printSuppliersPDF() {
             <tbody>${rowsHtml}</tbody>
         </table>
         <div class="pdf-foot">${en ? 'Generated by the LPO Management System — Takaful Oman Insurance' : 'صادر عن نظام إدارة أوامر الشراء المحلية — تكافل عمان للتأمين'}</div>`;
-    const docHtml = `<!DOCTYPE html><html dir="${en ? 'ltr' : 'rtl'}" lang="${en ? 'en' : 'ar'}"><head><meta charset="utf-8"><title>${en ? 'Suppliers List' : 'كشف قائمة الموردين'}</title>
-<style>
-  @page { size: A4 landscape; margin: 8mm; }
-  * { box-sizing: border-box; } html, body { margin:0; padding:0; }
-  body { font-family: Arial, 'Segoe UI', Tahoma, sans-serif; color:#222; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding:4px; }
-  .pdf-head { display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:3px solid #0093c4; padding-bottom:10px; margin-bottom:12px; }
-  table { width:100%; border-collapse:collapse; font-size:11px; table-layout:fixed; }
-  thead { display: table-header-group; }
-  th { background:#0093c4; color:#fff; padding:7px 5px; border:1px solid #cfe0ea; word-wrap:break-word; overflow-wrap:anywhere; }
-  td { border:1px solid #e1e8ee; padding:5px; word-wrap:break-word; overflow-wrap:anywhere; }
-  tbody tr:nth-child(even) { background:#f7fafc; }
-  tr { page-break-inside: avoid; }
-  .pdf-foot { margin-top:10px; font-size:9.5px; color:#8aa2b0; text-align:center; }
-</style></head><body>${bodyHtml}</body></html>`;
-    const prev = document.getElementById('__supPrintFrame'); if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
-    const iframe = document.createElement('iframe');
-    iframe.id = '__supPrintFrame';
-    iframe.style.cssText = 'position:fixed; right:0; bottom:0; width:0; height:0; border:0; visibility:hidden;';
-    document.body.appendChild(iframe);
-    const cleanup = () => { try { if (iframe.parentNode) iframe.parentNode.removeChild(iframe); } catch (e) {} };
-    const doPrint = () => {
-        try {
-            iframe.contentWindow.focus();
-            try { iframe.contentWindow.onafterprint = () => setTimeout(cleanup, 500); } catch (e) {}
-            iframe.contentWindow.print();
-            setTimeout(cleanup, 60000);
-            recordAction(en ? 'Print suppliers list PDF' : 'طباعة قائمة الموردين PDF', 'export');
-        } catch (e) { cleanup(); alert(msg('تعذّرت الطباعة: ') + (e && e.message ? e.message : '')); }
-    };
-    const idoc = iframe.contentWindow.document;
-    idoc.open(); idoc.write(docHtml); idoc.close();
-    if (idoc.readyState === 'complete') setTimeout(doPrint, 400);
-    else iframe.onload = () => setTimeout(doPrint, 400);
+    // تنزيل ملف PDF مباشرة (دون فتح نافذة الطباعة في المتصفح) — نفس التصميم السابق
+    if (!(await ensureLib('html2pdf'))) { alert(msg('تعذّر تحميل مكتبة الطباعة. تأكد من اتصالك بالإنترنت وأعد المحاولة.')); return; }
+    const R = '.sup-pdf-root';
+    const css = `
+  ${R} { width:100%; background:#fff; font-family: Arial, 'Segoe UI', Tahoma, sans-serif; color:#222; padding:4px; box-sizing:border-box; }
+  ${R} * { box-sizing: border-box; }
+  ${R} .pdf-head { display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:3px solid #0093c4; padding-bottom:10px; margin-bottom:12px; }
+  ${R} table { width:100%; border-collapse:collapse; font-size:11px; table-layout:fixed; }
+  ${R} th { background:#0093c4; color:#fff; padding:7px 5px; border:1px solid #cfe0ea; word-wrap:break-word; overflow-wrap:anywhere; }
+  ${R} td { border:1px solid #e1e8ee; padding:5px; word-wrap:break-word; overflow-wrap:anywhere; }
+  ${R} tbody tr:nth-child(even) { background:#f7fafc; }
+  ${R} tr { page-break-inside: avoid; }
+  ${R} .pdf-foot { margin-top:10px; font-size:9.5px; color:#8aa2b0; text-align:center; }`;
+    const localDate = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    const ok = await downloadListPdf(bodyHtml, css, 'sup-pdf-root', (en ? 'Suppliers-List-' : 'قائمة-الموردين-') + localDate + '.pdf', en);
+    if (ok) recordAction(en ? 'Download suppliers list PDF' : 'تنزيل قائمة الموردين PDF', 'export');
 }
 
-function printLPOListPDF() {
+async function printLPOListPDF() {
     const en = currentLanguage === 'en';
     const list = getSortedLPOs(); // يحترم الفلترة والفرز المطبّقين في الجدول
     if (!list.length) { alert(msg('لا توجد أوامر لطباعتها')); return; }
@@ -6071,50 +6218,24 @@ function printLPOListPDF() {
         </table>
         <div class="pdf-foot">${en ? 'Generated by the LPO Management System — Takaful Oman Insurance' : 'صادر عن نظام إدارة أوامر الشراء المحلية — تكافل عمان للتأمين'}</div>`;
 
-    const docHtml = `<!DOCTYPE html><html dir="${en ? 'ltr' : 'rtl'}" lang="${en ? 'en' : 'ar'}"><head><meta charset="utf-8">
-<title>${en ? 'Purchase Orders Report' : 'تقرير أوامر الشراء المحلية'}</title>
-<style>
-  @page { size: A4 landscape; margin: 8mm; }
-  * { box-sizing: border-box; }
-  html, body { margin:0; padding:0; }
-  body { font-family: Arial, 'Segoe UI', Tahoma, sans-serif; color:#222; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding:4px; }
-  .pdf-head { display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:3px solid #0093c4; padding-bottom:10px; margin-bottom:12px; }
-  .pdf-filters { font-size:11px; color:#444; background:#eef7fb; border:1px solid #cfe7f3; border-radius:6px; padding:6px 10px; margin-bottom:10px; }
-  table { width:100%; border-collapse:collapse; font-size:11px; }
-  thead { display: table-header-group; }
-  th { background:#0093c4; color:#fff; padding:7px 5px; border:1px solid #cfe0ea; }
-  td { border:1px solid #e1e8ee; padding:5px; }
-  tbody tr:nth-child(even) { background:#f7fafc; }
-  tr { page-break-inside: avoid; }
-  .pdf-total td { background:#f1f6f9; font-weight:800; padding:8px 6px; border:1px solid #cfe0ea; }
-  .pdf-foot { margin-top:10px; font-size:9.5px; color:#8aa2b0; text-align:center; }
-</style></head><body>${bodyHtml}</body></html>`;
-
-    // إزالة أي إطار طباعة سابق ثم إنشاء iframe مخفي والطباعة منه
-    const prev = document.getElementById('__lpoPrintFrame'); if (prev && prev.parentNode) prev.parentNode.removeChild(prev);
-    const iframe = document.createElement('iframe');
-    iframe.id = '__lpoPrintFrame';
-    iframe.setAttribute('aria-hidden', 'true');
-    iframe.style.cssText = 'position:fixed; right:0; bottom:0; width:0; height:0; border:0; visibility:hidden;';
-    document.body.appendChild(iframe);
-    const cleanup = () => { try { if (iframe.parentNode) iframe.parentNode.removeChild(iframe); } catch (e) {} };
-    const doPrint = () => {
-        try {
-            iframe.contentWindow.focus();
-            try { iframe.contentWindow.onafterprint = () => setTimeout(cleanup, 500); } catch (e) {}
-            iframe.contentWindow.print();
-            setTimeout(cleanup, 60000); // تنظيف احتياطي
-            recordAction(en ? 'Print orders list PDF' : 'طباعة قائمة أوامر الشراء PDF', 'export');
-        } catch (e) {
-            cleanup();
-            alert(msg('تعذّرت الطباعة: ') + (e && e.message ? e.message : ''));
-        }
-    };
-    const idoc = iframe.contentWindow.document;
-    idoc.open(); idoc.write(docHtml); idoc.close();
-    // مهلة بسيطة لاكتمال التخطيط وفك ترميز الشعار قبل فتح نافذة الطباعة
-    if (idoc.readyState === 'complete') setTimeout(doPrint, 400);
-    else iframe.onload = () => setTimeout(doPrint, 400);
+    // تنزيل ملف PDF مباشرة (دون فتح نافذة الطباعة في المتصفح) — نفس التصميم السابق
+    if (!(await ensureLib('html2pdf'))) { alert(msg('تعذّر تحميل مكتبة الطباعة. تأكد من اتصالك بالإنترنت وأعد المحاولة.')); return; }
+    const R = '.lpo-pdf-root';
+    const css = `
+  ${R} { width:100%; background:#fff; font-family: Arial, 'Segoe UI', Tahoma, sans-serif; color:#222; padding:4px; box-sizing:border-box; }
+  ${R} * { box-sizing: border-box; }
+  ${R} .pdf-head { display:flex; justify-content:space-between; align-items:center; gap:14px; border-bottom:3px solid #0093c4; padding-bottom:10px; margin-bottom:12px; }
+  ${R} .pdf-filters { font-size:11px; color:#444; background:#eef7fb; border:1px solid #cfe7f3; border-radius:6px; padding:6px 10px; margin-bottom:10px; }
+  ${R} table { width:100%; border-collapse:collapse; font-size:11px; }
+  ${R} th { background:#0093c4; color:#fff; padding:7px 5px; border:1px solid #cfe0ea; }
+  ${R} td { border:1px solid #e1e8ee; padding:5px; }
+  ${R} tbody tr:nth-child(even) { background:#f7fafc; }
+  ${R} tr { page-break-inside: avoid; }
+  ${R} .pdf-total td { background:#f1f6f9; font-weight:800; padding:8px 6px; border:1px solid #cfe0ea; }
+  ${R} .pdf-foot { margin-top:10px; font-size:9.5px; color:#8aa2b0; text-align:center; }`;
+    const localDate = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+    const ok = await downloadListPdf(bodyHtml, css, 'lpo-pdf-root', (en ? 'Purchase-Orders-' : 'أوامر-الشراء-') + localDate + '.pdf', en);
+    if (ok) recordAction(en ? 'Download orders list PDF' : 'تنزيل قائمة أوامر الشراء PDF', 'export');
 }
 
 // تصدير قائمة أوامر الشراء المُصفّاة إلى ملف Excel احترافي بورقتين
