@@ -383,6 +383,8 @@
         .badge-draft { background: #e3f2fd; color: #1976d2; }
         .badge-pending { background: #fff3cd; color: #856404; }
         .badge-approved { background: #e8f5e9; color: #2e7d32; }
+        .badge-payment { background: #efe7fb; color: #6c3fb5; }
+        .badge-closed { background: #eceff1; color: #455a64; }
         .badge-rejected { background: #fdecea; color: #c0392b; }
         .excel-link { font-size: 13px; font-weight: 600; color: #1b7e2d; text-decoration: none; border-bottom: 1px dashed #7cb342; padding-bottom: 2px; transition: all 0.18s; cursor: pointer; }
         .excel-link:hover { color: #fff; background: #1b7e2d; border-radius: 6px; padding: 5px 12px; border-bottom-color: transparent; }
@@ -1097,7 +1099,7 @@
                     <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الأقسام --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
                     <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
                 </div>
-                <select id="filterStatus" onchange="filterLPOs()"><option value="">-- كل الحالات --</option><option value="__pending">بانتظار الاعتماد</option><option value="__approved">معتمد</option><option value="__rejected">مرفوض</option></select>
+                <select id="filterStatus" onchange="filterLPOs()"><option value="">-- كل الحالات --</option><option value="__pending">بانتظار الاعتماد</option><option value="__approved">معتمد</option><option value="__payment">قيد الدفع</option><option value="__closed">مغلق</option><option value="__rejected">مرفوض</option></select>
                 <input type="date" lang="en" dir="ltr" id="filterFromDate" onchange="filterLPOs()" title="من تاريخ">
                 <input type="date" lang="en" dir="ltr" id="filterToDate" onchange="filterLPOs()" title="إلى تاريخ">
             </div>
@@ -1983,7 +1985,6 @@
                     <span data-i18n="إظهار اسم المستلم">إظهار اسم المستلم</span>
                 </label>
                 <button onclick="downloadPreviewPDF()" class="btn btn-success"><i class="fas fa-download"></i> تحميل PDF</button>
-                <button onclick="closePreview()" class="btn">إغلاق</button>
                 <button class="modal-close" onclick="closePreview()">×</button>
             </div>
         </div>
@@ -2072,7 +2073,7 @@
 </button>
 
 <!-- ============ SUPPLIER MODAL ============ -->
-<div id="supplierModal" class="modal" onclick="if(event.target===this) closeSupplierModal()">
+<div id="supplierModal" class="modal" onmousedown="if(event.target===this) requestCloseSupplierModal()">
     <div class="modal-content">
         <div class="modal-header">
             <h2 id="supplierModalTitle"><i class="fas fa-plus"></i> إضافة مورد جديد</h2>
@@ -2099,6 +2100,7 @@
                     <div class="form-group-item"><label>البريد</label><input type="email" id="newSupplierEmail"></div>
                     <div class="form-group-item"><label>المدينة</label><input type="text" id="newSupplierCity" value="مسقط"></div>
                     <div class="form-group-item"><label>الرقم الضريبي (VAT No)</label><input type="text" id="newSupplierVat"></div>
+                    <div class="form-group-item"><label>تاريخ انتهاء الضريبة</label><input type="date" lang="en" dir="ltr" id="newSupplierVatExpiry"></div>
                     <div class="form-group-item"><label>السجل التجاري (C.R)</label><input type="text" id="newSupplierCr"></div>
                     <div class="form-group-item"><label>تاريخ انتهاء السجل التجاري</label><input type="date" lang="en" dir="ltr" id="newSupplierCrExpiry"></div>
                 </div>
@@ -2368,7 +2370,7 @@ const ROLE_ORDER = ['new_user','requester','purchasing_officer','approver','stor
 // الوحدات (الموارد) التي تُضبط صلاحياتها — يمكن لكل وحدة تحديد الإجراءات المطبّقة عليها عبر acts
 const PERM_MODULES = [
     { key: 'dashboard',     ar: 'لوحة التحكم',       en: 'Dashboard', acts: ['view'] },
-    { key: 'orders',        ar: 'أوامر الشراء',     en: 'Purchase Orders', acts: ['view','create','edit','delete','approve','unapprove'] },
+    { key: 'orders',        ar: 'أوامر الشراء',     en: 'Purchase Orders', acts: ['view','create','edit','delete','approve','unapprove','pay','close'] },
     { key: 'drafts',        ar: 'المسودات',          en: 'Drafts', acts: ['view','create','edit','delete'] },
     { key: 'suppliers',     ar: 'الموردون',         en: 'Suppliers' },
     { key: 'evaluation',    ar: 'تقييم الموردين',    en: 'Supplier Evaluation', acts: ['view','create','edit'] },
@@ -2389,6 +2391,8 @@ const PERM_ACTIONS = [
     { key: 'restore', ar: 'استرجاع', en: 'Restore' },
     { key: 'approve', ar: 'اعتماد',  en: 'Approve' },
     { key: 'unapprove', ar: 'التراجع عن الاعتماد', en: 'Undo Approval' },
+    { key: 'pay',     ar: 'الدفع',    en: 'Pay' },
+    { key: 'close',   ar: 'الإغلاق',  en: 'Close' },
     { key: 'edit_display_name', ar: 'تعديل اسم العرض', en: 'Edit Display Name' },
     { key: 'edit_others', ar: 'تعديل بيانات المستخدمين', en: "Edit Users' Info" }
 ];
@@ -2443,6 +2447,8 @@ Object.keys(DEFAULT_PERMISSIONS).forEach(r => {
     DEFAULT_PERMISSIONS[r].drafts = { view: !!o.view, create: !!o.create, edit: !!o.edit, delete: !!o.delete };
     // التراجع عن الاعتماد: افتراضياً لمدير النظام فقط (قابل للمنح لأي دور)
     if (o) o.unapprove = (r === 'sysadmin');
+    // مرحلتا ما بعد الاعتماد (الدفع ثم الإغلاق): افتراضياً لمدير النظام ومدير الشراء والمحاسب (قابلة للمنح لأي دور)
+    if (o) { const fin = (r === 'sysadmin' || r === 'manager' || r === 'finance'); o.pay = fin; o.close = fin; }
     // تقييم الموردين: رؤية للجميع، وإضافة/تعديل لمن يملك تعديل الموردين
     const s = DEFAULT_PERMISSIONS[r].suppliers || {};
     DEFAULT_PERMISSIONS[r].evaluation = { view: !!s.view || true, create: !!s.edit || !!s.create, edit: !!s.edit };
@@ -2488,7 +2494,7 @@ function rowToDraft(r) {
 function rowToSupplier(r) {
     return { id: r.id, name: r.name, serviceType: r.service_type, phone: r.phone,
              email: r.email, city: r.city, vatNo: r.vat_no || '', crNo: r.cr_no || '',
-             crExpiry: r.cr_expiry || '', notes: r.notes || '', createdAt: r.created_at,
+             crExpiry: r.cr_expiry || '', vatExpiry: r.vat_expiry || '', notes: r.notes || '', createdAt: r.created_at,
              createdBy: r.created_by || '', deletedAt: r.deleted_at || null,
              supplierType: r.supplier_type || 'Local Supplier',
              taxCardUrl: r.tax_card_url || '', crCertUrl: r.cr_cert_url || '', otherFilesUrl: r.other_files_url || '' };
@@ -2916,6 +2922,9 @@ const I18N = {
     '-- كل أرقام المسودات --': '-- All Draft Numbers --',
     'تفضيلات العرض وإعادة التعيين': 'Display Preferences & Reset',
     'أُنشِئ بواسطة': 'Created by',
+    'قيد الدفع': 'Payment processing',
+    'تاريخ انتهاء الضريبة': 'VAT Expiry Date',
+    'مغلق': 'Closed',
     'تعديل': 'Edit',
     'إعادة ضبط المصنع لأعمدة جداول أوامر الشراء': 'Factory reset purchase orders table columns',
     'حفظ أحجام وترتيب أعمدة جداول أوامر الشراء الحالية كوضع افتراضي': 'Save current purchase orders table column sizes & order as default',
@@ -3142,6 +3151,7 @@ const I18N = {
 // ===================== قاموس رسائل التنبيه والأخطاء =====================
 // يُستخدم عبر الدالة msg() لعرض الرسائل بلغة الواجهة المختارة
 const MSG_I18N = {
+    'تعذّر تحديث حالة الأمر: ': 'Could not update the order status: ',
     'يرجى إدخال اسم العرض': 'Please enter the display name',
     'تم حفظ البيانات بنجاح ✅': 'Data saved successfully ✅',
     'اسم العرض مستخدم لمستخدم آخر، الرجاء اختيار اسم مختلف': 'This display name is already used by another user, please choose a different one',
@@ -3350,6 +3360,8 @@ const ACTIVITY_TYPES = {
     restore:     { ar: 'استرجاع',    en: 'Restore',          color: '#27ae60' },
     approve:     { ar: 'اعتماد',     en: 'Approve',          color: '#1e8449' },
     reject:      { ar: 'رفض',        en: 'Reject',           color: '#e74c3c' },
+    pay:         { ar: 'دفع',        en: 'Payment',          color: '#6c3fb5' },
+    close:       { ar: 'إغلاق',      en: 'Close',            color: '#455a64' },
     draft:       { ar: 'مسودة',      en: 'Draft',            color: '#9b59b6' },
     import:      { ar: 'استيراد',    en: 'Import',           color: '#16a085' },
     export:      { ar: 'تصدير/تنزيل', en: 'Export/Download',  color: '#34495e' },
@@ -3873,7 +3885,7 @@ document.addEventListener('keydown', function(e) {
     const supModal = document.getElementById('supplierModal');
     if (supModal && supModal.classList.contains('active')) {
         e.preventDefault();
-        closeSupplierModal();
+        requestCloseSupplierModal();
         return;
     }
     const newModal = document.getElementById('newLpoModal');
@@ -4724,7 +4736,7 @@ function drawMonthlyChart() {
 
 function drawStatusChart() {
     const ctx = document.getElementById('statusChart').getContext('2d');
-    const signed = lpoDrafts.filter(l => l.status === 'موقعة').length;
+    const signed = lpoDrafts.filter(l => l.status === 'موقعة' || l.status === LPO_STAGE_PAYMENT || l.status === LPO_STAGE_CLOSED).length;
     const pending = lpoDrafts.filter(l => l.status === 'معلقة').length;
     const drafts = draftSaves.length;
     destroyChart('status');
@@ -4829,6 +4841,7 @@ async function editLPO(id) {
     if (!can('orders', 'edit')) { alert(msg('غير مصرّح')); return; }
     const l = lpoDrafts.find(x => String(x.id) === String(id));
     if (!l) return;
+    if (orderStage(l) === 'closed') { alert(currentLanguage === 'en' ? 'This order is closed and cannot be edited.' : 'هذا الأمر مغلق ولا يمكن تعديله.'); return; }
     if (l.approvalStatus === 'approved' && !confirm(currentLanguage === 'en'
         ? 'This order is approved. Editing it will change an approved document. Continue?'
         : 'هذا الأمر معتمد. تعديله سيغيّر مستنداً معتمداً. هل تريد المتابعة؟')) return;
@@ -4895,10 +4908,83 @@ function clearDraftFilters() {
     document.getElementById('filterDraftDate').value = '';
     loadDrafts();
 }
+// ===================== دورة عمل أمر الشراء (Workflow) =====================
+// الإنشاء ← بانتظار الاعتماد ← معتمد ← قيد الدفع ← مغلق
+// مرحلتا ما بعد الاعتماد تُخزَّنان في عمود status الموجود (دون حاجة لتعديل قاعدة البيانات)
+const LPO_STAGE_PAYMENT = 'قيد الدفع';   // Payment processing
+const LPO_STAGE_CLOSED  = 'مغلق';        // Closed
+function isApprovedOrder(l) { return l && (l.approvalStatus === 'approved' || !l.approvalStatus); }
+// مرحلة الأمر: pending | rejected | approved | payment | closed
+function orderStage(l) {
+    if (!l) return '';
+    if (l.approvalStatus === 'pending') return 'pending';
+    if (l.approvalStatus === 'rejected') return 'rejected';
+    if (l.status === LPO_STAGE_CLOSED) return 'closed';
+    if (l.status === LPO_STAGE_PAYMENT) return 'payment';
+    return 'approved';
+}
+function orderStageText(l, en) {
+    const st = orderStage(l);
+    if (st === 'pending') return en ? 'Pending Approval' : 'بانتظار الاعتماد';
+    if (st === 'rejected') return en ? 'Rejected' : 'مرفوض';
+    if (st === 'payment') return en ? 'Payment processing' : 'قيد الدفع';
+    if (st === 'closed') return en ? 'Closed' : 'مغلق';
+    return en ? 'Approved' : 'معتمد';
+}
+// آخر من نفّذ مرحلة (من سجل النشاط) — لتلميح الشارة
+function _stageActor(l, type) {
+    try {
+        const e = (activityLog || []).find(a => a.actionType === type && (a.details || '').indexOf(l.number) !== -1);
+        return e ? { by: e.username, at: e.createdAt } : null;
+    } catch (e) { return null; }
+}
+async function _setOrderStage(id, stage, perm, fromCheck, logAr, logType, confirmEn, confirmAr, doneEn, doneAr) {
+    const en = currentLanguage === 'en';
+    if (!can('orders', perm)) { alert(msg('غير مصرّح')); return; }
+    const l = lpoDrafts.find(x => String(x.id) === String(id));
+    if (!l) return;
+    if (!fromCheck(l)) { alert(en ? 'This action is not available at the order\'s current stage.' : 'هذا الإجراء غير متاح في المرحلة الحالية للأمر.'); return; }
+    if (!confirm(en ? confirmEn : confirmAr)) return;
+    const { error } = await sb.from('purchase_orders').update({ status: stage }).eq('id', id);
+    if (error) { alert(msg('تعذّر تحديث حالة الأمر: ') + error.message); return; }
+    await loadAllFromCloud();
+    recordAction(logAr + ' ' + l.number, logType);
+    alert(en ? doneEn : doneAr);
+    refreshOrdersAndDrafts();
+    try { loadDashboard(); } catch (e) {}
+}
+// الدفع: متاح بعد الاعتماد فقط (صلاحية orders:pay) ← "قيد الدفع"
+function payOrder(id) {
+    const l = lpoDrafts.find(x => String(x.id) === String(id)) || {};
+    return _setOrderStage(id, LPO_STAGE_PAYMENT, 'pay', x => orderStage(x) === 'approved',
+        'دفع أمر', 'pay',
+        `Mark order ${l.number} for payment?\nIts status will change to "Payment processing".`,
+        `تحويل الأمر ${l.number} إلى الدفع؟\nستتغيّر حالته إلى "قيد الدفع".`,
+        'Order status changed to "Payment processing".', 'تم تغيير حالة الأمر إلى "قيد الدفع".');
+}
+// الإغلاق: متاح بعد الدفع فقط (صلاحية orders:close) ← "مغلق"
+function closeOrder(id) {
+    const l = lpoDrafts.find(x => String(x.id) === String(id)) || {};
+    return _setOrderStage(id, LPO_STAGE_CLOSED, 'close', x => orderStage(x) === 'payment',
+        'إغلاق أمر', 'close',
+        `Close order ${l.number}?\nIts status will change to "Closed" and it will be locked from editing.`,
+        `إغلاق الأمر ${l.number}؟\nستتغيّر حالته إلى "مغلق" ويُقفل من التعديل.`,
+        'Order closed successfully.', 'تم إغلاق الأمر بنجاح.');
+}
+
 // ===================== LPO LIST =====================
 // شارة حالة الاعتماد — الأوامر القديمة (بلا حقل) تُعتبر معتمدة
 function approvalBadge(l) {
     const en = currentLanguage === 'en';
+    const stg = orderStage(l);
+    if (stg === 'payment' || stg === 'closed') {
+        const act = _stageActor(l, stg === 'payment' ? 'pay' : 'close');
+        const tip = (stg === 'payment' ? (en ? 'Payment processing' : 'قيد الدفع') : (en ? 'Closed' : 'مغلق'))
+            + (act ? ((en ? ' — by: ' : ' — بواسطة: ') + act.by + ' (' + new Date(act.at).toLocaleDateString('en-GB') + ')') : '');
+        return stg === 'payment'
+            ? `<span class="badge badge-payment" title="${escapeHtml(tip)}"><i class="fas fa-money-bill-wave"></i> ${en ? 'Payment processing' : 'قيد الدفع'}</span>`
+            : `<span class="badge badge-closed" title="${escapeHtml(tip)}"><i class="fas fa-circle-check"></i> ${en ? 'Closed' : 'مغلق'}</span>`;
+    }
     if (l.approvalStatus === 'pending') {
         return `<span class="badge badge-pending" title="${en ? 'Awaiting approval' : 'بانتظار اعتماد المعتمِد'}"><i class="fas fa-hourglass-half"></i> ${en ? 'Pending Approval' : 'بانتظار الاعتماد'}</span>`;
     }
@@ -4944,6 +5030,10 @@ async function unapproveOrder(id) {
     if (!l) return;
     if (l.approvalStatus !== 'approved') {
         alert(currentLanguage === 'en' ? 'This order is not approved.' : 'هذا الأمر غير معتمد.');
+        return;
+    }
+    if (orderStage(l) !== 'approved') {
+        alert(currentLanguage === 'en' ? 'Approval cannot be undone after the order moved to payment or was closed.' : 'لا يمكن التراجع عن الاعتماد بعد تحويل الأمر إلى الدفع أو إغلاقه.');
         return;
     }
     const q = currentLanguage === 'en'
@@ -5521,7 +5611,9 @@ function getFilteredLPOs() {
         (!numF.length || numF.includes(l.number)) &&
         (!supF.length || supF.includes(l.supplierId)) &&
         (!statusF || (statusF === '__pending' ? l.approvalStatus === 'pending'
-                     : statusF === '__approved' ? (l.approvalStatus === 'approved' || !l.approvalStatus)
+                     : statusF === '__approved' ? orderStage(l) === 'approved'
+                     : statusF === '__payment' ? orderStage(l) === 'payment'
+                     : statusF === '__closed' ? orderStage(l) === 'closed'
                      : statusF === '__rejected' ? l.approvalStatus === 'rejected'
                      : l.status === statusF)) &&
         (!staffF.length || staffF.includes(l.staff)) &&
@@ -5602,13 +5694,19 @@ function buildRowActionItems(l) {
     const items = [];
     items.push({ icon: 'fa-eye',   color: '#0093c4', label: en ? 'Preview' : 'معاينة',        fn: `viewLPO('${l.id}')` });
     items.push({ icon: 'fa-print', color: '#6c757d', label: en ? 'Download PDF' : 'تحميل PDF', fn: `quickPrintLPO('${l.id}')` });
-    if (can('orders', 'edit'))
+    if (can('orders', 'edit') && orderStage(l) !== 'closed')
         items.push({ icon: 'fa-edit', color: '#f0ad4e', label: en ? 'Edit' : 'تعديل', fn: `editLPO('${l.id}')` });
     if ((l.approvalStatus === 'pending') && can('orders', 'approve')) {
         items.push({ icon: 'fa-check', color: '#2e7d32', label: en ? 'Approve' : 'اعتماد', fn: `approveOrder('${l.id}')` });
         items.push({ icon: 'fa-times', color: '#c0392b', label: en ? 'Reject' : 'رفض',     fn: `rejectOrder('${l.id}')` });
     }
-    if ((l.approvalStatus === 'approved') && can('orders', 'unapprove'))
+    // دورة العمل بعد الاعتماد: الدفع ثم الإغلاق
+    const stg = orderStage(l);
+    if (stg === 'approved' && can('orders', 'pay'))
+        items.push({ icon: 'fa-money-bill-wave', color: '#6c3fb5', label: en ? 'Pay' : 'الدفع', fn: `payOrder('${l.id}')` });
+    if (stg === 'payment' && can('orders', 'close'))
+        items.push({ icon: 'fa-circle-check', color: '#455a64', label: en ? 'Close' : 'الإغلاق', fn: `closeOrder('${l.id}')` });
+    if (stg === 'approved' && can('orders', 'unapprove'))
         items.push({ icon: 'fa-rotate-left', color: '#e67e22', label: en ? 'Undo Approval' : 'التراجع عن الاعتماد', fn: `unapproveOrder('${l.id}')` });
     if (can('orders', 'delete'))
         items.push({ icon: 'fa-trash', color: '#c0392b', label: en ? 'Delete' : 'حذف', fn: `deleteLPO('${l.id}')` });
@@ -6168,14 +6266,13 @@ async function printLPOListPDF() {
     const usrSel = msGet('msUser'); if (usrSel && usrSel.length) parts.push((en ? 'Employee: ' : 'الموظف: ') + usrSel.join('، '));
     const depSel = msGet('msDepartment'); if (depSel && depSel.length) parts.push((en ? 'Department: ' : 'القسم: ') + depSel.join('، '));
     const stV = (document.getElementById('filterStatus') || {}).value;
-    if (stV) { const m = { '__pending': en ? 'Pending' : 'بانتظار الاعتماد', '__approved': en ? 'Approved' : 'معتمد', '__rejected': en ? 'Rejected' : 'مرفوض' }; parts.push((en ? 'Status: ' : 'الحالة: ') + (m[stV] || stV)); }
+    if (stV) { const m = { '__pending': en ? 'Pending' : 'بانتظار الاعتماد', '__approved': en ? 'Approved' : 'معتمد', '__payment': en ? 'Payment processing' : 'قيد الدفع', '__closed': en ? 'Closed' : 'مغلق', '__rejected': en ? 'Rejected' : 'مرفوض' }; parts.push((en ? 'Status: ' : 'الحالة: ') + (m[stV] || stV)); }
     const fromD = (document.getElementById('filterFromDate') || {}).value, toD = (document.getElementById('filterToDate') || {}).value;
     if (fromD || toD) parts.push((en ? 'Date: ' : 'التاريخ: ') + (fromD || '…') + ' → ' + (toD || '…'));
     const filterSummary = parts.length ? parts.join('  •  ') : (en ? 'All data (no filters applied)' : 'كل البيانات (بدون تصفية)');
 
     const grand = list.reduce((s, l) => s + (parseFloat(l.total) || 0), 0);
-    const statusText = (l) => l.approvalStatus === 'pending' ? (en ? 'Pending' : 'بانتظار الاعتماد')
-        : l.approvalStatus === 'rejected' ? (en ? 'Rejected' : 'مرفوض') : (en ? 'Approved' : 'معتمد');
+    const statusText = (l) => orderStageText(l, en);
 
     const rowsHtml = list.map((l, i) => `<tr>
         <td style="text-align:center;">${i + 1}</td>
@@ -6246,12 +6343,7 @@ async function exportLPOList() {
     if (!list.length) { alert(msg('لا توجد بيانات للتصدير')); return; }
     const en = currentLanguage === 'en';
     try {
-        const statusText = (l) => {
-            if (l.approvalStatus === 'pending') return en ? 'Pending Approval' : 'بانتظار الاعتماد';
-            if (l.approvalStatus === 'rejected') return en ? 'Rejected' : 'مرفوض';
-            if (l.approvalStatus === 'approved') return en ? 'Approved' : 'معتمد';
-            return en ? (I18N[l.status] || l.status || 'Approved') : (l.status || 'معتمد');
-        };
+        const statusText = (l) => orderStageText(l, en);
         const fmtDT = (iso) => iso ? new Date(iso).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : '';
         const fmtD  = (iso) => iso ? new Date(iso).toLocaleDateString('en-GB') : '';
 
@@ -6493,12 +6585,7 @@ async function downloadOrdersExcel() {
             const ca = a.createdAt || a.date || '', cb = b.createdAt || b.date || '';
             return cb < ca ? -1 : cb > ca ? 1 : 0;
         });
-        const statusText = (l) => {
-            if (l.approvalStatus === 'pending') return en ? 'Pending Approval' : 'بانتظار الاعتماد';
-            if (l.approvalStatus === 'approved') return en ? 'Approved' : 'معتمد';
-            if (l.approvalStatus === 'rejected') return en ? 'Rejected' : 'مرفوض';
-            return en ? (I18N[l.status] || l.status || '') : (l.status || '');
-        };
+        const statusText = (l) => orderStageText(l, en);
         const rows = sorted.map(l => ({
             number: l.number,
             supplier: l.supplierName,
@@ -6964,13 +7051,15 @@ function openSupplierModal(fromLPO) {
     if (addLink) addLink.style.display = can('control', 'create') ? 'inline-block' : 'none';
     wireServiceTypeCreatable();
     document.getElementById('supplierModal').classList.add('active');
+    _supFormSnap = _supFormState();
 }
 function closeSupplierModal() {
+    _supFormSnap = null;
     supplierModalFromLPO = false;
     editingSupplierId = null;
     document.getElementById('supplierModal').classList.remove('active');
     refreshSupplierViewIfOpen();
-    ['newSupplierName','newSupplierPhone','newSupplierEmail','newSupplierVat','newSupplierCr','newSupplierCrExpiry','newSupplierNotes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    ['newSupplierName','newSupplierPhone','newSupplierEmail','newSupplierVat','newSupplierVatExpiry','newSupplierCr','newSupplierCrExpiry','newSupplierNotes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     msClear('msNewSupplierSvc');
     document.getElementById('newSupplierCity').value = 'مسقط';
     document.getElementById('newSupplierType').value = 'Local Supplier';
@@ -6994,10 +7083,12 @@ function editSupplier(id) {
     document.getElementById('newSupplierEmail').value = s.email || '';
     document.getElementById('newSupplierCity').value = s.city || 'مسقط';
     document.getElementById('newSupplierVat').value = s.vatNo || '';
+    document.getElementById('newSupplierVatExpiry').value = s.vatExpiry || '';
     document.getElementById('newSupplierCr').value = s.crNo || '';
     document.getElementById('newSupplierCrExpiry').value = s.crExpiry || '';
     document.getElementById('newSupplierNotes').value = s.notes || '';
     setSupplierModalMode('edit');
+    _supFormSnap = _supFormState();   // لقطة البيانات الأصلية لاكتشاف التعديلات غير المحفوظة
 }
 
 // استعراض كل بيانات وملفات المورد في نافذة عرض
@@ -7034,6 +7125,7 @@ function viewSupplierDetails(id) {
             ${item(en?'Email':'البريد الإلكتروني', esc(s.email))}
             ${item(en?'City':'المدينة', esc(s.city))}
             ${item('VAT No', esc(s.vatNo))}
+            ${item(en?'VAT Expiry Date':'تاريخ انتهاء الضريبة', s.vatExpiry ? new Date(s.vatExpiry).toLocaleDateString('en-GB') : '')}
             ${item('C.R No', esc(s.crNo))}
             ${item(en?'C.R Expiry Date':'تاريخ انتهاء السجل التجاري', s.crExpiry ? crExpiryCell(s.crExpiry) : '')}
         </div>
@@ -7154,6 +7246,41 @@ function wireServiceTypeCreatable() {
     });
 }
 
+// تنبيه إن لم يُحفظ "تاريخ انتهاء الضريبة" لعدم وجود عموده بعد في قاعدة البيانات
+let _vatExpiryMissingWarn = false;
+function warnVatExpiryColumn() {
+    if (!_vatExpiryMissingWarn) return;
+    _vatExpiryMissingWarn = false;
+    alert(currentLanguage === 'en'
+        ? "Saved, but the VAT Expiry Date was not stored because its column does not exist in the database yet.\nRun the SQL file \"تحديث_قاعدة_البيانات_10_تاريخ_انتهاء_الضريبة.sql\" in Supabase (SQL Editor), then reload the page."
+        : "تم الحفظ، لكن \"تاريخ انتهاء الضريبة\" لم يُحفظ لأن عموده غير موجود بعد في قاعدة البيانات.\nشغّل ملف SQL: \"تحديث_قاعدة_البيانات_10_تاريخ_انتهاء_الضريبة.sql\" في Supabase (SQL Editor) ثم أعد تحميل الصفحة.");
+}
+
+// ===== تأكيد الإغلاق عند وجود تعديلات غير محفوظة في نافذة بيانات المورد (مثل نافذة أمر الشراء) =====
+let _supFormSnap = null;
+function _supFormState() {
+    const ids = ['newSupplierName','newSupplierPhone','newSupplierEmail','newSupplierCity','newSupplierVat','newSupplierVatExpiry','newSupplierCr','newSupplierCrExpiry','newSupplierNotes','newSupplierType'];
+    const v = ids.map(id => { const el = document.getElementById(id); return el ? (el.value || '') : ''; });
+    try { v.push(JSON.stringify(msGet('msNewSupplierSvc') || [])); } catch (e) {}
+    ['newSupplierTaxCard','newSupplierCrCert','newSupplierOther'].forEach(id => { const el = document.getElementById(id); v.push(el && el.files ? String(el.files.length) : '0'); });
+    return v.join('\u0001');
+}
+function supplierFormDirty() { return _supFormSnap !== null && _supFormState() !== _supFormSnap; }
+function requestCloseSupplierModal() {
+    const m = document.getElementById('supplierModal');
+    if (!m || !m.classList.contains('active')) return;
+    if (isGuest || !supplierFormDirty()) { closeSupplierModal(); return; }
+    const en = currentLanguage === 'en';
+    const q = en ? 'Do you want to save the changes before closing?\n\nOK = Save, Cancel = Close without saving.'
+                 : 'هل تريد حفظ التعديلات قبل الإغلاق؟\n\nموافق = حفظ، إلغاء = إغلاق دون حفظ.';
+    if (confirm(q)) {
+        const form = m.querySelector('form');
+        if (form) { if (form.requestSubmit) form.requestSubmit(); else form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true })); }
+    } else {
+        closeSupplierModal();
+    }
+}
+
 async function addSupplier(event) {
     event.preventDefault();
     if (isGuest) { alert(msg('الزائر لا يملك صلاحية الإضافة')); return; }
@@ -7196,24 +7323,26 @@ async function addSupplier(event) {
         vat_no: document.getElementById('newSupplierVat').value,
         cr_no: document.getElementById('newSupplierCr').value,
         cr_expiry: document.getElementById('newSupplierCrExpiry').value || null,
+        vat_expiry: document.getElementById('newSupplierVatExpiry').value || null,
         notes: document.getElementById('newSupplierNotes').value || null,
         created_by: (currentUser && (currentUser.email || currentUser.username)) || null,
         tax_card_url: taxUrl || null,
         cr_cert_url: crUrl || null,
         other_files_url: otherUrl || null
     };
-    // إسقاط أي عمود غير موجود بعد في قاعدة البيانات (cr_expiry / notes / created_by) بأمان ثم إعادة المحاولة
+    _vatExpiryMissingWarn = false;
+    // إسقاط أي عمود غير موجود بعد في قاعدة البيانات (cr_expiry / vat_expiry / notes / created_by) بأمان ثم إعادة المحاولة
     const stripUnknownCols = (obj, errMsg) => {
         const clone = Object.assign({}, obj);
         let stripped = false;
-        ['cr_expiry', 'notes', 'created_by'].forEach(c => { if (new RegExp(c, 'i').test(errMsg || '')) { delete clone[c]; stripped = true; } });
+        ['cr_expiry', 'vat_expiry', 'notes', 'created_by'].forEach(c => { if (new RegExp(c, 'i').test(errMsg || '')) { delete clone[c]; stripped = true; if (c === 'vat_expiry' && obj.vat_expiry) _vatExpiryMissingWarn = true; } });
         return stripped ? clone : null;
     };
     // وضع التعديل: تحديث بيانات مورد قائم بدل إضافة مورد جديد
     if (editingSupplierId) {
         const upd = { name: row.name, service_type: row.service_type, supplier_type: row.supplier_type,
                       phone: row.phone, email: row.email, city: row.city, vat_no: row.vat_no, cr_no: row.cr_no,
-                      cr_expiry: row.cr_expiry, notes: row.notes };
+                      cr_expiry: row.cr_expiry, vat_expiry: row.vat_expiry, notes: row.notes };
         // الملفات: تُستبدل فقط إذا رُفع ملف جديد، وإلا تبقى الملفات الحالية كما هي
         if (taxUrl) upd.tax_card_url = taxUrl;
         if (crUrl) upd.cr_cert_url = crUrl;
@@ -7228,6 +7357,7 @@ async function addSupplier(event) {
         loadSuppliersList();
         populateSupplierSelect();
         alert(msg('تم تحديث بيانات المورد بنجاح'));
+        warnVatExpiryColumn();
         return;
     }
     let insRes = await sb.from('suppliers').insert(row).select();
@@ -7250,6 +7380,7 @@ async function addSupplier(event) {
         loadSuppliersList();
         alert(msg('تم إضافة المورد بنجاح في السحابة'));
     }
+    warnVatExpiryColumn();
 }
 
 async function deleteSupplier(id) {
