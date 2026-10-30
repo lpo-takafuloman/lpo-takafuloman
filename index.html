@@ -272,6 +272,11 @@
         #lpoListTable tbody tr, #draftsTable tbody tr { cursor: pointer; }
         #lpoListTable td .btn-small, #draftsTable td .btn-small { padding: 4px 7px; font-size: 11px; }
         /* سحب/إزاحة الأعمدة من صف العنوان */
+        #activityTable thead th { -webkit-user-select: none; user-select: none; position: relative; cursor: pointer; white-space: nowrap; }
+        #activityTable thead th.col-dragging { opacity: 0.4; }
+        #activityTable thead th.col-drag-over { background: #dff1fb; box-shadow: inset 3px 0 0 #0093c4, inset -3px 0 0 #0093c4; }
+        #activityTable thead th .sort-arrow { opacity: .45; font-size: 11px; }
+        #activityTable thead th.sorted .sort-arrow { opacity: 1; color: #0093c4; }
         #lpoListTable thead th, #suppliersTable thead th, #draftsTable thead th, #usersTable thead th, #trashOrdersTable thead th, #trashDraftsTable thead th, #trashSuppliersTable thead th { -webkit-user-select: none; user-select: none; position: relative; }
         #lpoListTable thead th.col-dragging, #suppliersTable thead th.col-dragging, #draftsTable thead th.col-dragging, #usersTable thead th.col-dragging, #trashOrdersTable thead th.col-dragging, #trashDraftsTable thead th.col-dragging, #trashSuppliersTable thead th.col-dragging { opacity: 0.4; }
         #lpoListTable thead th.col-drag-over, #suppliersTable thead th.col-drag-over, #draftsTable thead th.col-drag-over, #usersTable thead th.col-drag-over, #trashOrdersTable thead th.col-drag-over, #trashDraftsTable thead th.col-drag-over, #trashSuppliersTable thead th.col-drag-over { background: #dff1fb; box-shadow: inset 3px 0 0 #0093c4, inset -3px 0 0 #0093c4; }
@@ -554,6 +559,11 @@
            نضبط width + min-width + max-width معاً لأن تخطيط الجدول التلقائي يتجاهل width وحده إن كان المحتوى أضيق */
         #suppliersTable thead th[data-colid="0"] { width: 100px; min-width: 100px; max-width: 100px; }   /* تاريخ التسجيل: أصغر قليلاً */
         #suppliersTable thead th[data-colid="2"] { width: 220px; min-width: 220px; max-width: 220px; }   /* اسم المورد: مضاعف */
+        #suppliersTable thead th[data-colid="4"] { width: 135px; min-width: 135px; max-width: 135px; white-space: normal; }    /* نوع الخدمة: أضيق */
+        #suppliersTable thead th[data-colid="9"] { width: 96px; min-width: 96px; max-width: 96px; white-space: normal; }    /* انتهاء السجل التجاري: أضيق */
+        #suppliersTable thead th[data-colid="11"] { width: 98px; min-width: 98px; max-width: 98px; white-space: normal; }   /* آخر تعديل: أضيق */
+        #suppliersTable thead th[data-colid="10"] { width: 120px; min-width: 120px; max-width: 120px; white-space: normal; }   /* أُنشئ بواسطة: أضيق */
+        #suppliersTable thead th[data-colid="12"] { width: 84px; min-width: 84px; max-width: 84px; white-space: normal; }   /* المبلغ: أضيق */
         #suppliersTable thead th[data-colid="6"] { width: 105px; min-width: 105px; max-width: 105px; }   /* الهاتف: يتسع لنحو 10 أرقام */
         /* السماح بتحجيم عمود الهاتف للأصغر مثل باقي الأعمدة (الأرقام لا تنكسر تلقائياً فتمنع التقليص عند السحب) */
         #suppliersTable td.col-phone { overflow-wrap: anywhere; word-break: break-word; }
@@ -1276,6 +1286,8 @@
                     <th class="sortable" onclick="sortSuppliers('cr')">C.R <span class="sort-arrow">⇅</span></th>
                     <th class="sortable" onclick="sortSuppliers('crExpiry')">انتهاء السجل التجاري <span class="sort-arrow">⇅</span></th>
                     <th class="sortable" onclick="sortSuppliers('createdBy')">أُنشئ بواسطة <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" onclick="sortSuppliers('lastMod')">آخر تعديل <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" onclick="sortSuppliers('amount')">المبلغ (ر.ع) <span class="sort-arrow">⇅</span></th>
                     <th>الملفات</th>
                 </tr></thead>
                 <tbody></tbody>
@@ -1608,13 +1620,44 @@
         <!-- جدول كل العمليات -->
         <div class="card-header" style="margin-top:1.5rem;"><div class="card-title" style="font-size:15px;"><i class="fas fa-list-ul"></i> سجل العمليات</div></div>
         <div id="activityLogWarn" style="display:none; margin:0 0 10px; padding:10px 12px; border:1px solid #f5c6cb; background:#fdecea; color:#a94442; border-radius:8px; font-size:12.5px; line-height:1.7;"></div>
+        <div id="activityScopeNote" style="display:none; margin:0 0 10px; padding:8px 12px; border:1px solid #cfe7f3; background:#eef7fb; color:#0a6c91; border-radius:8px; font-size:12.5px;"></div>
+        <!-- فلاتر سجل العمليات (قوائم متعددة الاختيار قابلة للبحث) -->
+        <div class="filter-section filter-section-compact" style="margin-bottom:12px;">
+            <div class="filter-grid filter-grid-auto">
+                <div class="ms-wrap" data-ms="msActDate">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل التواريخ --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msActUser">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل المستخدمين --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msActType">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل أنواع العمليات --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msActDetails">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل التفاصيل --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button type="button" class="btn btn-danger btn-small" onclick="resetActivityFilters()"><i class="fas fa-eraser"></i> إعادة تعيين الفلاتر</button>
+                <span id="activityCountInfo" style="font-size:12px; color:#667; align-self:center;"></span>
+            </div>
+        </div>
         <div class="table-responsive">
             <table id="activityTable">
-                <thead><tr><th>التاريخ والوقت</th><th>المستخدم</th><th>نوع العملية</th><th>التفاصيل</th></tr></thead>
+                <thead><tr>
+                    <th data-colid="0" onclick="sortActivity('date')">التاريخ والوقت <span class="sort-arrow">⇅</span></th>
+                    <th data-colid="1" onclick="sortActivity('user')">المستخدم <span class="sort-arrow">⇅</span></th>
+                    <th data-colid="2" onclick="sortActivity('type')">نوع العملية <span class="sort-arrow">⇅</span></th>
+                    <th data-colid="3" onclick="sortActivity('details')">التفاصيل <span class="sort-arrow">⇅</span></th>
+                </tr></thead>
                 <tbody></tbody>
             </table>
         </div>
-        <small style="color:#999; margin-top:8px; display:block;"><i class="fas fa-info-circle"></i> مرتّب حسب الأحدث أولاً. يسجّل النظام كل عملية (إضافة، تعديل، حذف، اعتماد، رفض، استيراد، تصدير، دخول...) تلقائياً.</small>
+        <small style="color:#999; margin-top:8px; display:block;"><i class="fas fa-info-circle"></i> انقر على عنوان أي عمود للفرز، واسحبه لإعادة الترتيب أو اسحب حافته لتغيير العرض (يعود للوضع الافتراضي عند تحديث الصفحة). يسجّل النظام كل عملية (إضافة، تعديل، حذف، اعتماد، رفض، استيراد، تصدير، دخول...) تلقائياً.</small>
         <div style="text-align:center; margin-top:16px; padding-top:12px; border-top:1px dashed #d5dde3;">
             <a href="#" onclick="downloadActivityExcel(); return false;" class="excel-link"><i class="fas fa-file-excel"></i> تنزيل البيانات Excel</a>
         </div>
@@ -1957,6 +2000,10 @@
             <button class="btn btn-small perm-hidden sysadmin-only" style="background:#6c3fb5; color:#fff;" onclick="saveLpoTablesAsDefault()" title="يحفظ ترتيب وأحجام أعمدة جدولَي أوامر الشراء والمسودات كما تظهر لديك الآن كوضع افتراضي يُطبَّق على جميع المستخدمين"><i class="fas fa-floppy-disk"></i> حفظ أحجام وترتيب أعمدة جداول أوامر الشراء الحالية كوضع افتراضي</button>
             <button class="btn btn-small perm-hidden sysadmin-only" style="background:#fff; color:#6c3fb5; border:1px solid #6c3fb5;" onclick="clearLpoTablesDefault()" title="يلغي الوضع الافتراضي المحفوظ ويعيد الوضع الأصلي لجميع المستخدمين"><i class="fas fa-rotate-left"></i> استعادة الوضع الأصلي للجميع</button>
         </div>
+        <label style="display:flex; align-items:center; gap:9px; margin-top:14px; padding-top:12px; border-top:1px dashed #e3e9ee; font-size:13px; font-weight:600; color:#334; cursor:pointer; width:fit-content;">
+            <input type="checkbox" id="prefEvalAfterLpo" checked onchange="setEvalAfterLpoPref(this.checked)" style="width:17px; height:17px; cursor:pointer;">
+            <span>عرض نافذة التقييم عند إصدار أمر الشراء</span>
+        </label>
         <span id="profileResetMsg" style="font-size:12.5px; display:block; margin-top:10px; color:#2e7d32;"></span>
     </div>
 
@@ -2430,6 +2477,7 @@ const PERM_MODULES = [
     { key: 'notifications', ar: 'الإشعارات',         en: 'Notifications' },
     { key: 'users',         ar: 'إدارة المستخدمين',  en: 'User Management' },
     { key: 'trash',         ar: 'سلة المهملات',      en: 'Recycle Bin', acts: ['view','restore','delete'] },
+    { key: 'activity',      ar: 'سجل العمليات (الإدارة والتحكم)', en: 'Operations Log (Management & Control)', acts: ['view_all'] },
     { key: 'profiles',      ar: 'تصفّح الملفات الشخصية', en: 'Browse Profiles', acts: ['view','edit_others'] },
     { key: 'profile',       ar: 'الملف الشخصي',       en: 'My Profile', acts: ['edit_display_name'] }
 ];
@@ -2445,7 +2493,8 @@ const PERM_ACTIONS = [
     { key: 'pay',     ar: 'الدفع',    en: 'Pay' },
     { key: 'close',   ar: 'الإغلاق',  en: 'Close' },
     { key: 'edit_display_name', ar: 'تعديل اسم العرض', en: 'Edit Display Name' },
-    { key: 'edit_others', ar: 'تعديل بيانات المستخدمين', en: "Edit Users' Info" }
+    { key: 'edit_others', ar: 'تعديل بيانات المستخدمين', en: "Edit Users' Info" },
+    { key: 'view_all', ar: 'رؤية عمليات جميع المستخدمين', en: "View all users' operations" }
 ];
 // الإجراءات الافتراضية المطبّقة على الوحدات التي لا تحدّد acts
 const DEFAULT_PERM_ACTS = ['view','create','edit','delete','approve'];
@@ -2488,6 +2537,8 @@ Object.keys(DEFAULT_PERMISSIONS).forEach(r => {
         : { view: false, restore: false, delete: false };
     // تعديل بيانات المستخدمين الآخرين (اسم العرض/الهاتف/المسمى الوظيفي) عند تصفّح ملفاتهم: افتراضياً لمدير النظام فقط
     DEFAULT_PERMISSIONS[r].profiles = { view: (r === 'sysadmin'), edit_others: (r === 'sysadmin') };
+    // سجل العمليات في الإدارة والتحكم: افتراضياً يرى كل مستخدم عملياته فقط؛ رؤية الجميع لمدير النظام (قابلة للمنح)
+    DEFAULT_PERMISSIONS[r].activity = { view_all: (r === 'sysadmin') };
     // صلاحية تعديل اسم العرض في البيانات الشخصية: افتراضياً لمدير النظام فقط
     DEFAULT_PERMISSIONS[r].profile = { edit_display_name: (r === 'sysadmin') };
     // رؤية لوحة التحكم: متاحة افتراضياً لكل الأدوار (وقابلة للمنع من صفحة الصلاحيات)
@@ -2983,6 +3034,13 @@ const I18N = {
     'تفضيلات العرض وإعادة التعيين': 'Display Preferences & Reset',
     'أُنشِئ بواسطة': 'Created by',
     'قيد الدفع': 'Payment processing',
+    'عُدّل بواسطة': 'Modified By',
+    '-- كل التواريخ --': '-- All Dates --',
+    '-- كل أنواع العمليات --': '-- All Operation Types --',
+    '-- كل التفاصيل --': '-- All Details --',
+    'إعادة تعيين الفلاتر': 'Reset Filters',
+    'انقر على عنوان أي عمود للفرز، واسحبه لإعادة الترتيب أو اسحب حافته لتغيير العرض (يعود للوضع الافتراضي عند تحديث الصفحة). يسجّل النظام كل عملية (إضافة، تعديل، حذف، اعتماد، رفض، استيراد، تصدير، دخول...) تلقائياً.': 'Click any column header to sort; drag it to reorder or drag its edge to resize (resets to default when the page is refreshed). The system logs every operation (create, edit, delete, approve, reject, import, export, login...) automatically.',
+    'عرض نافذة التقييم عند إصدار أمر الشراء': 'Show the evaluation window when issuing a purchase order',
     'الخروج التلقائي عند الخمول': 'Automatic Logout on Inactivity',
     'إذا لم يقم المستخدم بأي نشاط (حركة الماوس، النقر، الكتابة، التمرير) خلال المدة المحددة، يُسجَّل خروجه تلقائياً مع تنبيه قبل الخروج بدقيقة. تُطبَّق المدة على جميع المستخدمين، وتُحتسب أيضاً إذا أُغلق المتصفح.': 'If a user shows no activity (mouse movement, clicks, typing, scrolling) for the set period, they are logged out automatically with a warning one minute before. The period applies to all users and also counts while the browser is closed.',
     'الأيام': 'Days',
@@ -4591,8 +4649,8 @@ async function saveLPO(event) {
     resetForm();
     closeNewLPO();
     refreshOrdersAndDrafts();
-    // إظهار نافذة تقييم المورد تلقائياً بعد الحفظ لأمر جديد فقط (ليس عند التعديل)
-    if (!prevOrderId && savedSupId && isUuid(savedSupId)) {
+    // إظهار نافذة تقييم المورد تلقائياً بعد الحفظ لأمر جديد فقط (ليس عند التعديل) — حسب تفضيل المستخدم
+    if (!prevOrderId && savedSupId && isUuid(savedSupId) && getEvalAfterLpoPref()) {
         openEvalModal(savedSupId, savedSupName, savedOrderNum);
     }
 }
@@ -5247,7 +5305,7 @@ function _validOrder(order, colCount) {
 function _loadColOrder(tableId, colCount) {
     if (COL_ORDER[tableId] && COL_ORDER[tableId].length === colCount) return COL_ORDER[tableId];
     let order = null;
-    try { const raw = localStorage.getItem('colorder_' + tableId); if (raw) order = JSON.parse(raw); } catch(_) {}
+    if (!NO_PERSIST_COL_TABLES[tableId]) { try { const raw = localStorage.getItem('colorder_' + tableId); if (raw) order = JSON.parse(raw); } catch(_) {} }
     let valid = _validOrder(order, colCount);
     // لا يوجد ترتيب شخصي → الترتيب الافتراضي الذي حدّده مدير النظام (إن وُجد)
     if (!valid) {
@@ -5258,7 +5316,10 @@ function _loadColOrder(tableId, colCount) {
     COL_ORDER[tableId] = order;
     return order;
 }
+// جداول لا يُحفظ ترتيب/عرض أعمدتها (تعود للوضع الافتراضي عند تحديث الصفحة)
+const NO_PERSIST_COL_TABLES = { activityTable: true };
 function _saveColOrder(tableId) {
+    if (NO_PERSIST_COL_TABLES[tableId]) return;
     try { localStorage.setItem('colorder_' + tableId, JSON.stringify(COL_ORDER[tableId])); } catch(_) {}
 }
 function _moveColOrder(arr, fromId, toId) {
@@ -5277,7 +5338,7 @@ let _colResize = null;     // { tableId, th, colid, fixedEdge, rtl, w }
 function _loadColWidths(tableId) {
     if (COL_WIDTHS[tableId]) return COL_WIDTHS[tableId];
     let w = null;
-    try { const raw = localStorage.getItem('colwidths_' + tableId); if (raw) w = JSON.parse(raw); } catch(_) {}
+    if (!NO_PERSIST_COL_TABLES[tableId]) { try { const raw = localStorage.getItem('colwidths_' + tableId); if (raw) w = JSON.parse(raw); } catch(_) {} }
     // لا توجد عروض شخصية → العروض الافتراضية التي حدّدها مدير النظام (إن وُجدت)
     if (!(w && typeof w === 'object')) {
         const g = TABLE_LAYOUT_DEFAULTS && TABLE_LAYOUT_DEFAULTS.tables && TABLE_LAYOUT_DEFAULTS.tables[tableId];
@@ -5287,6 +5348,7 @@ function _loadColWidths(tableId) {
     return COL_WIDTHS[tableId];
 }
 function _saveColWidths(tableId) {
+    if (NO_PERSIST_COL_TABLES[tableId]) return;
     try { localStorage.setItem('colwidths_' + tableId, JSON.stringify(COL_WIDTHS[tableId])); } catch(_) {}
 }
 // تطبيق عروض الأعمدة المحفوظة على رؤوس الجدول (تبقى على عنصر th عبر إعادة الرسم)
@@ -6781,6 +6843,9 @@ async function downloadSuppliersExcel() {
             { header: 'عدد التقييمات', headerEn: 'Ratings', key: 'ratingCount', width: 13, align: 'center' },
             { header: 'عدد الأوامر', headerEn: 'Orders', key: 'orders', width: 12, align: 'center' },
             { header: 'أُنشئ بواسطة', headerEn: 'Created By', key: 'createdBy', width: 26, align: 'right' },
+            { header: 'آخر تعديل', headerEn: 'Last Modified', key: 'lastMod', width: 20, align: 'center' },
+            { header: 'عُدّل بواسطة', headerEn: 'Modified By', key: 'lastModBy', width: 22, align: 'right' },
+            { header: 'المبلغ (ر.ع)', headerEn: 'Amount (OMR)', key: 'amount', width: 16, align: 'center', numFmt: '#,##0.000' },
             { header: 'ملاحظات', headerEn: 'Notes', key: 'notes', width: 30, align: 'right' }
         ];
         const sorted = suppliers.slice().sort((a, b) => { const ca = a.createdAt || '', cb = b.createdAt || ''; return cb < ca ? -1 : cb > ca ? 1 : 0; });
@@ -6802,11 +6867,15 @@ async function downloadSuppliersExcel() {
                 ratingCount: r.count,
                 orders: orderCount,
                 createdBy: s.createdBy || '',
+                lastMod: (() => { const lm = supplierLastMod(s); return lm ? new Date(lm.at).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : ''; })(),
+                lastModBy: (() => { const lm = supplierLastMod(s); return lm ? (lm.by || '') : ''; })(),
+                amount: +supplierOrdersTotal(s).total.toFixed(3),
                 notes: s.notes || ''
             };
         });
         const totalOrders = rows.reduce((s, r) => s + (r.orders || 0), 0);
-        const totalsRow = { name: en ? 'TOTAL' : 'الإجمالي', orders: totalOrders };
+        const totalAmount = rows.reduce((s, r) => s + (r.amount || 0), 0);
+        const totalsRow = { name: en ? 'TOTAL' : 'الإجمالي', orders: totalOrders, amount: +totalAmount.toFixed(3) };
         const buf = await buildProWorkbook({
             sheetName: en ? 'Suppliers' : 'الموردون',
             reportTitle: en ? 'Suppliers Database Report' : 'تقرير قاعدة بيانات الموردين',
@@ -6931,6 +7000,38 @@ async function saveNotifDays() {
 }
 
 // ===================== SUPPLIERS =====================
+// ===== أعمدة الموردين: مجموع مبالغ أوامر الشراء + آخر تعديل =====
+// مجموع مبالغ أوامر الشراء الصادرة للمورد (باستثناء الأوامر المرفوضة)
+function supplierOrdersTotal(s) {
+    let total = 0, count = 0;
+    (lpoDrafts || []).forEach(l => {
+        if (l.approvalStatus === 'rejected') return;
+        if ((s.id && String(l.supplierId) === String(s.id)) || (!l.supplierId && l.supplierName === s.name)) { total += (parseFloat(l.total) || 0); count++; }
+    });
+    return { total, count };
+}
+// خريطة آخر تعديل لكل مورد من سجل النشاط (تُبنى مرة واحدة لكل تحديث للسجل) — المفتاح: اسم المورد
+let _supLastModCache = { src: null, len: -1, map: null };
+function _supLastModMap() {
+    const all = getActivityEntries();
+    if (_supLastModCache.src === activityLog && _supLastModCache.len === all.length && _supLastModCache.map) return _supLastModCache.map;
+    const map = {};
+    all.forEach(e => {   // مرتّبة من الأحدث: أول تطابق لكل مورد هو آخر تعديل
+        const m = String(e.details || '').match(/^تعديل مورد (.+?)(?: — | \(|$)/);
+        if (!m) return;
+        const k = m[1].trim();
+        if (!map[k]) map[k] = { at: e.createdAt, by: e.username || '' };
+    });
+    _supLastModCache = { src: activityLog, len: all.length, map };
+    return map;
+}
+function supplierLastMod(s) { return _supLastModMap()[(s.name || '').trim()] || null; }
+function supplierLastModCell(s) {
+    const lm = supplierLastMod(s);
+    if (!lm) return '<span style="color:#bbb;">—</span>';
+    return fmtRecordDate(lm.at) + (lm.by ? `<div style="font-size:9.5px; color:#a3b3bd; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:72px; line-height:1.2;" title="${escapeHtml(lm.by)}"><i class="fas fa-user" style="font-size:8px;"></i> ${escapeHtml(lm.by)}</div>` : '');
+}
+
 // ===== تحديد صف بالنقر (يبقى مُبرزاً عبر إعادة الرسم) =====
 const _selRowId = { lpoListTable: null, suppliersTable: null };
 function selectTableRow(tableId, rowEl, id) {
@@ -6981,6 +7082,8 @@ function _supSortValue(s, key) {
         case 'cr': return (s.crNo || '').toLowerCase();
         case 'crExpiry': return s.crExpiry || '';
         case 'createdBy': return (s.createdBy || '').toLowerCase();
+        case 'lastMod': { const lm = supplierLastMod(s); return lm ? lm.at : ''; }
+        case 'amount': return supplierOrdersTotal(s).total;
         default: return '';
     }
 }
@@ -7003,7 +7106,12 @@ function getFilteredSuppliers() {
         const va = _supSortValue(a, _supSort.key), vb = _supSortValue(b, _supSort.key);
         if (va < vb) return -1 * dir;
         if (va > vb) return 1 * dir;
-        return 0;
+        // ترتيب ثابت عند تساوي القيم (مثلاً موردون مستوردون دفعةً واحدة بنفس وقت التسجيل):
+        // بالاسم ثم بالمعرّف — حتى لا يتغيّر موضع المورد بعد تعديل بياناته
+        const na = (a.name || '').toLowerCase(), nb = (b.name || '').toLowerCase();
+        if (na !== nb) return na < nb ? -1 : 1;
+        const ia = String(a.id), ib = String(b.id);
+        return ia < ib ? -1 : ia > ib ? 1 : 0;
     });
 }
 
@@ -7051,7 +7159,7 @@ function renderSuppliersTable() {
     const list = full.slice(startIdx, startIdx + pageSize);
 
     if (total === 0) {
-        tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; color:#999;">لا يوجد موردون مطابقون</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="14" style="text-align:center; color:#999;">لا يوجد موردون مطابقون</td></tr>';
     } else {
         const en = currentLanguage === 'en';
         const canEval = can('evaluation', 'create') || can('evaluation', 'edit') || can('evaluation', 'view');
@@ -7070,7 +7178,10 @@ function renderSuppliersTable() {
             if (String(s.id) === String(_selRowId.suppliersTable)) row.classList.add('row-selected');
             row.innerHTML = `<td>${fmtRecordDate(s.createdAt)}</td>`
                 + `<td class="col-actions" style="text-align:center; white-space:nowrap;" onclick="event.stopPropagation();">${kebab}</td>`
-                + `<td>${escapeHtml(s.name||'')}</td><td>${supplierRatingLabel(s.id)}</td><td>${escapeHtml(s.serviceType||'')||'-'}</td><td>${escapeHtml(s.supplierType||'')||'-'}</td><td class="col-phone" dir="ltr">${escapeHtml(s.phone||'')||'-'}</td><td>${escapeHtml(s.vatNo||'')||'-'}</td><td>${escapeHtml(s.crNo||'')||'-'}</td><td>${crExpiryCell(s.crExpiry)}</td><td style="font-size:11.5px; color:#667;" dir="ltr">${escapeHtml(s.createdBy||'')||'-'}</td><td style="font-size:16px;" onclick="event.stopPropagation();">${filesHtml}</td>`;
+                + `<td>${escapeHtml(s.name||'')}</td><td>${supplierRatingLabel(s.id)}</td><td>${escapeHtml(s.serviceType||'')||'-'}</td><td>${escapeHtml(s.supplierType||'')||'-'}</td><td class="col-phone" dir="ltr">${escapeHtml(s.phone||'')||'-'}</td><td>${escapeHtml(s.vatNo||'')||'-'}</td><td>${escapeHtml(s.crNo||'')||'-'}</td><td>${crExpiryCell(s.crExpiry)}</td><td style="font-size:11.5px; color:#667; word-break:break-all;" dir="ltr">${escapeHtml(s.createdBy||'')||'-'}</td>`
+                + `<td>${supplierLastModCell(s)}</td>`
+                + `<td style="white-space:nowrap; text-align:center;">${(() => { const a = supplierOrdersTotal(s); return a.count ? (+a.total).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '<span style="color:#bbb;">—</span>'; })()}</td>`
+                + `<td style="font-size:16px;" onclick="event.stopPropagation();">${filesHtml}</td>`;
         });
     }
     updateSupplierSortArrows();
@@ -7213,6 +7324,63 @@ function editSupplier(id) {
     _supFormSnap = _supFormState();   // لقطة البيانات الأصلية لاكتشاف التعديلات غير المحفوظة
 }
 
+// ===================== سجل عمليات المورد (Operations Log) =====================
+// وصف الحقول المعدّلة في المورد (يُضاف لنص سجل النشاط) — مع حفظ الاسم السابق عند تغيير الاسم لتتبّع السجل
+function describeSupplierChanges(old, upd) {
+    if (!old) return '';
+    const F = [
+        ['name', 'name', 'الاسم'], ['service_type', 'serviceType', 'نوع الخدمة'], ['supplier_type', 'supplierType', 'التصنيف'],
+        ['phone', 'phone', 'الهاتف'], ['email', 'email', 'البريد'], ['city', 'city', 'المدينة'],
+        ['vat_no', 'vatNo', 'الرقم الضريبي'], ['vat_expiry', 'vatExpiry', 'تاريخ انتهاء الضريبة'],
+        ['cr_no', 'crNo', 'السجل التجاري'], ['cr_expiry', 'crExpiry', 'تاريخ انتهاء السجل التجاري'], ['notes', 'notes', 'الملاحظات']
+    ];
+    const short = (v) => { v = (v == null ? '' : String(v)).trim(); return v ? (v.length > 40 ? v.slice(0, 40) + '…' : v) : '—'; };
+    const parts = [];
+    F.forEach(([col, key, label]) => {
+        if (!(col in upd)) return;
+        const a = (old[key] == null ? '' : String(old[key])).trim(), b = (upd[col] == null ? '' : String(upd[col])).trim();
+        if (a !== b) parts.push(col === 'notes' ? label : `${label}: ${short(a)} ← ${short(b)}`);
+    });
+    if (upd.tax_card_url) parts.push('البطاقة الضريبية (ملف جديد)');
+    if (upd.cr_cert_url) parts.push('شهادة السجل التجاري (ملف جديد)');
+    if (upd.other_files_url) parts.push('مرفقات أخرى (ملف جديد)');
+    let txt = parts.length ? (' — ' + parts.join('، ')) : ' — بدون تغييرات';
+    if (old.name && upd.name && old.name.trim() !== String(upd.name).trim()) txt += ' (الاسم السابق: ' + old.name.trim() + ')';
+    return txt;
+}
+// تجميع كشف عمليات المورد: من سجل النشاط (باسمه الحالي وأسمائه السابقة) + بيانات المورد + أوامر الشراء الصادرة له
+function getSupplierHistory(s) {
+    if (!s) return [];
+    const en = currentLanguage === 'en';
+    const all = getActivityEntries();
+    // الأسماء: الحالي + أي اسم سابق موثّق في السجل "(الاسم السابق: …)"
+    const names = new Set([(s.name || '').trim()].filter(Boolean));
+    for (let pass = 0; pass < 3; pass++) {
+        all.forEach(e => {
+            const m = String(e.details || '').match(/^تعديل مورد (.+?) — .*\(الاسم السابق: (.+?)\)\s*$/);
+            if (m && names.has(m[1].trim())) names.add(m[2].trim());
+        });
+    }
+    // مطابقة دقيقة لاسم المورد كما يُكتب في السجل: "… مورد <الاسم>" ثم نهاية النص أو " — " أو " ("
+    // (حتى لا يُطابق مورد "Al Maha" سجلات مورد آخر اسمه "Al Maha Trading")
+    const events = [];
+    all.forEach(e => {
+        const d = String(e.details || '');
+        const m = d.match(/مورد (.+?)(?: — | \(|$)/);
+        if (m && names.has(m[1].trim())) events.push({ createdAt: e.createdAt, actionType: e.actionType, username: e.username, details: d });
+    });
+    const has = (t) => events.some(e => e.actionType === t);
+    if (s.createdAt && !events.some(e => /^(إضافة مورد|استيراد)/.test(e.details) || e.actionType === 'create')) {
+        events.push({ createdAt: s.createdAt, actionType: 'create', username: s.createdBy || '—', details: (en ? 'Supplier registered: ' : 'تم تسجيل المورد: ') + (s.name || '') });
+    }
+    // أوامر الشراء الصادرة لهذا المورد
+    (lpoDrafts || []).filter(l => String(l.supplierId) === String(s.id) || (!l.supplierId && l.supplierName === s.name)).forEach(l => {
+        events.push({ createdAt: l.createdAt, actionType: 'other', username: l.staff || '—',
+            details: (en ? 'Purchase order issued: ' : 'إصدار أمر شراء: ') + (l.number || '') + ' — ' + fmt(l.total) + (en ? ' OMR' : ' ر.ع') });
+    });
+    if (s.deletedAt && !has('delete')) events.push({ createdAt: s.deletedAt, actionType: 'delete', username: '—', details: en ? 'Moved to the recycle bin' : 'نُقل إلى سلة المهملات' });
+    return events.filter(e => e.createdAt).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+}
 // استعراض كل بيانات وملفات المورد في نافذة عرض
 let _supViewId = null;
 // إعادة رسم نافذة الاستعراض (إن كانت مفتوحة) بعد إغلاق نافذة التعديل/التقييم لتعكس البيانات المحدّثة
@@ -7253,7 +7421,11 @@ function viewSupplierDetails(id) {
         </div>
         ${s.notes ? `<div style="font-size:12px; font-weight:700; color:#0093c4; margin:16px 0 6px;"><i class="fas fa-sticky-note"></i> ${en?'Other Notes':'ملاحظات أخرى'}</div><div style="background:#f8fafc; border:1px solid #e8eef5; border-radius:8px; padding:10px 12px; font-size:13px; color:#333; white-space:pre-wrap; line-height:1.6;">${esc(s.notes)}</div>` : ''}
         <div style="font-size:12px; font-weight:700; color:#0093c4; margin:16px 0 6px;"><i class="fas fa-paperclip"></i> ${en?'Attachments':'المرفقات'}</div>
-        ${filesHtml}`;
+        ${filesHtml}
+        ${(() => { const h = getSupplierHistory(s); return `<div class="ops-log-box" style="margin-top:16px;">
+            <div class="ops-log-head"><i class="fas fa-stream"></i> ${en ? 'Operations Log' : 'سجل العمليات'} <span class="ops-count">${h.length}</span></div>
+            ${buildOpsLogHtml(h)}
+        </div>`; })()}`;
     const editBtn = document.getElementById('supplierViewEditBtn');
     if (editBtn) {
         // لا يظهر زر التعديل لمورد محذوف (موجود في سلة المهملات)
@@ -7462,6 +7634,7 @@ async function addSupplier(event) {
     };
     // وضع التعديل: تحديث بيانات مورد قائم بدل إضافة مورد جديد
     if (editingSupplierId) {
+        const _oldSup = Object.assign({}, suppliers.find(x => String(x.id) === String(editingSupplierId)) || {});
         const upd = { name: row.name, service_type: row.service_type, supplier_type: row.supplier_type,
                       phone: row.phone, email: row.email, city: row.city, vat_no: row.vat_no, cr_no: row.cr_no,
                       cr_expiry: row.cr_expiry, vat_expiry: row.vat_expiry, notes: row.notes };
@@ -7473,7 +7646,7 @@ async function addSupplier(event) {
         if (updRes.error) { const fb = stripUnknownCols(upd, updRes.error.message); if (fb) updRes = await sb.from('suppliers').update(fb).eq('id', editingSupplierId); }
         if (updRes.error) { alert(msg('تعذّر تحديث المورد: ') + updRes.error.message); return; }
         await loadAllFromCloud();
-        recordAction('تعديل مورد ' + row.name);
+        recordAction('تعديل مورد ' + row.name + describeSupplierChanges(_oldSup, upd), 'update');
         const _editedId = editingSupplierId;
         closeSupplierModal();
         // تحديث البيانات فقط دون إعادة تعيين الصفحة/الفلاتر/الفرز، مع إبقاء المورد المعدَّل محدَّداً
@@ -9134,8 +9307,61 @@ function getActivityEntries() {
     return entries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
+// ===== سجل العمليات (الإدارة والتحكم): نطاق الرؤية + فلاتر + فرز =====
+let _actSort = { key: 'date', dir: 'desc' };
+let _actMsInit = false;
+function canViewAllActivity() { return can('activity', 'view_all'); }
+// العمليات المسموح برؤيتها: الجميع لمن يملك الصلاحية، وإلا عمليات المستخدم نفسه فقط
+function getVisibleActivityEntries() {
+    const all = getActivityEntries();
+    if (canViewAllActivity()) return all;
+    const me = currentUser || {};
+    const em = (me.email || '').toLowerCase(), un = (me.username || '').toLowerCase();
+    return all.filter(e => (em && (e.userEmail || '').toLowerCase() === em) || (un && (e.username || '').toLowerCase() === un));
+}
+function _actDay(e) { if (!e.createdAt) return ''; const d = new Date(e.createdAt); return isNaN(d) ? '' : d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function _initActivityFilters() {
+    if (_actMsInit) return;
+    _actMsInit = true;
+    msSetup('msActDate', '-- كل التواريخ --', renderActivityLog);
+    msSetup('msActUser', '-- كل المستخدمين --', renderActivityLog);
+    msSetup('msActType', '-- كل أنواع العمليات --', renderActivityLog);
+    msSetup('msActDetails', '-- كل التفاصيل --', renderActivityLog);
+}
+function _populateActivityFilters(base) {
+    const uniq = (arr) => [...new Set(arr.filter(Boolean))];
+    msSetOptions('msActDate', uniq(base.map(_actDay)).sort().reverse().map(d => ({ value: d, label: d.split('-').reverse().join('/') })));
+    msSetOptions('msActUser', uniq(base.map(e => e.username || '—')).sort((a, b) => a.localeCompare(b)).map(u => ({ value: u, label: u })));
+    msSetOptions('msActType', uniq(base.map(e => e.actionType || 'other')).map(t => ({ value: t, label: activityTypeLabel(t) })).sort((a, b) => a.label.localeCompare(b.label)));
+    msSetOptions('msActDetails', uniq(base.map(e => e.details || '')).sort((a, b) => a.localeCompare(b)).map(d => ({ value: d, label: d.length > 120 ? d.slice(0, 120) + '…' : d })));
+}
+// العمليات بعد تطبيق النطاق + الفلاتر + الفرز (تُستخدم في الجدول والرسوم والتصدير)
+function getFilteredActivityEntries() {
+    const base = getVisibleActivityEntries();
+    const fD = msGet('msActDate'), fU = msGet('msActUser'), fT = msGet('msActType'), fX = msGet('msActDetails');
+    const list = base.filter(e =>
+        (!fD.length || fD.includes(_actDay(e))) &&
+        (!fU.length || fU.includes(e.username || '—')) &&
+        (!fT.length || fT.includes(e.actionType || 'other')) &&
+        (!fX.length || fX.includes(e.details || '')));
+    const k = _actSort.key, dir = _actSort.dir === 'asc' ? 1 : -1;
+    const val = (e) => k === 'date' ? (new Date(e.createdAt).getTime() || 0)
+        : k === 'user' ? (e.username || '').toLowerCase()
+        : k === 'type' ? activityTypeLabel(e.actionType).toLowerCase()
+        : (e.details || '').toLowerCase();
+    return list.sort((a, b) => { const va = val(a), vb = val(b); if (va < vb) return -dir; if (va > vb) return dir; return (new Date(b.createdAt) - new Date(a.createdAt)); });
+}
+function sortActivity(key) {
+    if (_actSort.key === key) _actSort.dir = _actSort.dir === 'asc' ? 'desc' : 'asc';
+    else { _actSort.key = key; _actSort.dir = key === 'date' ? 'desc' : 'asc'; }
+    renderActivityLog();
+}
+function resetActivityFilters() {
+    ['msActDate', 'msActUser', 'msActType', 'msActDetails'].forEach(k => { try { msClear(k); } catch (e) {} });
+    _actSort = { key: 'date', dir: 'desc' };
+    renderActivityLog();
+}
 function renderActivityLog() {
-    const entries = getActivityEntries();
     const en = currentLanguage === 'en';
     // تنبيه إن كان السجل لا يُحفظ في قاعدة البيانات (جدول غير مُنشأ أو سياسة أمان تمنع)
     const warn = document.getElementById('activityLogWarn');
@@ -9149,20 +9375,48 @@ function renderActivityLog() {
                 + (_activityLogError ? `<div style="font-size:11.5px; color:#7a2f27; margin-top:4px;" dir="ltr">${escapeHtml(String(_activityLogError))}</div>` : '');
         } else warn.style.display = 'none';
     }
+    _initActivityFilters();
+    const viewAll = canViewAllActivity();
+    const base = getVisibleActivityEntries();
+    _populateActivityFilters(base);
+    const entries = getFilteredActivityEntries();
+    // ملاحظة نطاق الرؤية
+    const scope = document.getElementById('activityScopeNote');
+    if (scope) {
+        scope.style.display = viewAll ? 'none' : 'block';
+        scope.innerHTML = '<i class="fas fa-user-lock"></i> ' + (en ? 'You are viewing your own operations only.' : 'تعرض عملياتك أنت فقط. رؤية عمليات جميع المستخدمين تتطلب صلاحية خاصة من مدير النظام.');
+    }
+    // عنوان المستخدم: يُخفى فلتر المستخدم لمن لا يرى إلا نفسه
+    const uw = document.querySelector('[data-ms="msActUser"]'); if (uw) uw.style.display = viewAll ? '' : 'none';
+    const LIMIT = 1000;
+    const info = document.getElementById('activityCountInfo');
+    if (info) info.textContent = en
+        ? `Showing ${Math.min(entries.length, LIMIT)} of ${entries.length} operation(s)` + (entries.length > LIMIT ? ' — download Excel for all' : '')
+        : `عرض ${Math.min(entries.length, LIMIT)} من ${entries.length} عملية` + (entries.length > LIMIT ? ' — نزّل ملف Excel للكل' : '');
+    const table = document.getElementById('activityTable');
+    initColumnDrag('activityTable', renderActivityLog);
     const tbody = document.querySelector('#activityTable tbody');
     if (tbody) {
         tbody.innerHTML = '';
         const fmtDT = (d) => d ? new Date(d).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : '—';
         if (entries.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999;">${en ? 'No activity yet' : 'لا يوجد نشاط بعد'}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999;">${en ? 'No matching operations' : 'لا توجد عمليات مطابقة'}</td></tr>`;
         } else {
-            entries.slice(0, 500).forEach(e => {
+            entries.slice(0, LIMIT).forEach(e => {
                 const badge = `<span style="display:inline-block; background:${activityTypeColor(e.actionType)}22; color:${activityTypeColor(e.actionType)}; border:1px solid ${activityTypeColor(e.actionType)}55; border-radius:12px; padding:2px 10px; font-size:11px; font-weight:700;">${activityTypeLabel(e.actionType)}</span>`;
                 tbody.insertRow().innerHTML = `<td style="white-space:nowrap; font-size:12px;">${fmtDT(e.createdAt)}</td><td style="font-weight:600;">${escapeHtml(e.username || '—')}</td><td>${badge}</td><td style="font-size:12px; color:#555;">${escapeHtml(e.details || '—')}</td>`;
             });
         }
     }
-    // الرسوم البيانية الثلاثة
+    // أسهم الفرز
+    if (table) Array.from(table.tHead.rows[0].cells).forEach(th => {
+        const k = ['date', 'user', 'type', 'details'][+th.getAttribute('data-colid')];
+        const on = k === _actSort.key;
+        th.classList.toggle('sorted', on);
+        const ar = th.querySelector('.sort-arrow'); if (ar) ar.textContent = on ? (_actSort.dir === 'asc' ? '▲' : '▼') : '⇅';
+    });
+    applyColumnOrder('activityTable');
+    // الرسوم البيانية الثلاثة (تعكس النطاق والفلاتر المطبّقة)
     drawActivityHeatmap(entries);
     drawActivityUsersChart(entries);
     drawActivityOpsChart(entries);
@@ -9209,23 +9463,57 @@ function drawActivityOpsChart(entries) {
 
 // تنزيل سجل النشاط كملف Excel
 async function downloadActivityExcel() {
-    if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
+    if (!(await ensureLib('exceljs')) || !excelReady()) return;
     const en = currentLanguage === 'en';
-    const entries = getActivityEntries();
+    const entries = getFilteredActivityEntries();   // نفس النطاق والفلاتر والفرز المعروضة
     if (!entries.length) { alert(msg('لا توجد بيانات للتصدير')); return; }
     try {
-        const rows = entries.map(e => ({
-            [en ? 'Date & Time' : 'التاريخ والوقت']: e.createdAt ? new Date(e.createdAt).toLocaleString('en-GB') : '',
-            [en ? 'User' : 'المستخدم']: e.username || '',
-            [en ? 'Operation Type' : 'نوع العملية']: activityTypeLabel(e.actionType),
-            [en ? 'Details' : 'التفاصيل']: e.details || ''
+        // ملخّص الفلاتر المطبّقة
+        const parts = [];
+        const fD = msGet('msActDate'), fU = msGet('msActUser'), fT = msGet('msActType'), fX = msGet('msActDetails');
+        if (!canViewAllActivity()) parts.push(en ? 'My operations only' : 'عملياتي فقط');
+        if (fD.length) parts.push((en ? 'Date: ' : 'التاريخ: ') + fD.map(d => d.split('-').reverse().join('/')).join('، '));
+        if (fU.length) parts.push((en ? 'User: ' : 'المستخدم: ') + fU.join('، '));
+        if (fT.length) parts.push((en ? 'Type: ' : 'النوع: ') + fT.map(activityTypeLabel).join('، '));
+        if (fX.length) parts.push((en ? 'Details: ' : 'التفاصيل: ') + fX.length + (en ? ' selected' : ' محدّدة'));
+        const title = (en ? 'Operations Log' : 'سجل العمليات') + (parts.length ? ('  —  ' + parts.join('  |  ')) : (en ? '  —  All data' : '  —  كل البيانات'));
+        const rows = entries.map((e, i) => ({
+            n: i + 1,
+            dt: e.createdAt ? new Date(e.createdAt).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'medium' }) : '',
+            user: e.username || '',
+            email: e.userEmail || '',
+            type: activityTypeLabel(e.actionType),
+            details: e.details || ''
         }));
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet(rows);
-        ws['!cols'] = [{ wch: 20 }, { wch: 22 }, { wch: 16 }, { wch: 48 }];
-        XLSX.utils.book_append_sheet(wb, ws, en ? 'Activity Log' : 'سجل النشاط');
-        XLSX.writeFile(wb, (en ? 'Activity_Log_' : 'سجل_النشاط_') + new Date().toISOString().split('T')[0] + '.xlsx');
-        recordAction(en ? 'Export activity log' : 'تصدير سجل النشاط', 'export');
+        const wb = new ExcelJS.Workbook();
+        const ws = addStyledSheet(wb, {
+            sheetName: en ? 'Operations Log' : 'سجل العمليات',
+            reportTitle: title,
+            columns: [
+                { key: 'n', header: '#', headerEn: '#', width: 7 },
+                { key: 'dt', header: 'التاريخ والوقت', headerEn: 'Date & Time', width: 21 },
+                { key: 'user', header: 'المستخدم', headerEn: 'User', width: 24, align: en ? 'left' : 'right' },
+                { key: 'email', header: 'البريد الإلكتروني', headerEn: 'Email', width: 28, align: 'left' },
+                { key: 'type', header: 'نوع العملية', headerEn: 'Operation Type', width: 17 },
+                { key: 'details', header: 'التفاصيل', headerEn: 'Details', width: 80, align: en ? 'left' : 'right' }
+            ],
+            rows
+        });
+        // تلوين خلية نوع العملية بلون نوعها + التفاف نص التفاصيل
+        try {
+            entries.forEach((e, i) => {
+                const row = ws.getRow(5 + i);
+                const c = (activityTypeColor(e.actionType) || '#7a8b99').replace('#', '').toUpperCase();
+                const tc = row.getCell(5); tc.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF' + c } };
+                const dc = row.getCell(6); dc.alignment = Object.assign({}, dc.alignment, { wrapText: true, vertical: 'top' });
+                if ((e.details || '').length > 90) row.height = 32;
+            });
+            ws.autoFilter = { from: { row: 4, column: 1 }, to: { row: 4, column: 6 } };
+        } catch (e) {}
+        const buf = await wb.xlsx.writeBuffer();
+        const d = new Date(), ds = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        triggerExcelDownload(buf, (en ? 'Operations_Log_' : 'سجل_العمليات_') + ds + '.xlsx');
+        recordAction(en ? 'Export operations log' : 'تصدير سجل العمليات', 'export');
     } catch (e) {
         alert(msg('تعذّر تصدير الملف: ') + e.message);
     }
@@ -9363,14 +9651,25 @@ function viewDeletedDraft(id) {
 
 const _TRASH_TABLE = { orders: 'purchase_orders', drafts: 'drafts', suppliers: 'suppliers' };
 
+// اسم/رقم العنصر المحذوف (لتوثيقه بوضوح في سجل النشاط)
+function _trashItemName(type, id) {
+    try {
+        const all = [].concat(deletedSuppliers || [], deletedOrders || [], deletedDrafts || []);
+        const x = all.find(i => String(i.id) === String(id));
+        if (!x) return '';
+        if (x.name) return 'مورد ' + x.name;
+        return x.number || x.draftNumber || '';
+    } catch (e) { return ''; }
+}
 async function restoreTrashItem(type, id) {
     if (!can('trash', 'restore')) { alert(msg('ليست لديك صلاحية استرجاع المحذوفات.')); return; }
     const table = _TRASH_TABLE[type]; if (!table) return;
     if (!confirm(msg('هل تريد استرجاع هذا العنصر من سلة المهملات؟'))) return;
+    const _nm = _trashItemName(type, id);
     const { error } = await restoreRow(table, id);
     if (error) { alert(msg('تعذّر الاسترجاع: ') + error.message); return; }
     await loadAllFromCloud();
-    recordAction('استرجاع عنصر محذوف من سلة المهملات', 'restore');
+    recordAction('استرجاع عنصر محذوف من سلة المهملات' + (_nm ? (': ' + _nm) : ''), 'restore');
     loadTrash();
     try { populateAllFilters(); } catch (e) {}
     alert(msg('تم استرجاع العنصر بنجاح ✅'));
@@ -9381,10 +9680,11 @@ async function purgeTrashItem(type, id) {
     const table = _TRASH_TABLE[type]; if (!table) return;
     const en = currentLanguage === 'en';
     if (!confirm(en ? '⚠ Permanently delete this item?\nThis cannot be undone.' : '⚠ حذف هذا العنصر نهائياً؟\nلا يمكن التراجع عن الحذف النهائي إطلاقاً.')) return;
+    const _nm = _trashItemName(type, id);
     const { error } = await hardDeleteRow(table, id);
     if (error) { alert(msg('تعذّر الحذف النهائي: ') + error.message); return; }
     await loadAllFromCloud();
-    recordAction('حذف نهائي لعنصر من سلة المهملات', 'delete');
+    recordAction('حذف نهائي لعنصر من سلة المهملات' + (_nm ? (': ' + _nm) : ''), 'delete');
     loadTrash();
     alert(msg('تم الحذف النهائي.'));
 }
@@ -9429,7 +9729,18 @@ function profileTarget() {
         createdAt: myRec && myRec.createdAt, id: myRec && myRec.id };
 }
 
+// تفضيل المستخدم: عرض نافذة تقييم المورد تلقائياً بعد إصدار أمر شراء (افتراضياً: مفعّل) — يُحفظ لكل مستخدم في هذا المتصفح
+function _evalPrefKey() { return 'pref_eval_after_lpo_' + (((currentUser && currentUser.email) || '') + '').toLowerCase(); }
+function getEvalAfterLpoPref() { try { return localStorage.getItem(_evalPrefKey()) !== '0'; } catch (e) { return true; } }
+function setEvalAfterLpoPref(on) {
+    try { localStorage.setItem(_evalPrefKey(), on ? '1' : '0'); } catch (e) {}
+    const el = document.getElementById('profileResetMsg');
+    if (el) el.textContent = currentLanguage === 'en'
+        ? (on ? 'The evaluation window will appear after issuing a purchase order. ✅' : 'The evaluation window will no longer appear after issuing a purchase order. ✅')
+        : (on ? 'ستظهر نافذة التقييم بعد إصدار أمر الشراء ✅' : 'لن تظهر نافذة التقييم بعد إصدار أمر الشراء ✅');
+}
 function loadProfile() {
+    try { const cb = document.getElementById('prefEvalAfterLpo'); if (cb) cb.checked = getEvalAfterLpoPref(); } catch (e) {}
     const en = currentLanguage === 'en';
     const t = profileTarget();
     const since = t.createdAt ? new Date(t.createdAt).toLocaleDateString('en-GB') : '—';
