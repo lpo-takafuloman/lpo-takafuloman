@@ -154,6 +154,24 @@
         .chat-messages { flex: 1; overflow-y: auto; background: rgba(248,250,252,0.6); padding: 14px; min-height: 0; }
         .chat-input-row { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #e8eef5; background: white; flex-shrink: 0; }
         .chat-input-row input { flex: 1; padding: 10px 12px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit; }
+        .chat-attach-btn { background: #f1f6f9; border: 1.5px solid #dde6ec; color: #0093c4; border-radius: 8px; width: 40px; flex-shrink: 0; cursor: pointer; font-size: 15px; }
+        .chat-attach-btn:hover { background: #e3f1f8; }
+        .chat-pending { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 6px; padding: 8px 12px 0; background: white; border-top: 1px solid #e8eef5; }
+        .chat-pending .cp-item { position: relative; flex-shrink: 0; display: flex; align-items: center; gap: 6px; border: 1px solid #dde6ec; background: #f8fafc; border-radius: 8px; padding: 4px 22px 4px 4px; font-size: 11.5px; color: #445; max-width: 200px; }
+        html[dir="rtl"] .chat-pending .cp-item { padding: 4px 4px 4px 22px; }
+        .chat-pending .cp-item img { width: 38px; height: 38px; object-fit: cover; border-radius: 5px; display: block; }
+        .chat-pending .cp-item .cp-ic { width: 38px; height: 38px; border-radius: 5px; background: #e3f1f8; color: #0093c4; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .chat-pending .cp-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+        .chat-pending .cp-x { position: absolute; top: 2px; inset-inline-end: 3px; border: none; background: none; color: #c0392b; cursor: pointer; font-size: 12px; padding: 0 2px; }
+        .chat-drop-hint { outline: 2px dashed #0093c4; outline-offset: -6px; }
+        .chat-att-imgs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+        .chat-att-imgs a img { width: 150px; max-width: 100%; max-height: 140px; object-fit: cover; border-radius: 8px; border: 1px solid #e3e9ee; display: block; cursor: zoom-in; }
+        .chat-att-file { display: flex; align-items: center; gap: 8px; margin-top: 6px; padding: 6px 9px; border: 1px solid #dde6ec; border-radius: 8px; background: #f8fafc; color: #0a6c91; text-decoration: none; font-size: 12px; max-width: 260px; }
+        .chat-att-file i { font-size: 18px; flex-shrink: 0; }
+        .chat-att-file .caf-n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+        .chat-att-file .caf-s { color: #8aa2b0; font-size: 10.5px; }
+        .chat-att-wrap { position: relative; display: inline-block; }
+        .chat-att-del { position: absolute; top: 3px; inset-inline-end: 3px; width: 20px; height: 20px; border-radius: 50%; border: none; background: rgba(192,57,43,.9); color: #fff; font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .chat-reply-bar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #eef7fb; border-top: 1px solid #d5e9f2; border-right: 3px solid #0093c4; flex-shrink: 0; }
 
         /* وضع: مثبت جانبي (العرض الافتراضي أقل ما يكون) */
@@ -378,11 +396,25 @@
         th.sortable.sorted-asc .sort-arrow, th.sortable.sorted-desc .sort-arrow { opacity: 1; color: #0093c4; }
         td { padding: 12px 13px; border-bottom: 1px solid #f0f2f5; }
         tr:hover td { background: #f9fbfc; }
+        /* الصف المحدَّد بالنقر في جدولي أوامر الشراء والموردين */
+        #lpoListTable tbody tr.row-selected td, #suppliersTable tbody tr.row-selected td { background: #dff1fb !important; }
+        #lpoListTable tbody tr.row-selected td:first-child, #suppliersTable tbody tr.row-selected td:first-child { box-shadow: inset 3px 0 0 #0093c4; }
+        html[dir="rtl"] #lpoListTable tbody tr.row-selected td:first-child, html[dir="rtl"] #suppliersTable tbody tr.row-selected td:first-child { box-shadow: inset -3px 0 0 #0093c4; }
 
         .badge { display: inline-block; padding: 5px 11px; border-radius: 20px; font-size: 11px; font-weight: 700; }
         .badge-draft { background: #e3f2fd; color: #1976d2; }
         .badge-pending { background: #fff3cd; color: #856404; }
         .badge-approved { background: #e8f5e9; color: #2e7d32; }
+        .user-state-btn { display:inline-flex; align-items:center; gap:7px; border:1px solid; border-radius:14px; padding:3px 10px 3px 4px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; background:#fff; }
+        .user-state-btn .us-knob { width:26px; height:14px; border-radius:8px; position:relative; transition:background .2s; }
+        .user-state-btn .us-knob::after { content:''; position:absolute; top:2px; width:10px; height:10px; border-radius:50%; background:#fff; transition:left .2s; }
+        .user-state-btn.on { color:#2e7d32; border-color:#bfe3c9; } .user-state-btn.on .us-knob { background:#43a047; } .user-state-btn.on .us-knob::after { left:14px; }
+        .user-state-btn.off { color:#c0392b; border-color:#f5c6cb; } .user-state-btn.off .us-knob { background:#c9ced3; } .user-state-btn.off .us-knob::after { left:2px; }
+        .user-state { font-size:11.5px; font-weight:700; color:#2e7d32; }
+        tr.user-disabled-row td { background:#fff5f5 !important; color:#999; }
+        #blockedOverlay { position:fixed; inset:0; z-index:99999; background:rgba(20,30,40,.75); display:flex; align-items:center; justify-content:center; padding:16px; }
+        #blockedOverlay .bo-box { background:#fff; border-radius:14px; max-width:430px; width:100%; padding:28px 24px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,.35); }
+        #blockedOverlay .bo-ic { width:64px; height:64px; border-radius:50%; background:#fdecea; color:#c0392b; display:flex; align-items:center; justify-content:center; font-size:28px; margin:0 auto 14px; }
         .badge-payment { background: #efe7fb; color: #6c3fb5; }
         .badge-closed { background: #eceff1; color: #455a64; }
         .badge-rejected { background: #fdecea; color: #c0392b; }
@@ -1575,6 +1607,7 @@
 
         <!-- جدول كل العمليات -->
         <div class="card-header" style="margin-top:1.5rem;"><div class="card-title" style="font-size:15px;"><i class="fas fa-list-ul"></i> سجل العمليات</div></div>
+        <div id="activityLogWarn" style="display:none; margin:0 0 10px; padding:10px 12px; border:1px solid #f5c6cb; background:#fdecea; color:#a94442; border-radius:8px; font-size:12.5px; line-height:1.7;"></div>
         <div class="table-responsive">
             <table id="activityTable">
                 <thead><tr><th>التاريخ والوقت</th><th>المستخدم</th><th>نوع العملية</th><th>التفاصيل</th></tr></thead>
@@ -1607,10 +1640,23 @@
                     <th class="sortable" data-colid="1" onclick="sortGenericTable('usersTable', this)">البريد <span class="sort-arrow">⇅</span></th>
                     <th class="sortable" data-colid="2" onclick="sortGenericTable('usersTable', this)">الصلاحية <span class="sort-arrow">⇅</span></th>
                     <th class="sortable" data-colid="3" onclick="sortGenericTable('usersTable', this)">تاريخ الإضافة <span class="sort-arrow">⇅</span></th>
-                    <th data-colid="4"></th>
+                    <th class="sortable" data-colid="4" onclick="sortGenericTable('usersTable', this)">حالة الدخول <span class="sort-arrow">⇅</span></th>
+                    <th data-colid="5"></th>
                 </tr></thead>
                 <tbody></tbody>
             </table>
+        </div>
+    </div>
+
+    <!-- الخروج التلقائي بعد فترة خمول (أمان الأجهزة المتروكة مفتوحة) -->
+    <div class="card">
+        <div class="card-header"><div class="card-title"><i class="fas fa-user-clock"></i> الخروج التلقائي عند الخمول</div></div>
+        <p style="font-size:12.5px; color:#667; line-height:1.7; margin-bottom:12px;">إذا لم يقم المستخدم بأي نشاط (حركة الماوس، النقر، الكتابة، التمرير) خلال المدة المحددة، يُسجَّل خروجه تلقائياً مع تنبيه قبل الخروج بدقيقة. تُطبَّق المدة على جميع المستخدمين، وتُحتسب أيضاً إذا أُغلق المتصفح.</p>
+        <div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;">
+            <div><label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px;">الأيام</label><input type="number" id="idleDays" min="0" max="30" step="1" value="0" style="width:90px; padding:8px 10px; border:1.5px solid #ddd; border-radius:8px; font-family:inherit;"></div>
+            <div><label style="display:block; font-size:12px; font-weight:700; margin-bottom:4px;">الساعات</label><input type="number" id="idleHours" min="0" max="23" step="1" value="1" style="width:90px; padding:8px 10px; border:1.5px solid #ddd; border-radius:8px; font-family:inherit;"></div>
+            <button type="button" class="btn btn-success" onclick="saveIdleTimeout()"><i class="fas fa-save"></i> حفظ مدة الخمول</button>
+            <span id="idleSaveMsg" style="font-size:12.5px;"></span>
         </div>
     </div>
 
@@ -1681,7 +1727,7 @@
         <!-- 2) تغذية الموردين من ملف إكسل -->
         <div style="border:1px solid #e8eef5; border-radius:10px; padding:1rem; background:#f8fafc;">
             <div style="font-size:14px; font-weight:700; color:#0093c4; margin-bottom:6px;"><i class="fas fa-file-import"></i> تغذية بيانات الموردين من ملف إكسل</div>
-            <p style="font-size:12.5px; color:#666; line-height:1.7; margin-bottom:12px;">نزّل القالب الجاهز، أدخل بيانات الموردين فيه، ثم ارفعه ليُضيف النظام جميع الموردين دفعةً واحدة. الأعمدة: اسم المورد (إلزامي)، نوع الخدمة (يمكن فصل أكثر من نوع بفاصلة)، التصنيف، الهاتف، البريد، المدينة، الرقم الضريبي، السجل التجاري.</p>
+            <p style="font-size:12.5px; color:#666; line-height:1.7; margin-bottom:12px;">نزّل القالب الجاهز، أدخل بيانات الموردين فيه، ثم ارفعه ليُضيف النظام جميع الموردين دفعةً واحدة. الأعمدة: اسم المورد (إلزامي)، نوع الخدمة (يمكن فصل أكثر من نوع بفاصلة)، التصنيف، الهاتف، البريد، المدينة، الرقم الضريبي، تاريخ انتهاء الضريبة، السجل التجاري، تاريخ انتهاء السجل التجاري، ملاحظات.</p>
             <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
                 <button type="button" class="btn btn-primary" onclick="downloadSupplierTemplate()"><i class="fas fa-file-download"></i> تنزيل قالب إكسل</button>
                 <input type="file" id="supplierImportFile" accept=".xlsx,.xls" style="font-size:12px;">
@@ -2033,6 +2079,7 @@
             <span id="chatRefLabel" style="font-size:11px; opacity:0.85; font-weight:400; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></span>
         </div>
         <div class="chat-controls">
+            <button type="button" class="chat-ctrl-btn" id="chatClearAllBtn" style="display:none;" onclick="deleteWholeChat()" title="حذف المحادثة بالكامل (مدير النظام)"><i class="fas fa-trash-can"></i></button>
             <button type="button" class="chat-ctrl-btn" id="chatBtnFloat" onclick="setChatMode('floating')" title="عائم"><i class="fas fa-window-restore"></i></button>
             <button type="button" class="chat-ctrl-btn" id="chatBtnDock" onclick="setChatMode('docked')" title="مثبت جانبي"><i class="fas fa-columns"></i></button>
             <button type="button" class="chat-ctrl-btn" onclick="setChatMode('hidden')" title="إخفاء"><i class="fas fa-minus"></i></button>
@@ -2056,9 +2103,13 @@
             <button type="button" class="chat-ctrl-btn" style="color:#e74c3c;" onclick="cancelReply()" title="إلغاء الرد"><i class="fas fa-times"></i></button>
         </div>
 
+        <!-- المرفقات المختارة قبل الإرسال (صور/ملفات) -->
+        <div id="chatPending" class="chat-pending" style="display:none;"></div>
         <div id="chatInputRow" class="chat-input-row">
-            <input type="text" id="chatInput" placeholder="اكتب ملاحظة أو رسالة..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendComment();}">
-            <button type="button" class="btn btn-primary" onclick="sendComment()"><i class="fas fa-paper-plane"></i></button>
+            <input type="file" id="chatFileInput" multiple style="display:none;" onchange="addChatFiles(this.files); this.value='';">
+            <button type="button" class="chat-attach-btn" onclick="document.getElementById('chatFileInput').click()" title="إرفاق ملف أو صورة (أو الصق صورة بـ Ctrl+V)"><i class="fas fa-paperclip"></i></button>
+            <input type="text" id="chatInput" placeholder="اكتب ملاحظة أو رسالة..." onkeydown="if(event.key==='Enter'){event.preventDefault();sendComment();}" onpaste="onChatPaste(event)">
+            <button type="button" id="chatSendBtn" class="btn btn-primary" onclick="sendComment()"><i class="fas fa-paper-plane"></i></button>
         </div>
         <div id="chatGuestNote" style="display:none; font-size:12px; color:#856404; background:#fff3cd; padding:8px 12px; border-radius:8px; margin:0 12px 12px;">
             <i class="fas fa-info-circle"></i> الزائر لا يمكنه إضافة رسائل. سجّل الدخول للمشاركة.
@@ -2550,16 +2601,23 @@ async function loadAllFromCloud() {
             if (nd && nd.value) crNotifyDays = parseInt(nd.value, 10) || 30;
             const ctrl = document.getElementById('crNotifyDaysCtrl'); if (ctrl) ctrl.value = crNotifyDays;
         } catch (e) {}
-        // تحميل سجل نشاط النظام (آخر 1000 عملية) — يفشل بصمت إن لم يُنشأ الجدول بعد
+        // تحميل سجل نشاط النظام (آخر 3000 عملية) — بعد إرسال أي عمليات معلّقة لم تُحفظ سابقاً
         try {
-            const { data: al } = await sb.from('activity_log').select('*').order('created_at', { ascending: false }).limit(1000);
+            await flushActivityQueue();
+            const { data: al, error: alErr } = await sb.from('activity_log').select('*').order('created_at', { ascending: false }).limit(3000);
+            if (alErr) _activityLogError = alErr.message || 'error';
             if (al) activityLog = al.map(r => ({ id: r.id, username: r.username || '—', userEmail: r.user_email || '', actionType: r.action_type || 'other', details: r.details || '', createdAt: r.created_at }));
-        } catch (e) {}
+            // العمليات المعلّقة (لم تصل قاعدة البيانات بعد) تُعرض أيضاً حتى لا تختفي من السجل
+            const pend = _readActivityQueue();
+            if (pend.length) activityLog = pend.map((r, i) => ({ id: 'pending-' + i, username: r.username || '—', userEmail: r.user_email || '', actionType: r.action_type || 'other', details: r.details || '', createdAt: r.created_at })).concat(activityLog || []);
+        } catch (e) { _activityLogError = (e && e.message) || 'error'; }
         // تحميل الوضع الافتراضي العام لأعمدة جداول أوامر الشراء (يحدّده مدير النظام)
         try {
             const { data: tl } = await sb.from('settings').select('value').eq('key', 'table_layout_defaults').maybeSingle();
             applyTableLayoutDefaults(tl && tl.value ? JSON.parse(tl.value) : null);
         } catch (e) {}
+        // قائمة المستخدمين المعطّلين (لعرض حالتهم في إدارة المستخدمين)
+        await loadDisabledUsers();
         // تحميل مصفوفة الصلاحيات المحفوظة (إن وُجدت)
         await loadRolePermissions();
         try { updateNotifBadge(); } catch (e) {}
@@ -2633,7 +2691,7 @@ function rerenderActivePage() {
     const id = active.id.replace('page-', '');
     if (id === 'dashboard') loadDashboard();
     else if (id === 'lpo-management') { loadDrafts(); loadLPOList(); }
-    else if (id === 'suppliers') loadSuppliersList();
+    else if (id === 'suppliers') refreshSuppliersKeepState();
     else if (id === 'reports') { populateAllFilters(); generateReport(); }
     else if (id === 'admin') { loadAdminPanel(); loadRolesPage(); }
     else if (id === 'control-panel') loadControlPanel();
@@ -2664,6 +2722,8 @@ async function refreshMyAccess(force) {
     _lastAccessRefresh = now; _accessRefreshing = true;
     let changed = false;
     try {
+        // 0) هل عُطّل حساب المستخدم أثناء استخدامه للنظام؟ ⇒ إخراجه فوراً
+        if (await isCurrentUserBlocked()) { _accessRefreshing = false; await showBlockedAndSignOut(); return; }
         // 1) دور المستخدم الحالي (قد يكون مُنح/غُيّر من مدير النظام)
         if (currentUser.authId && (currentUser.email || '').toLowerCase() !== DEFAULT_SYSADMIN_EMAIL) {
             const { data } = await sb.from('app_users').select('role').eq('auth_id', currentUser.authId).maybeSingle();
@@ -2923,6 +2983,14 @@ const I18N = {
     'تفضيلات العرض وإعادة التعيين': 'Display Preferences & Reset',
     'أُنشِئ بواسطة': 'Created by',
     'قيد الدفع': 'Payment processing',
+    'الخروج التلقائي عند الخمول': 'Automatic Logout on Inactivity',
+    'إذا لم يقم المستخدم بأي نشاط (حركة الماوس، النقر، الكتابة، التمرير) خلال المدة المحددة، يُسجَّل خروجه تلقائياً مع تنبيه قبل الخروج بدقيقة. تُطبَّق المدة على جميع المستخدمين، وتُحتسب أيضاً إذا أُغلق المتصفح.': 'If a user shows no activity (mouse movement, clicks, typing, scrolling) for the set period, they are logged out automatically with a warning one minute before. The period applies to all users and also counts while the browser is closed.',
+    'الأيام': 'Days',
+    'الساعات': 'Hours',
+    'حفظ مدة الخمول': 'Save idle time',
+    'حذف المحادثة بالكامل (مدير النظام)': 'Delete the entire conversation (System Admin)',
+    'إرفاق ملف أو صورة (أو الصق صورة بـ Ctrl+V)': 'Attach a file or image (or paste an image with Ctrl+V)',
+    'حالة الدخول': 'Login Status',
     'تاريخ انتهاء الضريبة': 'VAT Expiry Date',
     'مغلق': 'Closed',
     'تعديل': 'Edit',
@@ -3123,7 +3191,7 @@ const I18N = {
     'نسخة Excel (أوامر + موردون)': 'Excel Copy (Orders + Suppliers)',
     'لم يتم إجراء أي نسخة احتياطية بعد من هذا المتصفح.': 'No backup has been made from this browser yet.',
     'تغذية بيانات الموردين من ملف إكسل': 'Import Suppliers from Excel',
-    'نزّل القالب الجاهز، أدخل بيانات الموردين فيه، ثم ارفعه ليُضيف النظام جميع الموردين دفعةً واحدة. الأعمدة: اسم المورد (إلزامي)، نوع الخدمة (يمكن فصل أكثر من نوع بفاصلة)، التصنيف، الهاتف، البريد، المدينة، الرقم الضريبي، السجل التجاري.': 'Download the ready template, enter supplier data, then upload it to add all suppliers at once. Columns: Supplier Name (required), Service Type (multiple types separated by comma), Classification, Phone, Email, City, VAT No, C.R.',
+    'نزّل القالب الجاهز، أدخل بيانات الموردين فيه، ثم ارفعه ليُضيف النظام جميع الموردين دفعةً واحدة. الأعمدة: اسم المورد (إلزامي)، نوع الخدمة (يمكن فصل أكثر من نوع بفاصلة)، التصنيف، الهاتف، البريد، المدينة، الرقم الضريبي، تاريخ انتهاء الضريبة، السجل التجاري، تاريخ انتهاء السجل التجاري، ملاحظات.': 'Download the ready template, enter supplier data, then upload it to add all suppliers at once. Columns: Supplier Name (required), Service Type (multiple types separated by comma), Classification, Phone, Email, City, VAT No, VAT Expiry, C.R No, C.R Expiry, Notes.',
     'تنزيل قالب إكسل': 'Download Excel Template',
     'تحميل ملف بيانات الموردين': 'Upload Suppliers File',
     'تغذية أنواع الخدمات (Service Types) من ملف إكسل': 'Import Service Types from Excel',
@@ -3264,7 +3332,7 @@ function changeLanguage(lang, ev) {
             if (id === 'page-admin') { loadAdminPanel(); if (typeof _dbRows !== 'undefined' && _dbRows && _dbRows.length) renderDbTable(); }
             else if (id === 'page-dashboard') loadDashboard();
             else if (id === 'page-reports') generateReport();
-            else if (id === 'page-suppliers') filterSuppliers();
+            else if (id === 'page-suppliers') renderSuppliersTable();
             else if (id === 'page-lpo-management') { renderLPOList(); loadDrafts(); }
             else if (id === 'page-control-panel') loadControlPanel();
             else if (id === 'page-trash') loadTrash();
@@ -3413,10 +3481,34 @@ async function recordAction(desc, typeKey) {
             await sb.from('app_users').update({ last_action: now, last_action_desc: desc || '' }).eq('auth_id', currentUser.authId);
         }
     } catch (e) {}
-    // الكتابة في جدول سجل النشاط (إن كان موجوداً) — تفشل بصمت إن لم يُنشأ الجدول بعد
+    // الكتابة في جدول سجل النشاط. عند الفشل (انقطاع/جدول غير مُنشأ/سياسة أمان) تُحفظ العملية في طابور محلي
+    // وتُعاد محاولة إرسالها تلقائياً عند التحميل التالي — حتى لا تضيع أي عملية من السجل.
+    const rec = { username: uname, user_email: currentUser.email || '', action_type: type, details: desc || '', created_at: now };
+    let failed = null;
     try {
-        await sb.from('activity_log').insert({ username: uname, user_email: currentUser.email || '', action_type: type, details: desc || '', created_at: now });
-    } catch (e) {}
+        const res = await sb.from('activity_log').insert(rec);
+        if (res && res.error) failed = res.error.message || 'error';
+    } catch (e) { failed = (e && e.message) || 'error'; }
+    if (failed) { _activityLogError = failed; _queueActivity(rec); }
+    else _activityLogError = null;
+}
+// ===== طابور محلي لعمليات السجل التي تعذّر حفظها (يُعاد إرسالها لاحقاً) =====
+let _activityLogError = null;
+const _ACT_Q_KEY = 'pending_activity_log_v1';
+function _readActivityQueue() { try { const q = JSON.parse(localStorage.getItem(_ACT_Q_KEY) || '[]'); return Array.isArray(q) ? q : []; } catch (e) { return []; } }
+function _queueActivity(rec) {
+    try { const q = _readActivityQueue(); q.push(rec); localStorage.setItem(_ACT_Q_KEY, JSON.stringify(q.slice(-1000))); } catch (e) {}
+}
+async function flushActivityQueue() {
+    if (!sb || isGuest) return;
+    const q = _readActivityQueue();
+    if (!q.length) return;
+    try {
+        const res = await sb.from('activity_log').insert(q);
+        if (res && res.error) { _activityLogError = res.error.message || 'error'; return; }
+        localStorage.removeItem(_ACT_Q_KEY);
+        _activityLogError = null;
+    } catch (e) { _activityLogError = (e && e.message) || 'error'; }
 }
 
 function isCompanyEmail(email) {
@@ -3593,6 +3685,7 @@ async function handleLogin(event) {
 
     isGuest = false;
     currentUser = { username: username, email: emailVal, role: role, authId: data.user.id, id: Date.now() };
+    _idleTouch();   // دخول جديد بكلمة السر ⇒ بداية جلسة نشطة
     await startApp();
 }
 
@@ -3604,6 +3697,10 @@ async function loginAsGuest() {
 }
 
 async function startApp() {
+    // منع دخول المستخدم المعطّل من قِبل مدير النظام
+    if (await isCurrentUserBlocked()) { await showBlockedAndSignOut(); return; }
+    // الخروج التلقائي عند الخمول: إن تجاوزت آخر جلسة المدة المسموحة (حتى مع إغلاق المتصفح) يُطلب الدخول من جديد
+    if (!isGuest && !(await startIdleWatch())) { await idleLogoutNow(true); return; }
     document.getElementById('loginContainer').classList.add('hidden');
     document.getElementById('mainApp').style.display = 'flex';
     document.getElementById('sidebarUsername').textContent = currentUser.username;
@@ -5713,6 +5810,7 @@ function buildRowActionItems(l) {
     return items;
 }
 function openRowMenu(ev, id) {
+    try { selectTableRow('lpoListTable', ev.currentTarget && ev.currentTarget.closest('tr'), id); } catch (e) {}
     ev.stopPropagation();
     const sameBtn = _rowMenuEl && _rowMenuEl.getAttribute('data-for') === String(id);
     closeRowMenu();
@@ -5759,6 +5857,7 @@ function buildSupplierActionItems(s) {
     return items;
 }
 function openSupplierRowMenu(ev, id) {
+    try { selectTableRow('suppliersTable', ev.currentTarget && ev.currentTarget.closest('tr'), id); } catch (e) {}
     ev.stopPropagation();
     const sameBtn = _rowMenuEl && _rowMenuEl.getAttribute('data-for') === ('sup-' + id);
     closeRowMenu();
@@ -5867,7 +5966,9 @@ function renderLPOList() {
             const kebab = `<button class="kebab-btn" title="${en ? 'Actions' : 'إجراءات'}" onclick="event.stopPropagation(); openRowMenu(event, '${l.id}')"><i class="fas fa-ellipsis-v"></i></button>`;
             const row = tbody.insertRow();
             row.style.cursor = 'pointer';
-            row.setAttribute('onclick', `viewLPO('${l.id}')`);
+            row.setAttribute('onclick', `selectTableRow('lpoListTable', this, '${l.id}'); viewLPO('${l.id}')`);
+            row.setAttribute('data-rid', String(l.id));
+            if (String(l.id) === String(_selRowId.lpoListTable)) row.classList.add('row-selected');
             // إبراز أوامر اليوم (تسجيلاً أو إصداراً) بخط عريض في عمودي رقم الأمر وتاريخ التسجيل
             const bwL = (isTodayDate(l.createdAt) || isTodayDate(l.date)) ? ' style="font-weight:800;"' : '';
             row.innerHTML = `<td class="col-actions" style="text-align:center; white-space:nowrap;" onclick="event.stopPropagation();">${kebab}</td>`
@@ -6830,6 +6931,25 @@ async function saveNotifDays() {
 }
 
 // ===================== SUPPLIERS =====================
+// ===== تحديد صف بالنقر (يبقى مُبرزاً عبر إعادة الرسم) =====
+const _selRowId = { lpoListTable: null, suppliersTable: null };
+function selectTableRow(tableId, rowEl, id) {
+    _selRowId[tableId] = id;
+    const t = document.getElementById(tableId);
+    if (t) t.querySelectorAll('tbody tr.row-selected').forEach(r => r.classList.remove('row-selected'));
+    if (!rowEl && t) rowEl = t.querySelector(`tbody tr[data-rid="${CSS.escape(String(id))}"]`);
+    if (rowEl) rowEl.classList.add('row-selected');
+}
+// تحديث جدول الموردين بالبيانات الجديدة مع الإبقاء على الصفحة الحالية والفلاتر والفرز والتحديد وموضع التمرير
+function refreshSuppliersKeepState() {
+    const sc = document.getElementById('contentArea');
+    const top = sc ? sc.scrollTop : 0, wy = window.scrollY;
+    try { populateAllFilters(); } catch (e) {}
+    initColumnDrag('suppliersTable', filterSuppliers);
+    renderSuppliersTable();
+    if (sc) sc.scrollTop = top;
+    window.scrollTo(window.scrollX, wy);
+}
 function loadSuppliersList() {
     populateAllFilters();
     initColumnDrag('suppliersTable', filterSuppliers);
@@ -6945,7 +7065,9 @@ function renderSuppliersTable() {
             const filesHtml = files.length ? files.join(' ') : '<span style="color:#ccc;">-</span>';
             const row = tbody.insertRow();
             row.style.cursor = 'pointer';
-            row.setAttribute('onclick', `viewSupplierDetails('${sid}')`);
+            row.setAttribute('onclick', `selectTableRow('suppliersTable', this, '${sid}'); viewSupplierDetails('${sid}')`);
+            row.setAttribute('data-rid', String(s.id));
+            if (String(s.id) === String(_selRowId.suppliersTable)) row.classList.add('row-selected');
             row.innerHTML = `<td>${fmtRecordDate(s.createdAt)}</td>`
                 + `<td class="col-actions" style="text-align:center; white-space:nowrap;" onclick="event.stopPropagation();">${kebab}</td>`
                 + `<td>${escapeHtml(s.name||'')}</td><td>${supplierRatingLabel(s.id)}</td><td>${escapeHtml(s.serviceType||'')||'-'}</td><td>${escapeHtml(s.supplierType||'')||'-'}</td><td class="col-phone" dir="ltr">${escapeHtml(s.phone||'')||'-'}</td><td>${escapeHtml(s.vatNo||'')||'-'}</td><td>${escapeHtml(s.crNo||'')||'-'}</td><td>${crExpiryCell(s.crExpiry)}</td><td style="font-size:11.5px; color:#667;" dir="ltr">${escapeHtml(s.createdBy||'')||'-'}</td><td style="font-size:16px;" onclick="event.stopPropagation();">${filesHtml}</td>`;
@@ -7252,8 +7374,8 @@ function warnVatExpiryColumn() {
     if (!_vatExpiryMissingWarn) return;
     _vatExpiryMissingWarn = false;
     alert(currentLanguage === 'en'
-        ? "Saved, but the VAT Expiry Date was not stored because its column does not exist in the database yet.\nRun the SQL file \"تحديث_قاعدة_البيانات_10_تاريخ_انتهاء_الضريبة.sql\" in Supabase (SQL Editor), then reload the page."
-        : "تم الحفظ، لكن \"تاريخ انتهاء الضريبة\" لم يُحفظ لأن عموده غير موجود بعد في قاعدة البيانات.\nشغّل ملف SQL: \"تحديث_قاعدة_البيانات_10_تاريخ_انتهاء_الضريبة.sql\" في Supabase (SQL Editor) ثم أعد تحميل الصفحة.");
+        ? "Saved, but the VAT Expiry Date was not stored because its column does not exist in the database yet.\nRun the SQL file \"تحديث_قاعدة_البيانات_16_تاريخ_انتهاء_الضريبة.sql\" in Supabase (SQL Editor), then reload the page."
+        : "تم الحفظ، لكن \"تاريخ انتهاء الضريبة\" لم يُحفظ لأن عموده غير موجود بعد في قاعدة البيانات.\nشغّل ملف SQL: \"تحديث_قاعدة_البيانات_16_تاريخ_انتهاء_الضريبة.sql\" في Supabase (SQL Editor) ثم أعد تحميل الصفحة.");
 }
 
 // ===== تأكيد الإغلاق عند وجود تعديلات غير محفوظة في نافذة بيانات المورد (مثل نافذة أمر الشراء) =====
@@ -7352,9 +7474,11 @@ async function addSupplier(event) {
         if (updRes.error) { alert(msg('تعذّر تحديث المورد: ') + updRes.error.message); return; }
         await loadAllFromCloud();
         recordAction('تعديل مورد ' + row.name);
+        const _editedId = editingSupplierId;
         closeSupplierModal();
-        populateAllFilters();
-        loadSuppliersList();
+        // تحديث البيانات فقط دون إعادة تعيين الصفحة/الفلاتر/الفرز، مع إبقاء المورد المعدَّل محدَّداً
+        _selRowId.suppliersTable = _editedId;
+        refreshSuppliersKeepState();
         populateSupplierSelect();
         alert(msg('تم تحديث بيانات المورد بنجاح'));
         warnVatExpiryColumn();
@@ -7390,8 +7514,7 @@ async function deleteSupplier(id) {
         if (error) { alert(msg('تعذّر الحذف: ') + error.message); return; }
         await loadAllFromCloud();
         recordAction('حذف مورد ' + ((s && s.name) || id));
-        populateAllFilters();
-        loadSuppliersList();
+        refreshSuppliersKeepState();
     }
 }
 
@@ -7601,7 +7724,7 @@ async function saveEvaluation() {
     alert(currentLanguage === 'en' ? 'Evaluation saved successfully.' : 'تم حفظ التقييم بنجاح.');
     // تحديث صفحة الموردين إن كانت مفتوحة
     const active = document.querySelector('.page.active');
-    if (active && active.id === 'page-suppliers') loadSuppliersList();
+    if (active && active.id === 'page-suppliers') refreshSuppliersKeepState();
 }
 // ===================== POPULATE ALL FILTERS (Strict dropdowns) =====================
 function populateAllFilters() {
@@ -8215,9 +8338,9 @@ function downloadFullBackup() {
 async function downloadSupplierTemplate() {
     if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
     try {
-        const headers = ['Supplier Name', 'Service Type', 'Classification', 'Phone', 'Email', 'City', 'VAT No', 'C.R No', 'C.R Expiry', 'Notes'];
+        const headers = ['Supplier Name', 'Service Type', 'Classification', 'Phone', 'Email', 'City', 'VAT No', 'VAT Expiry', 'C.R No', 'C.R Expiry', 'Notes'];
         const example = [
-            { 'Supplier Name': 'Example Trading Co.', 'Service Type': 'Stationery, Printing', 'Classification': 'Local Supplier', 'Phone': '24xxxxxx', 'Email': 'info@example.com', 'City': 'Muscat', 'VAT No': 'OMxxxxxxxx', 'C.R No': '1xxxxxx', 'C.R Expiry': '2027-12-31', 'Notes': 'Approved supplier' }
+            { 'Supplier Name': 'Example Trading Co.', 'Service Type': 'Stationery, Printing', 'Classification': 'Local Supplier', 'Phone': '24xxxxxx', 'Email': 'info@example.com', 'City': 'Muscat', 'VAT No': 'OMxxxxxxxx', 'VAT Expiry': '2027-06-30', 'C.R No': '1xxxxxx', 'C.R Expiry': '2027-12-31', 'Notes': 'Approved supplier' }
         ];
         const ws = XLSX.utils.json_to_sheet(example, { header: headers });
         ws['!cols'] = headers.map(() => ({ wch: 20 }));
@@ -8229,6 +8352,20 @@ async function downloadSupplierTemplate() {
     }
 }
 
+// توحيد التاريخ المستورد إلى YYYY-MM-DD (يقبل رقم تاريخ Excel أو DD/MM/YYYY أو YYYY-MM-DD)
+function normImportDate(v) {
+    v = (v == null ? '' : String(v)).trim();
+    if (!v) return '';
+    if (/^\d{4,6}(\.\d+)?$/.test(v)) {                  // رقم تسلسلي من Excel
+        const d = new Date(Math.round((parseFloat(v) - 25569) * 86400000));
+        return isNaN(d) ? '' : d.toISOString().slice(0, 10);
+    }
+    let m = v.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);
+    if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+    m = v.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})/);
+    if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+    return '';
+}
 // قراءة ملف إكسل وتغذية بيانات الموردين دفعةً واحدة
 async function importSuppliersFromExcel() {
     const statusEl = document.getElementById('supplierImportStatus');
@@ -8251,7 +8388,7 @@ async function importSuppliersFromExcel() {
         const toInsert = [];
         let skipped = 0;
         rows.forEach(r => {
-            const name = pick(r, ['اسم المورد', 'الاسم', 'name', 'Name', 'Supplier', 'supplier']);
+            const name = pick(r, ['اسم المورد', 'الاسم', 'name', 'Name', 'Supplier Name', 'Supplier', 'supplier']);
             if (!name) { skipped++; return; }
             toInsert.push({
                 name: name,
@@ -8261,8 +8398,9 @@ async function importSuppliersFromExcel() {
                 email: pick(r, ['البريد', 'البريد الإلكتروني', 'email', 'Email']),
                 city: pick(r, ['المدينة', 'city', 'City']) || 'مسقط',
                 vat_no: pick(r, ['الرقم الضريبي', 'vat_no', 'VAT', 'VAT No']),
-                cr_no: pick(r, ['السجل التجاري', 'cr_no', 'C.R', 'CR']),
-                cr_expiry: pick(r, ['تاريخ انتهاء السجل التجاري', 'cr_expiry', 'C.R Expiry', 'CR Expiry']) || null,
+                vat_expiry: normImportDate(pick(r, ['تاريخ انتهاء الضريبة', 'vat_expiry', 'VAT Expiry', 'VAT Expiry Date'])) || null,
+                cr_no: pick(r, ['السجل التجاري', 'cr_no', 'C.R No', 'C.R', 'CR']),
+                cr_expiry: normImportDate(pick(r, ['تاريخ انتهاء السجل التجاري', 'cr_expiry', 'C.R Expiry', 'CR Expiry', 'C.R Expiry Date'])) || null,
                 notes: pick(r, ['ملاحظات أخرى', 'ملاحظات', 'notes', 'Notes']) || null
             });
         });
@@ -8271,8 +8409,9 @@ async function importSuppliersFromExcel() {
         show('<i class="fas fa-spinner fa-spin"></i> ' + msg('جارٍ إضافة الموردين... ') + toInsert.length, '#0093c4');
         let impRes = await sb.from('suppliers').insert(toInsert);
         // تراجُع رشيق إن لم تكن أعمدة cr_expiry / notes موجودة بعد
-        if (impRes.error && /(cr_expiry|notes)/i.test(impRes.error.message || '')) {
-            const cleaned = toInsert.map(r => { const c = Object.assign({}, r); delete c.cr_expiry; delete c.notes; return c; });
+        if (impRes.error && /(cr_expiry|vat_expiry|notes)/i.test(impRes.error.message || '')) {
+            const em = impRes.error.message || '';
+            const cleaned = toInsert.map(r => { const c = Object.assign({}, r); ['cr_expiry','vat_expiry','notes'].forEach(k => { if (new RegExp(k, 'i').test(em)) delete c[k]; }); return c; });
             impRes = await sb.from('suppliers').insert(cleaned);
         }
         if (impRes.error) { show('<i class="fas fa-times-circle"></i> ' + msg('تعذّر الاستيراد: ') + impRes.error.message, '#c0392b'); return; }
@@ -8541,11 +8680,177 @@ function resetPermissionsDefault() {
     }
 }
 
+// ===================== الخروج التلقائي بعد فترة خمول =====================
+// المدة بالدقائق تُخزَّن في جدول settings (مفتاح idle_timeout_minutes). آخر نشاط يُحفظ في localStorage
+// (مشترك بين تبويبات المتصفح) فيُحتسب الخمول أيضاً بعد إغلاق المتصفح وإعادة فتحه.
+const IDLE_DEFAULT_MIN = 60;
+const IDLE_WARN_SEC = 60;
+const IDLE_LAST_KEY = 'lpo_last_activity';
+let idleTimeoutMin = IDLE_DEFAULT_MIN;
+let _idleTimer = null, _idleWarnShown = false;
+function _idleLast() { try { return +localStorage.getItem(IDLE_LAST_KEY) || 0; } catch (e) { return 0; } }
+function _idleTouch() { try { localStorage.setItem(IDLE_LAST_KEY, String(Date.now())); } catch (e) {} }
+function _idleActive() { return !!(currentUser && !isGuest && sb); }
+async function loadIdleTimeout() {
+    if (!sb) return;
+    try {
+        const { data } = await sb.from('settings').select('value').eq('key', 'idle_timeout_minutes').maybeSingle();
+        const v = data && data.value ? parseInt(data.value, 10) : NaN;
+        if (v > 0) idleTimeoutMin = v;
+    } catch (e) {}
+    const d = document.getElementById('idleDays'), h = document.getElementById('idleHours');
+    if (d && h && document.activeElement !== d && document.activeElement !== h) {
+        d.value = Math.floor(idleTimeoutMin / 1440);
+        h.value = Math.floor((idleTimeoutMin % 1440) / 60);
+    }
+}
+async function saveIdleTimeout() {
+    const en = currentLanguage === 'en';
+    const admin = _realAdminUser || currentUser;
+    if (!admin || admin.role !== 'sysadmin') { alert(msg('غير مصرّح')); return; }
+    const d = Math.max(0, parseInt(document.getElementById('idleDays').value, 10) || 0);
+    const h = Math.max(0, parseInt(document.getElementById('idleHours').value, 10) || 0);
+    const mins = d * 1440 + h * 60;
+    const sm = document.getElementById('idleSaveMsg');
+    if (mins < 60) { alert(en ? 'The minimum idle time is 1 hour.' : 'أقل مدة خمول هي ساعة واحدة.'); return; }
+    if (mins > 30 * 1440) { alert(en ? 'The maximum idle time is 30 days.' : 'أقصى مدة خمول هي 30 يوماً.'); return; }
+    const { error } = await sb.from('settings').upsert({ key: 'idle_timeout_minutes', value: String(mins) });
+    if (error) { if (sm) { sm.style.color = '#c0392b'; sm.textContent = msg('تعذّر الحفظ: ') + error.message; } return; }
+    idleTimeoutMin = mins;
+    recordAction('تعديل مدة الخروج التلقائي عند الخمول إلى ' + d + ' يوم و' + h + ' ساعة', 'update');
+    if (sm) { sm.style.color = '#2e7d32'; sm.textContent = en ? `Saved ✅ (${d} day(s), ${h} hour(s))` : `تم الحفظ ✅ (${d} يوم، ${h} ساعة)`; }
+}
+function _hideIdleWarn() {
+    _idleWarnShown = false;
+    const ov = document.getElementById('idleWarnOverlay'); if (ov) ov.remove();
+}
+function _showIdleWarn(secLeft) {
+    const en = currentLanguage === 'en';
+    let ov = document.getElementById('idleWarnOverlay');
+    if (!ov) {
+        ov = document.createElement('div'); ov.id = 'idleWarnOverlay';
+        ov.style.cssText = 'position:fixed; inset:0; z-index:99998; background:rgba(20,30,40,.6); display:flex; align-items:center; justify-content:center; padding:16px;';
+        ov.setAttribute('dir', en ? 'ltr' : 'rtl');
+        ov.innerHTML = `<div style="background:#fff; border-radius:14px; max-width:420px; width:100%; padding:26px 22px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,.35);">
+            <div style="width:60px; height:60px; border-radius:50%; background:#fff4e5; color:#e67e22; display:flex; align-items:center; justify-content:center; font-size:26px; margin:0 auto 12px;"><i class="fas fa-hourglass-half"></i></div>
+            <div style="font-size:18px; font-weight:800; color:#e67e22; margin-bottom:6px;">${en ? 'Are you still there?' : 'هل ما زلت هنا؟'}</div>
+            <div style="font-size:14px; color:#444; line-height:1.8; margin-bottom:16px;">${en ? 'You will be logged out automatically due to inactivity in' : 'سيتم تسجيل خروجك تلقائياً بسبب عدم النشاط خلال'} <strong id="idleCountdown" style="color:#c0392b; font-size:16px;"></strong> ${en ? 'seconds.' : 'ثانية.'}</div>
+            <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                <button type="button" class="btn btn-success" onclick="idleStayLoggedIn()"><i class="fas fa-check"></i> ${en ? 'Stay logged in' : 'البقاء متصلاً'}</button>
+                <button type="button" class="btn" onclick="idleLogoutNow(false)"><i class="fas fa-sign-out-alt"></i> ${en ? 'Log out now' : 'تسجيل الخروج الآن'}</button>
+            </div></div>`;
+        document.body.appendChild(ov);
+    }
+    _idleWarnShown = true;
+    const c = document.getElementById('idleCountdown'); if (c) c.textContent = Math.max(0, Math.ceil(secLeft));
+}
+function idleStayLoggedIn() { _idleTouch(); _hideIdleWarn(); }
+async function idleLogoutNow(auto) {
+    _hideIdleWarn();
+    if (!currentUser) return;
+    const en = currentLanguage === 'en';
+    if (auto) { try { await recordAction(en ? 'Automatic logout due to inactivity' : 'تسجيل خروج تلقائي بسبب عدم النشاط', 'login'); } catch (e) {} }
+    try { if (sb) await sb.auth.signOut(); } catch (e) {}
+    try { closeChatPanel(); } catch (e) {}
+    try { localStorage.removeItem(IDLE_LAST_KEY); } catch (e) {}
+    currentUser = null; isGuest = false; _realAdminUser = null;
+    document.body.classList.remove('guest-mode');
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('loginContainer').classList.remove('hidden');
+    const pw = document.getElementById('email'); if (pw) pw.value = '';
+    if (auto) setTimeout(() => alert(en ? 'You were logged out automatically due to inactivity. Please log in again.' : 'تم تسجيل خروجك تلقائياً بسبب عدم النشاط. يرجى تسجيل الدخول مرة أخرى.'), 50);
+}
+function _idleTick() {
+    if (!_idleActive()) { _hideIdleWarn(); return; }
+    const last = _idleLast() || Date.now();
+    const idleSec = (Date.now() - last) / 1000;
+    const limit = idleTimeoutMin * 60;
+    if (idleSec >= limit) { idleLogoutNow(true); return; }
+    if (idleSec >= limit - IDLE_WARN_SEC) _showIdleWarn(limit - idleSec);
+    else if (_idleWarnShown) _hideIdleWarn();   // نشاط في تبويب آخر
+}
+// يُستدعى عند بدء التطبيق: إن كانت آخر جلسة خاملة أطول من المدة (مثلاً بعد إغلاق المتصفح) ⇒ خروج فوري
+async function startIdleWatch() {
+    await loadIdleTimeout();
+    const last = _idleLast();
+    if (last && (Date.now() - last) >= idleTimeoutMin * 60000) return false;
+    _idleTouch();
+    if (!_idleTimer) {
+        let lastWrite = 0;
+        const onAct = () => {
+            if (_idleWarnShown || !_idleActive()) return;   // أثناء التنبيه: البقاء يتطلب الضغط على الزر
+            const n = Date.now(); if (n - lastWrite > 5000) { lastWrite = n; _idleTouch(); }
+        };
+        ['mousemove', 'mousedown', 'keydown', 'wheel', 'scroll', 'touchstart'].forEach(ev => document.addEventListener(ev, onAct, { passive: true, capture: true }));
+        _idleTimer = setInterval(_idleTick, 1000);
+    }
+    return true;
+}
+
+// ===================== تعطيل/تمكين دخول المستخدمين =====================
+// قائمة البريد الإلكتروني للمستخدمين المعطّلين — تُخزَّن في جدول settings (مفتاح disabled_users) دون تعديل قاعدة البيانات
+let disabledUsers = [];
+function isUserDisabled(u) { return !!(u && u.email && disabledUsers.indexOf(String(u.email).toLowerCase()) !== -1); }
+async function loadDisabledUsers() {
+    if (!sb) return;
+    try {
+        const { data } = await sb.from('settings').select('value').eq('key', 'disabled_users').maybeSingle();
+        const v = data && data.value ? JSON.parse(data.value) : [];
+        disabledUsers = Array.isArray(v) ? v.map(x => String(x).toLowerCase()) : [];
+    } catch (e) {}
+}
+async function toggleUserDisabled(id) {
+    const en = currentLanguage === 'en';
+    const admin = _realAdminUser || currentUser;
+    if (!admin || admin.role !== 'sysadmin') { alert(msg('غير مصرّح')); return; }
+    const u = registeredUsers.find(x => String(x.id) === String(id));
+    if (!u || !u.email) return;
+    const email = u.email.toLowerCase();
+    if (email === DEFAULT_SYSADMIN_EMAIL || email === (admin.email || '').toLowerCase()) { alert(en ? 'This account cannot be disabled.' : 'لا يمكن تعطيل هذا الحساب.'); return; }
+    await loadDisabledUsers();   // أحدث قائمة قبل التعديل
+    const willDisable = disabledUsers.indexOf(email) === -1;
+    const q = willDisable
+        ? (en ? `Disable login for ${u.username || u.email}?\nThe user will be blocked from entering the system immediately.` : `تعطيل دخول المستخدم ${u.username || u.email}؟\nسيُمنع من الدخول إلى النظام فوراً.`)
+        : (en ? `Enable login for ${u.username || u.email}?` : `تمكين دخول المستخدم ${u.username || u.email}؟`);
+    if (!confirm(q)) return;
+    const list = willDisable ? disabledUsers.concat([email]) : disabledUsers.filter(x => x !== email);
+    const { error } = await sb.from('settings').upsert({ key: 'disabled_users', value: JSON.stringify(list) });
+    if (error) { alert(msg('تعذّر الحفظ: ') + error.message); return; }
+    disabledUsers = list;
+    recordAction((willDisable ? 'تعطيل دخول المستخدم ' : 'تمكين دخول المستخدم ') + (u.email || u.username), 'permissions');
+    loadAdminPanel();
+}
+// هل الحساب الحالي معطّل؟ (لا يُطبَّق أثناء محاكاة مدير النظام لمستخدم)
+async function isCurrentUserBlocked() {
+    if (!sb || isGuest || !currentUser || _realAdminUser || currentUser._impersonated) return false;
+    const email = (currentUser.email || '').toLowerCase();
+    if (!email || email === DEFAULT_SYSADMIN_EMAIL) return false;
+    await loadDisabledUsers();
+    return disabledUsers.indexOf(email) !== -1;
+}
+// نافذة "تم حظر دخولك" ثم تسجيل الخروج والعودة لشاشة الدخول
+async function showBlockedAndSignOut() {
+    const en = currentLanguage === 'en';
+    try { if (sb) await sb.auth.signOut(); } catch (e) {}
+    try { closeChatPanel(); } catch (e) {}
+    currentUser = null; isGuest = false;
+    document.getElementById('mainApp').style.display = 'none';
+    document.getElementById('loginContainer').classList.remove('hidden');
+    const pw = document.getElementById('email'); if (pw) pw.value = '';
+    let ov = document.getElementById('blockedOverlay');
+    if (!ov) { ov = document.createElement('div'); ov.id = 'blockedOverlay'; document.body.appendChild(ov); }
+    ov.setAttribute('dir', en ? 'ltr' : 'rtl');
+    ov.innerHTML = `<div class="bo-box"><div class="bo-ic"><i class="fas fa-ban"></i></div>
+        <div style="font-size:19px; font-weight:800; color:#c0392b; margin-bottom:8px;">${en ? 'Access Blocked' : 'تم حظر دخولك'}</div>
+        <div style="font-size:14px; color:#444; line-height:1.8; margin-bottom:18px;">${en ? 'Your access to the system has been blocked by the System Administrator.<br>Please contact the administrator for more information.' : 'تم حظر دخولك إلى النظام من قِبل مدير النظام.<br>يرجى التواصل مع مدير النظام لمزيد من المعلومات.'}</div>
+        <button type="button" class="btn btn-primary" onclick="document.getElementById('blockedOverlay').remove()">${en ? 'OK' : 'حسناً'}</button></div>`;
+}
+
 function loadAdminPanel() {
     const tbody = document.querySelector('#usersTable tbody');
     tbody.innerHTML = '';
     if (registeredUsers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999;">لا يوجد مستخدمون مسجلون</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#999;">لا يوجد مستخدمون مسجلون</td></tr>';
     } else {
         registeredUsers.forEach(u => {
             const created = u.createdAt ? new Date(u.createdAt).toLocaleDateString(currentLanguage === 'en' ? 'en-GB' : 'ar') : '-';
@@ -8558,10 +8863,20 @@ function loadAdminPanel() {
             const delCell = isDefaultAdmin
                 ? `<button class="btn btn-small" disabled style="opacity:.4; cursor:not-allowed;" title="${currentLanguage==='en'?'Cannot delete default admin':'لا يمكن حذف المدير الافتراضي'}"><i class="fas fa-lock"></i></button>`
                 : `<button class="btn btn-small" onclick="deleteUser('${u.id}')" style="color:#e74c3c;"><i class="fas fa-trash"></i></button>`;
-            tbody.insertRow().innerHTML = `<td>${u.username}</td><td>${u.email}</td><td>${roleCell}</td><td data-sort="${u.createdAt || ''}">${created}</td><td>${delCell}</td>`;
+            const en = currentLanguage === 'en';
+            const myEmail = ((_realAdminUser || currentUser) && ((_realAdminUser || currentUser).email || '')).toLowerCase();
+            const dis = isUserDisabled(u);
+            const lockedRow = isDefaultAdmin || (u.email || '').toLowerCase() === myEmail;
+            const stateCell = lockedRow
+                ? `<span class="user-state on" title="${en ? 'Cannot disable your own account or the default admin' : 'لا يمكن تعطيل حسابك أو المدير الافتراضي'}"><i class="fas fa-circle-check"></i> ${en ? 'Enabled' : 'مُفعّل'}</span>`
+                : `<button type="button" class="user-state-btn ${dis ? 'off' : 'on'}" onclick="toggleUserDisabled('${u.id}')" title="${dis ? (en ? 'Click to enable login' : 'انقر لتمكين الدخول') : (en ? 'Click to disable login' : 'انقر لتعطيل الدخول')}"><span class="us-knob"></span><span>${dis ? (en ? 'Disabled' : 'معطّل') : (en ? 'Enabled' : 'مُفعّل')}</span></button>`;
+            const row = tbody.insertRow();
+            if (dis) row.classList.add('user-disabled-row');
+            row.innerHTML = `<td>${escapeHtml(u.username || '')}${dis ? ' <i class="fas fa-ban" style="color:#c0392b; font-size:11px;"></i>' : ''}</td><td>${escapeHtml(u.email || '')}</td><td>${roleCell}</td><td data-sort="${u.createdAt || ''}">${created}</td><td data-sort="${dis ? 1 : 0}">${stateCell}</td><td>${delCell}</td>`;
         });
     }
     updateLastBackupInfo();
+    try { loadIdleTimeout(); } catch (e) {}
     renderImpersonationList();
     // تفعيل الفرز/السحب/التمديد للأعمدة (مرة واحدة) ثم تطبيق الترتيب والفرز المحفوظ
     initColumnDrag('usersTable', loadAdminPanel);
@@ -8822,6 +9137,18 @@ function getActivityEntries() {
 function renderActivityLog() {
     const entries = getActivityEntries();
     const en = currentLanguage === 'en';
+    // تنبيه إن كان السجل لا يُحفظ في قاعدة البيانات (جدول غير مُنشأ أو سياسة أمان تمنع)
+    const warn = document.getElementById('activityLogWarn');
+    if (warn) {
+        const pendingN = _readActivityQueue().length;
+        if (_activityLogError || pendingN) {
+            warn.style.display = 'block';
+            warn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + (en
+                ? `The activity log is not being saved to the database${pendingN ? ` (${pendingN} operations waiting on this device)` : ''}. Run the SQL file <strong>تحديث_قاعدة_البيانات_17_إصلاح_سجل_النشاط.sql</strong> in Supabase (SQL Editor), then reload the page.`
+                : `سجل النشاط لا يُحفظ حالياً في قاعدة البيانات${pendingN ? ` (${pendingN} عملية بانتظار الإرسال من هذا الجهاز)` : ''}. شغّل ملف SQL: <strong>تحديث_قاعدة_البيانات_17_إصلاح_سجل_النشاط.sql</strong> في Supabase (SQL Editor) ثم أعد تحميل الصفحة.`)
+                + (_activityLogError ? `<div style="font-size:11.5px; color:#7a2f27; margin-top:4px;" dir="ltr">${escapeHtml(String(_activityLogError))}</div>` : '');
+        } else warn.style.display = 'none';
+    }
     const tbody = document.querySelector('#activityTable tbody');
     if (tbody) {
         tbody.innerHTML = '';
@@ -10709,7 +11036,9 @@ function fabClick() { if (_fabMoved) { _fabMoved = false; return; } setChatMode(
 })();
 
 async function openChat(refNumber, refType) {
+    if (currentChatRef !== refNumber) clearChatPending();
     currentChatRef = refNumber;
+    const clrBtn = document.getElementById('chatClearAllBtn'); if (clrBtn) clrBtn.style.display = chatIsAdmin() ? '' : 'none';
     currentChatType = refType || 'order';
     cancelReply();
     document.getElementById('chatRefLabel').textContent = ' (' + refNumber + ')';
@@ -10769,7 +11098,8 @@ function renderChatMessages(messages) {
                 <div style="color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(m.reply_snippet || '')}</div>
             </div>` : '';
 
-        const replyBtn = isGuest ? '' : `<button type="button" class="chat-msg-actions" onclick="startReply('${m.id}')" title="رد" style="background:none; border:none; cursor:pointer; color:#0093c4; font-size:11px; padding:2px 5px;"><i class="fas fa-reply"></i></button>`;
+        const replyBtn = (isGuest ? '' : `<button type="button" class="chat-msg-actions" onclick="startReply('${m.id}')" title="رد" style="background:none; border:none; cursor:pointer; color:#0093c4; font-size:11px; padding:2px 5px;"><i class="fas fa-reply"></i></button>`)
+            + (chatIsAdmin() ? `<button type="button" class="chat-msg-actions" onclick="deleteChatMessage('${m.id}')" title="${currentLanguage === 'en' ? 'Delete message' : 'حذف الرسالة'}" style="background:none; border:none; cursor:pointer; color:#c0392b; font-size:11px; padding:2px 5px;"><i class="fas fa-trash"></i></button>` : '');
 
         const wrap = document.createElement('div');
         wrap.className = 'chat-msg';
@@ -10784,7 +11114,7 @@ function renderChatMessages(messages) {
                     ${replyBtn}
                 </div>
                 <div style="display:inline-block; background:${isMine ? '#e8f5e9' : 'white'}; border:1px solid #e8eef5; border-radius:10px; padding:8px 11px; font-size:13px; color:#333; max-width:88%; word-wrap:break-word; text-align:start;">
-                    ${quote}${escapeHtml(m.message)}
+                    ${quote}${renderChatBody(m.message, chatIsAdmin() ? m.id : null)}
                 </div>
             </div>`;
         box.appendChild(wrap);
@@ -10800,7 +11130,8 @@ function renderChatMessages(messages) {
 function startReply(msgId) {
     const m = chatMessagesCache.find(x => String(x.id) === String(msgId));
     if (!m) return;
-    const snippet = (m.message || '').slice(0, 90);
+    const pm = parseChatMessage(m.message);
+    const snippet = (pm.text || (pm.atts.length ? ('📎 ' + pm.atts.map(a => a.n).join('، ')) : '')).slice(0, 90);
     replyingTo = { id: m.id, author: m.user_name || 'مستخدم', snippet: snippet };
     document.getElementById('chatReplyAuthor').textContent = replyingTo.author;
     document.getElementById('chatReplySnippet').textContent = snippet;
@@ -10822,19 +11153,204 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// ===================== مرفقات المحادثة (صور + ملفات + لصق من الحافظة) =====================
+// تُرفع المرفقات إلى Supabase Storage (المجلد chat/ داخل حاوية supplier-files الموجودة)، وتُحفظ روابطها
+// داخل نص الرسالة بعلامة خاصة — فلا حاجة لأي تعديل في قاعدة البيانات.
+const CHAT_ATT_MARK = '\n[[ATT]]';
+const CHAT_MAX_FILE_MB = 10;
+let chatPendingFiles = [];   // [{ file, url(preview) }]
+function parseChatMessage(raw) {
+    raw = raw || '';
+    const i = raw.indexOf(CHAT_ATT_MARK);
+    if (i === -1) return { text: raw, atts: [] };
+    let atts = [];
+    try { atts = JSON.parse(raw.slice(i + CHAT_ATT_MARK.length)) || []; } catch (e) { atts = []; }
+    return { text: raw.slice(0, i), atts: Array.isArray(atts) ? atts : [] };
+}
+function _fmtSize(b) { b = +b || 0; return b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB'; }
+function _fileIcon(name, type) {
+    const n = (name || '').toLowerCase();
+    if (/pdf$/.test(n) || /pdf/.test(type || '')) return 'fa-file-pdf" style="color:#c0392b';
+    if (/\.(xlsx?|csv)$/.test(n)) return 'fa-file-excel" style="color:#1e8449';
+    if (/\.(docx?|rtf)$/.test(n)) return 'fa-file-word" style="color:#2b579a';
+    if (/\.(pptx?)$/.test(n)) return 'fa-file-powerpoint" style="color:#d35400';
+    if (/\.(zip|rar|7z)$/.test(n)) return 'fa-file-zipper" style="color:#7f8c8d';
+    return 'fa-file-lines" style="color:#0093c4';
+}
+function _isImageAtt(a) { return /^image\//.test(a.t || '') || /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(a.n || ''); }
+function renderChatBody(raw, adminMsgId) {
+    const { text, atts } = parseChatMessage(raw);
+    let html = text ? escapeHtml(text) : '';
+    const en = currentLanguage === 'en';
+    // زر حذف مرفق واحد (لمدير النظام فقط)
+    const delBtn = (a) => adminMsgId == null ? '' : `<button type="button" class="chat-att-del" onclick="event.preventDefault(); event.stopPropagation(); deleteChatAttachment('${adminMsgId}', ${atts.indexOf(a)})" title="${en ? 'Delete attachment' : 'حذف المرفق'}"><i class="fas fa-times"></i></button>`;
+    const imgs = atts.filter(_isImageAtt), files = atts.filter(a => !_isImageAtt(a));
+    if (imgs.length) html += `<div class="chat-att-imgs">${imgs.map(a => `<span class="chat-att-wrap"><a href="${escapeHtml(a.u)}" target="_blank" rel="noopener" title="${escapeHtml(a.n || '')}"><img src="${escapeHtml(a.u)}" alt="${escapeHtml(a.n || '')}" loading="lazy" onload="var b=document.getElementById('chatMessages'); if(b && b.scrollHeight-b.scrollTop-b.clientHeight<260) b.scrollTop=b.scrollHeight;"></a>${delBtn(a)}</span>`).join('')}</div>`;
+    files.forEach(a => {
+        html += `<span class="chat-att-wrap" style="display:block;"><a class="chat-att-file" href="${escapeHtml(a.u)}" target="_blank" rel="noopener" download="${escapeHtml(a.n || '')}"><i class="fas ${_fileIcon(a.n, a.t)}"></i><span style="min-width:0;"><div class="caf-n">${escapeHtml(a.n || 'file')}</div><div class="caf-s">${_fmtSize(a.s)}</div></span></a>${delBtn(a)}</span>`;
+    });
+    return html;
+}
+// ===================== حذف أجزاء من المحادثة (مدير النظام فقط) =====================
+function chatIsAdmin() { return !isGuest && !!currentUser && currentUser.role === 'sysadmin'; }
+// حذف ملف مرفق من مساحة التخزين (أفضل محاولة — لا يمنع الحذف من المحادثة إن فشل)
+async function _removeChatStorageFiles(atts) {
+    try {
+        const paths = (atts || []).map(a => { const m = String(a.u || '').match(/\/supplier-files\/(chat\/.+)$/); return m ? decodeURIComponent(m[1]) : null; }).filter(Boolean);
+        if (paths.length) await sb.storage.from('supplier-files').remove(paths);
+    } catch (e) {}
+}
+function _chatDeleteDenied(en) {
+    alert(en
+        ? 'The database did not allow the deletion.\nRun the SQL file "تحديث_قاعدة_البيانات_18_حذف_المحادثات.sql" in Supabase (SQL Editor), then try again.'
+        : 'لم تسمح قاعدة البيانات بالحذف.\nشغّل ملف SQL: "تحديث_قاعدة_البيانات_18_حذف_المحادثات.sql" في Supabase (SQL Editor) ثم أعد المحاولة.');
+}
+async function deleteChatMessage(id) {
+    const en = currentLanguage === 'en';
+    if (!chatIsAdmin()) { alert(msg('غير مصرّح')); return; }
+    const m = chatMessagesCache.find(x => String(x.id) === String(id));
+    if (!m) return;
+    if (!confirm(en ? 'Delete this message (and its attachments) for everyone?' : 'حذف هذه الرسالة (ومرفقاتها) نهائياً من المحادثة لدى الجميع؟')) return;
+    const res = await sb.from('comments').delete().eq('id', m.id).select();
+    if (res.error) { alert(msg('تعذّر الحذف: ') + res.error.message); return; }
+    if (Array.isArray(res.data) && res.data.length === 0) { _chatDeleteDenied(en); return; }
+    await _removeChatStorageFiles(parseChatMessage(m.message).atts);
+    recordAction('حذف رسالة من محادثة ' + currentChatRef + ' (' + (m.user_name || '') + ')', 'delete');
+    await loadChatMessages(currentChatRef);
+}
+async function deleteChatAttachment(id, idx) {
+    const en = currentLanguage === 'en';
+    if (!chatIsAdmin()) { alert(msg('غير مصرّح')); return; }
+    const m = chatMessagesCache.find(x => String(x.id) === String(id));
+    if (!m) return;
+    const pm = parseChatMessage(m.message);
+    const att = pm.atts[idx];
+    if (!att) return;
+    if (!confirm((en ? 'Delete the attachment "' : 'حذف المرفق "') + (att.n || '') + (en ? '" for everyone?' : '" نهائياً لدى الجميع؟'))) return;
+    const rest = pm.atts.filter((_, i) => i !== idx);
+    let res;
+    if (!pm.text.trim() && !rest.length) res = await sb.from('comments').delete().eq('id', m.id).select();   // لم يبقَ شيء ⇒ حذف الرسالة كلها
+    else res = await sb.from('comments').update({ message: pm.text + (rest.length ? (CHAT_ATT_MARK + JSON.stringify(rest)) : '') }).eq('id', m.id).select();
+    if (res.error) { alert(msg('تعذّر الحذف: ') + res.error.message); return; }
+    if (Array.isArray(res.data) && res.data.length === 0) { _chatDeleteDenied(en); return; }
+    await _removeChatStorageFiles([att]);
+    recordAction('حذف مرفق ' + (att.n || '') + ' من محادثة ' + currentChatRef, 'delete');
+    await loadChatMessages(currentChatRef);
+}
+async function deleteWholeChat() {
+    const en = currentLanguage === 'en';
+    if (!chatIsAdmin() || !currentChatRef) { alert(msg('غير مصرّح')); return; }
+    if (!chatMessagesCache.length) { alert(en ? 'This conversation is already empty.' : 'المحادثة فارغة بالفعل.'); return; }
+    if (!confirm(en ? `Delete the ENTIRE conversation of ${currentChatRef} (${chatMessagesCache.length} messages and their attachments) for everyone?\nThis cannot be undone.`
+                    : `حذف محادثة ${currentChatRef} بالكامل (${chatMessagesCache.length} رسالة مع مرفقاتها) لدى الجميع؟\nلا يمكن التراجع عن هذا الإجراء.`)) return;
+    const all = chatMessagesCache.slice();
+    const res = await sb.from('comments').delete().eq('ref_number', currentChatRef).select();
+    if (res.error) { alert(msg('تعذّر الحذف: ') + res.error.message); return; }
+    if (Array.isArray(res.data) && res.data.length === 0) { _chatDeleteDenied(en); return; }
+    await _removeChatStorageFiles([].concat(...all.map(x => parseChatMessage(x.message).atts)));
+    recordAction('حذف محادثة ' + currentChatRef + ' بالكامل', 'delete');
+    await loadChatMessages(currentChatRef);
+}
+function addChatFiles(fileList) {
+    if (isGuest) return;
+    const en = currentLanguage === 'en';
+    const tooBig = [];
+    Array.from(fileList || []).forEach(f => {
+        if (!f) return;
+        if (f.size > CHAT_MAX_FILE_MB * 1048576) { tooBig.push(f.name); return; }
+        chatPendingFiles.push({ file: f, url: /^image\//.test(f.type) ? URL.createObjectURL(f) : '' });
+    });
+    if (tooBig.length) alert((en ? `Files larger than ${CHAT_MAX_FILE_MB} MB were skipped:\n` : `تم تجاهل ملفات أكبر من ${CHAT_MAX_FILE_MB} ميجابايت:\n`) + tooBig.join('\n'));
+    renderChatPending();
+    const inp = document.getElementById('chatInput'); if (inp) inp.focus();
+}
+function removeChatPending(i) {
+    const p = chatPendingFiles[i];
+    if (p && p.url) { try { URL.revokeObjectURL(p.url); } catch (e) {} }
+    chatPendingFiles.splice(i, 1);
+    renderChatPending();
+}
+function clearChatPending() {
+    chatPendingFiles.forEach(p => { if (p.url) { try { URL.revokeObjectURL(p.url); } catch (e) {} } });
+    chatPendingFiles = [];
+    renderChatPending();
+}
+function renderChatPending() {
+    const box = document.getElementById('chatPending');
+    if (!box) return;
+    if (!chatPendingFiles.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+    const en = currentLanguage === 'en';
+    box.style.display = 'flex';
+    box.innerHTML = chatPendingFiles.map((p, i) => `<div class="cp-item">${p.url ? `<img src="${p.url}" alt="">` : `<span class="cp-ic"><i class="fas ${_fileIcon(p.file.name, p.file.type)}"></i></span>`}<span style="min-width:0;"><div class="cp-name" title="${escapeHtml(p.file.name)}">${escapeHtml(p.file.name)}</div><div style="color:#8aa2b0; font-size:10px;">${_fmtSize(p.file.size)}</div></span><button type="button" class="cp-x" onclick="removeChatPending(${i})" title="${en ? 'Remove' : 'إزالة'}"><i class="fas fa-times"></i></button></div>`).join('');
+}
+// لصق صورة (أو ملف) من الحافظة مباشرةً في حقل الرسالة
+function onChatPaste(e) {
+    const items = (e.clipboardData && e.clipboardData.items) ? Array.from(e.clipboardData.items) : [];
+    const files = [];
+    items.forEach(it => {
+        if (it.kind === 'file') {
+            const f = it.getAsFile();
+            if (f) {
+                const ext = (f.type.split('/')[1] || 'png').replace('jpeg', 'jpg');
+                const named = (f.name && f.name !== 'image.png') ? f : new File([f], 'pasted-image-' + new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19) + '.' + ext, { type: f.type });
+                files.push(named);
+            }
+        }
+    });
+    if (files.length) { e.preventDefault(); addChatFiles(files); }
+}
+// سحب وإفلات الملفات على صندوق المحادثة
+(function () {
+    function bind() {
+        const panel = document.getElementById('chatSection');
+        if (!panel || panel._dropBound) return;
+        panel._dropBound = true;
+        panel.addEventListener('dragover', e => { if (isGuest || !e.dataTransfer || Array.from(e.dataTransfer.types || []).indexOf('Files') === -1) return; e.preventDefault(); panel.classList.add('chat-drop-hint'); });
+        panel.addEventListener('dragleave', e => { if (e.target === panel) panel.classList.remove('chat-drop-hint'); });
+        panel.addEventListener('drop', e => { panel.classList.remove('chat-drop-hint'); if (isGuest || !e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return; e.preventDefault(); addChatFiles(e.dataTransfer.files); });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bind); else bind();
+})();
+async function uploadChatFile(file) {
+    const safe = (file.name || 'file').replace(/[^\w.\-\u0600-\u06FF]+/g, '_').slice(-80);
+    const ref = String(currentChatRef || 'general').replace(/[^\w\-]+/g, '_');
+    const path = 'chat/' + ref + '/' + Date.now() + '_' + Math.random().toString(36).slice(2, 7) + '_' + safe;
+    const { error } = await sb.storage.from('supplier-files').upload(path, file, { upsert: false, contentType: file.type || undefined });
+    if (error) throw error;
+    const { data } = sb.storage.from('supplier-files').getPublicUrl(path);
+    return { n: file.name || safe, u: data ? data.publicUrl : '', t: file.type || '', s: file.size || 0 };
+}
+
 async function sendComment() {
     if (isGuest) { alert(msg('الزائر لا يمكنه إضافة رسائل')); return; }
     const input = document.getElementById('chatInput');
-    const msg = input.value.trim();
-    if (!msg) return;
+    const text = input.value.trim();
+    if (!text && !chatPendingFiles.length) return;
     if (!sb || !currentChatRef) return;
+    const en = currentLanguage === 'en';
+    const sendBtn = document.getElementById('chatSendBtn');
+
+    // رفع المرفقات أولاً (إن وُجدت)
+    let atts = [];
+    if (chatPendingFiles.length) {
+        if (sendBtn) { sendBtn.disabled = true; sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
+        try {
+            for (const p of chatPendingFiles) atts.push(await uploadChatFile(p.file));
+        } catch (e) {
+            if (sendBtn) { sendBtn.disabled = false; sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>'; }
+            alert((en ? 'Could not upload the attachment: ' : 'تعذّر رفع المرفق: ') + (e && e.message ? e.message : ''));
+            return;
+        }
+        if (sendBtn) { sendBtn.disabled = false; sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>'; }
+    }
+    const message = text + (atts.length ? (CHAT_ATT_MARK + JSON.stringify(atts)) : '');
 
     const row = {
         ref_number: currentChatRef,
         ref_type: currentChatType,
         user_name: currentUser.username,
         user_email: currentUser.email,
-        message: msg
+        message: message
     };
     // بيانات الرد المترابط (إن كان المستخدم يرد على رسالة محددة)
     if (replyingTo) {
@@ -10845,19 +11361,23 @@ async function sendComment() {
 
     input.value = '';
     const savedReply = replyingTo;
+    const savedFiles = chatPendingFiles.slice();
+    chatPendingFiles = []; renderChatPending();
     cancelReply();
 
     const { error } = await sb.from('comments').insert(row);
     if (error) {
         alert(msg('تعذّر إرسال الرسالة: ') + error.message);
-        input.value = msg;
+        input.value = text;
+        chatPendingFiles = savedFiles; renderChatPending();
         replyingTo = savedReply;
         if (savedReply) startReply(savedReply.id);
         return;
     }
+    savedFiles.forEach(p => { if (p.url) { try { URL.revokeObjectURL(p.url); } catch (e) {} } });
     // إعادة التحميل فوراً (الاشتراك اللحظي سيحدّث للآخرين)
     await loadChatMessages(currentChatRef);
-    recordAction('إرسال رسالة في ' + currentChatRef);
+    recordAction('إرسال رسالة في ' + currentChatRef + (atts.length ? (' (' + atts.length + (en ? ' attachment(s))' : ' مرفق)')) : ''));
 }
 
 // الاشتراك اللحظي في رسائل الأمر الحالي
@@ -10868,6 +11388,9 @@ function subscribeChat(refNumber) {
     updateChatBadge();
     if (!sb) return;
     chatChannel = sb.channel('chat-' + refNumber)
+        // الحذف/التعديل (من مدير النظام) يُحدّث المحادثة لدى الجميع
+        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'comments' }, () => { if (currentChatRef === refNumber) loadChatMessages(refNumber); })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'comments', filter: 'ref_number=eq.' + refNumber }, () => loadChatMessages(refNumber))
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'comments', filter: 'ref_number=eq.' + refNumber }, (payload) => {
             loadChatMessages(refNumber);
             // إن كان الصندوق مخفياً ورسالة من شخص آخر: زد العداد
