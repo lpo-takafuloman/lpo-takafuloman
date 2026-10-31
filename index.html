@@ -144,15 +144,15 @@
         .sidebar-lang-btn.active { background: #0093c4; color: white; border-color: #0093c4; }
 
         /* ============ صندوق المحادثة: 3 أوضاع ============ */
-        .chat-panel { position: fixed; z-index: 1200; background: rgba(255,255,255,0.92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid #e0e6ed; box-shadow: 0 12px 40px rgba(0,0,0,0.18); display: flex; flex-direction: column; overflow: hidden; }
+        .chat-panel { position: fixed; z-index: 1200; background: rgba(255,255,255,0.58); backdrop-filter: blur(14px) saturate(160%); -webkit-backdrop-filter: blur(14px) saturate(160%); border: 1px solid rgba(255,255,255,0.65); box-shadow: 0 12px 40px rgba(0,0,0,0.18); display: flex; flex-direction: column; overflow: hidden; }
         .chat-header { background: linear-gradient(135deg, #0093c4 0%, #007ba3 100%); color: white; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 14px; flex-shrink: 0; cursor: move; user-select: none; }
         .chat-header .chat-controls { cursor: default; }
         .chat-controls { display: flex; gap: 4px; flex-shrink: 0; }
         .chat-ctrl-btn { background: rgba(255,255,255,0.15); border: none; color: white; width: 26px; height: 26px; border-radius: 6px; cursor: pointer; font-size: 11px; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
         .chat-ctrl-btn:hover { background: rgba(255,255,255,0.3); }
         .chat-body { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-        .chat-messages { flex: 1; overflow-y: auto; background: rgba(248,250,252,0.6); padding: 14px; min-height: 0; }
-        .chat-input-row { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #e8eef5; background: white; flex-shrink: 0; }
+        .chat-messages { flex: 1; overflow-y: auto; background: linear-gradient(180deg, rgba(240,248,252,0.28) 0%, rgba(248,250,252,0.12) 100%); padding: 14px; min-height: 0; }
+        .chat-input-row { display: flex; gap: 8px; padding: 12px; border-top: 1px solid rgba(220,230,238,0.7); background: rgba(255,255,255,0.62); flex-shrink: 0; }
         .chat-input-row input, .chat-input-row textarea { flex: 1; padding: 10px 12px; border: 1.5px solid #ddd; border-radius: 8px; font-size: 13px; font-family: inherit; }
         .chat-input-row { align-items: flex-end; }
         .chat-input-row textarea { resize: none; line-height: 1.45; min-height: 40px; max-height: 140px; overflow-y: hidden; box-sizing: border-box; }
@@ -160,7 +160,7 @@
         .chat-msg-text { white-space: pre-wrap; }
         .chat-attach-btn { background: #f1f6f9; border: 1.5px solid #dde6ec; color: #0093c4; border-radius: 8px; width: 40px; flex-shrink: 0; cursor: pointer; font-size: 15px; }
         .chat-attach-btn:hover { background: #e3f1f8; }
-        .chat-pending { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 6px; padding: 8px 12px 0; background: white; border-top: 1px solid #e8eef5; }
+        .chat-pending { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 6px; padding: 8px 12px 0; background: rgba(255,255,255,0.62); border-top: 1px solid rgba(220,230,238,0.7); }
         .chat-pending .cp-item { position: relative; flex-shrink: 0; display: flex; align-items: center; gap: 6px; border: 1px solid #dde6ec; background: #f8fafc; border-radius: 8px; padding: 4px 22px 4px 4px; font-size: 11.5px; color: #445; max-width: 200px; }
         html[dir="rtl"] .chat-pending .cp-item { padding: 4px 4px 4px 22px; }
         .chat-pending .cp-item img { width: 38px; height: 38px; object-fit: cover; border-radius: 5px; display: block; }
@@ -281,6 +281,17 @@
         #activityTable thead th.col-drag-over { background: #dff1fb; box-shadow: inset 3px 0 0 #0093c4, inset -3px 0 0 #0093c4; }
         #activityTable thead th .sort-arrow { opacity: .45; font-size: 11px; }
         #activityTable thead th.sorted .sort-arrow { opacity: 1; color: #0093c4; }
+        /* حذف جماعي لسجل العمليات */
+        #activityTable .act-sel-col { display: none; width: 92px; text-align: center; cursor: default !important; }
+        #activityTable.sel-mode .act-sel-col { display: table-cell; }
+        #activityTable .act-sel-col input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #c0392b; vertical-align: middle; }
+        .act-sel-all { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        #activityTable tbody tr.act-row-sel td { background: #fdf0ee !important; }
+        .act-sel-toggle { background: #fff; color: #b5473a; border: 1.5px solid #ecc3bd !important; }
+        .act-sel-toggle:hover, .act-sel-toggle.on { background: #fdf0ee; }
+        .act-sel-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; background: #fff6f4; border: 1px solid #f1d2cc; border-radius: 10px; padding: 8px 12px; margin: 8px 0; }
+        .act-sel-bar .asb-count { font-size: 13px; font-weight: 700; color: #b5473a; }
+        .act-sel-bar .asb-hint { font-size: 11.5px; color: #8a7a76; }
         #lpoListTable thead th, #suppliersTable thead th, #draftsTable thead th, #usersTable thead th, #trashOrdersTable thead th, #trashDraftsTable thead th, #trashSuppliersTable thead th { -webkit-user-select: none; user-select: none; position: relative; }
         #lpoListTable thead th.col-dragging, #suppliersTable thead th.col-dragging, #draftsTable thead th.col-dragging, #usersTable thead th.col-dragging, #trashOrdersTable thead th.col-dragging, #trashDraftsTable thead th.col-dragging, #trashSuppliersTable thead th.col-dragging { opacity: 0.4; }
         #lpoListTable thead th.col-drag-over, #suppliersTable thead th.col-drag-over, #draftsTable thead th.col-drag-over, #usersTable thead th.col-drag-over, #trashOrdersTable thead th.col-drag-over, #trashDraftsTable thead th.col-drag-over, #trashSuppliersTable thead th.col-drag-over { background: #dff1fb; box-shadow: inset 3px 0 0 #0093c4, inset -3px 0 0 #0093c4; }
@@ -1748,7 +1759,17 @@
             </div>
             <div class="filter-actions">
                 <button type="button" class="btn btn-danger btn-small" onclick="resetActivityFilters()"><i class="fas fa-eraser"></i> إعادة تعيين الفلاتر</button>
+                <button type="button" id="actSelToggleBtn" class="btn btn-small act-sel-toggle sysadmin-only" onclick="toggleActSelectMode()"><i class="fas fa-tasks"></i> <span>تحديد للحذف</span></button>
                 <span id="activityCountInfo" style="font-size:12px; color:#667; align-self:center;"></span>
+            </div>
+        </div>
+        <!-- شريط الحذف الجماعي (يظهر في وضع التحديد — مدير النظام فقط) -->
+        <div id="actSelBar" class="act-sel-bar" style="display:none;">
+            <span class="asb-count"><i class="fas fa-check-square"></i> <span id="actSelCount">0</span></span>
+            <span class="asb-hint" id="actSelHint"></span>
+            <div style="display:flex; gap:8px; margin-inline-start:auto;">
+                <button type="button" class="btn btn-small" onclick="toggleActSelectMode(false)"><i class="fas fa-times"></i> إلغاء</button>
+                <button type="button" id="actDelSelBtn" class="btn btn-danger btn-small" onclick="deleteSelectedActivity()" disabled><i class="fas fa-trash-alt"></i> <span>حذف المحدد</span></button>
             </div>
         </div>
         <!-- شريط التحكم بالتقسيم إلى صفحات (أعلى الجدول) -->
@@ -1771,6 +1792,7 @@
         <div class="table-responsive">
             <table id="activityTable">
                 <thead><tr>
+                    <th data-colid="4" class="act-sel-col" title="تحديد الكل"><label class="act-sel-all"><input type="checkbox" id="actSelAll" onclick="event.stopPropagation()" onchange="toggleActSelectAll(this.checked)"> <span>تحديد الكل</span></label></th>
                     <th data-colid="0" onclick="sortActivity('date')">التاريخ والوقت <span class="sort-arrow">⇅</span></th>
                     <th data-colid="1" onclick="sortActivity('user')">المستخدم <span class="sort-arrow">⇅</span></th>
                     <th data-colid="2" onclick="sortActivity('type')">نوع العملية <span class="sort-arrow">⇅</span></th>
@@ -3333,6 +3355,9 @@ const I18N = {
     'بيانات المورد في الطباعة': 'Supplier Details for Printing',
     'تظهر هذه البيانات في ملف PDF لأمر الشراء فقط، ولا تغيّر بيانات المورد الأصلية في صفحة الموردين ولا في جدول أوامر الشراء أو البحث والتصفية.': 'These details appear only in the purchase order PDF. They do not change the original supplier data on the Suppliers page, in the orders table, or in search and filters.',
     'استعادة الأصلية': 'Restore original',
+    'تحديد للحذف': 'Select to delete',
+    'حذف المحدد': 'Delete selected',
+    'تحديد الكل': 'Select all',
     'تحرير': 'Edit',
     'جودة المنتجات / الخدمات (Quality)': 'Quality of Products / Services',
     'الالتزام بمواعيد التسليم (Delivery)': 'Delivery Time Commitment',
@@ -10118,7 +10143,7 @@ let _actMsInit = false;
 function canViewAllActivity() { return can('activity', 'view_all'); }
 // العمليات المسموح برؤيتها: الجميع لمن يملك الصلاحية، وإلا عمليات المستخدم نفسه فقط
 function getVisibleActivityEntries() {
-    const all = getActivityEntries();
+    const all = visibleOps(getActivityEntries());
     if (canViewAllActivity()) return all;
     const me = currentUser || {};
     const em = (me.email || '').toLowerCase(), un = (me.username || '').toLowerCase();
@@ -10168,6 +10193,85 @@ function resetActivityFilters() {
     _actPage = 1;
     renderActivityLog();
 }
+// ===== حذف جماعي لبنود سجل العمليات (مدير النظام فقط) =====
+let _actSelMode = false;
+const _actSel = new Set();
+function _actKey(e) { return e.id != null ? 'id:' + e.id : 'sig:' + _opSig(e) + '|' + (e.username || '') + '|' + (e.details || ''); }
+function toggleActSelectMode(force) {
+    if (!_isSysadmin()) { _actSelMode = false; return; }
+    _actSelMode = (typeof force === 'boolean') ? force : !_actSelMode;
+    if (!_actSelMode) _actSel.clear();
+    renderActivityLog();
+}
+function toggleActSelectAll(on) {
+    // يشمل كل العناصر المطابقة للفلاتر الحالية في جميع الصفحات
+    const list = getFilteredActivityEntries();
+    if (on) list.forEach(e => _actSel.add(_actKey(e))); else _actSel.clear();
+    renderActivityLog();
+}
+function toggleActRow(key, on) {
+    if (on) _actSel.add(key); else _actSel.delete(key);
+    _updateActSelUi(getFilteredActivityEntries());
+    const cb = document.querySelector('#activityTable tbody input[data-k="' + CSS.escape(key) + '"]');
+    if (cb) { const tr = cb.closest('tr'); if (tr) tr.classList.toggle('act-row-sel', !!on); }
+}
+function _updateActSelUi(entries) {
+    const en = currentLanguage === 'en';
+    const n = _actSel.size, total = entries.length;
+    const cnt = document.getElementById('actSelCount');
+    if (cnt) cnt.textContent = en ? `${n} selected` : `تم تحديد ${n} عنصر`;
+    const hint = document.getElementById('actSelHint');
+    if (hint) hint.textContent = en ? `(out of ${total} matching the current filters)` : `(من أصل ${total} مطابقة للفلاتر الحالية)`;
+    const del = document.getElementById('actDelSelBtn'); if (del) del.disabled = n === 0;
+    const all = document.getElementById('actSelAll');
+    if (all) { all.checked = total > 0 && n >= total && entries.every(e => _actSel.has(_actKey(e))); all.indeterminate = n > 0 && !all.checked; }
+}
+async function deleteSelectedActivity() {
+    const en = currentLanguage === 'en';
+    if (!_isSysadmin()) { alert(msg('غير مصرّح')); return; }
+    const entries = getFilteredActivityEntries().filter(e => _actSel.has(_actKey(e)));
+    if (!entries.length) return;
+    if (!confirm(en ? `Delete ${entries.length} selected operation(s) from the operations log for everyone?\nThis cannot be undone.`
+                    : `حذف ${entries.length} عملية محددة من سجل العمليات لدى الجميع؟\nلا يمكن التراجع عن الحذف.`)) return;
+    const real = entries.filter(e => e.id != null && /^\d+$/.test(String(e.id)));
+    const derived = entries.filter(e => !(e.id != null && /^\d+$/.test(String(e.id))));
+    let deletedIds = [];
+    for (let i = 0; i < real.length; i += 200) {
+        const ids = real.slice(i, i + 200).map(e => e.id);
+        const res = await sb.from('activity_log').delete().in('id', ids).select();
+        if (res.error) { alert(msg('تعذّر الحذف: ') + res.error.message); break; }
+        const got = Array.isArray(res.data) ? res.data.map(r => String(r.id)) : ids.map(String);
+        if (Array.isArray(res.data) && res.data.length === 0) {
+            alert(en ? 'The database did not allow the deletion.\nRun the SQL file "تحديث_قاعدة_البيانات_20_حذف_بنود_السجل.sql" in Supabase (SQL Editor), then try again.'
+                     : 'لم تسمح قاعدة البيانات بالحذف.\nشغّل ملف SQL: "تحديث_قاعدة_البيانات_20_حذف_بنود_السجل.sql" في Supabase (SQL Editor) ثم أعد المحاولة.');
+            break;
+        }
+        deletedIds = deletedIds.concat(got);
+    }
+    if (deletedIds.length) { const set = new Set(deletedIds); activityLog = (activityLog || []).filter(x => !set.has(String(x.id))); }
+    let hiddenN = 0;
+    if (derived.length) {
+        await loadHiddenOps();
+        const before = new Set(hiddenOps);
+        derived.forEach(e => hiddenOps.add(_opSig(e)));
+        const { error } = await sb.from('settings').upsert({ key: 'hidden_ops', value: JSON.stringify([...hiddenOps]) });
+        if (error) { hiddenOps = before; alert(msg('تعذّر الحذف: ') + error.message); }
+        else {
+            hiddenN = derived.length;
+            try {
+                const q = _readActivityQueue().filter(r => !derived.some(e => r.created_at === e.createdAt && r.details === e.details));
+                localStorage.setItem(_ACT_Q_KEY, JSON.stringify(q));
+            } catch (er) {}
+        }
+    }
+    const done = deletedIds.length + hiddenN;
+    _actSel.clear();
+    try { _supLastModCache.map = null; } catch (er) {}
+    if (done) recordAction('حذف ' + done + ' بند من سجل العمليات (حذف جماعي)', 'delete');
+    renderActivityLog();
+    if (done) alert(en ? `${done} operation(s) deleted.` : `تم حذف ${done} عملية.`);
+}
+
 function renderActivityLog() {
     const en = currentLanguage === 'en';
     // تنبيه إن كان السجل لا يُحفظ في قاعدة البيانات (جدول غير مُنشأ أو سياسة أمان تمنع)
@@ -10215,11 +10319,15 @@ function renderActivityLog() {
         tbody.innerHTML = '';
         const fmtDT = (d) => d ? new Date(d).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : '—';
         if (entries.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999;">${en ? 'No matching operations' : 'لا توجد عمليات مطابقة'}</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#999;">${en ? 'No matching operations' : 'لا توجد عمليات مطابقة'}</td></tr>`;
         } else {
             pageList.forEach(e => {
                 const badge = `<span style="display:inline-block; background:${activityTypeColor(e.actionType)}22; color:${activityTypeColor(e.actionType)}; border:1px solid ${activityTypeColor(e.actionType)}55; border-radius:12px; padding:2px 10px; font-size:11px; font-weight:700;">${activityTypeLabel(e.actionType)}</span>`;
-                tbody.insertRow().innerHTML = `<td style="white-space:nowrap; font-size:12px;">${fmtDT(e.createdAt)}</td><td style="font-weight:600;">${escapeHtml(e.username || '—')}</td><td>${badge}</td><td style="font-size:12px; color:#555;">${escapeHtml(e.details || '—')}</td>`;
+                const k = _actKey(e), sel = _actSel.has(k);
+                const tr = tbody.insertRow();
+                if (sel) tr.classList.add('act-row-sel');
+                tr.innerHTML = `<td style="white-space:nowrap; font-size:12px;">${fmtDT(e.createdAt)}</td><td style="font-weight:600;">${escapeHtml(e.username || '—')}</td><td>${badge}</td><td style="font-size:12px; color:#555;">${escapeHtml(e.details || '—')}</td>`
+                    + `<td class="act-sel-col"><input type="checkbox" data-k="${escapeHtml(k)}"${sel ? ' checked' : ''} onchange="toggleActRow(this.getAttribute('data-k'), this.checked)"></td>`;
             });
         }
     }
@@ -10231,6 +10339,20 @@ function renderActivityLog() {
         const ar = th.querySelector('.sort-arrow'); if (ar) ar.textContent = on ? (_actSort.dir === 'asc' ? '▲' : '▼') : '⇅';
     });
     applyColumnOrder('activityTable');
+    // عمود التحديد يبقى دائماً أول عمود (خارج ترتيب السحب) ويظهر فقط في وضع التحديد لمدير النظام
+    if (table) {
+        if (!_isSysadmin()) { _actSelMode = false; _actSel.clear(); }
+        // تُستبعد العناصر المحددة التي لم تعد ضمن الفلاتر الحالية
+        if (_actSel.size) { const keep = new Set(entries.map(_actKey)); [..._actSel].forEach(k => { if (!keep.has(k)) _actSel.delete(k); }); }
+        const selTh = table.tHead.rows[0].querySelector('.act-sel-col');
+        if (selTh) { selTh.setAttribute('draggable', 'false'); selTh.style.cursor = 'default'; selTh.title = en ? 'Select all' : 'تحديد الكل'; table.tHead.rows[0].insertBefore(selTh, table.tHead.rows[0].firstChild); }
+        Array.from(table.tBodies[0].rows).forEach(r => { const c = r.querySelector('td.act-sel-col'); if (c) r.insertBefore(c, r.firstChild); });
+        table.classList.toggle('sel-mode', _actSelMode);
+        const bar = document.getElementById('actSelBar'); if (bar) bar.style.display = _actSelMode ? 'flex' : 'none';
+        const tg = document.getElementById('actSelToggleBtn');
+        if (tg) { tg.classList.toggle('on', _actSelMode); const sp = tg.querySelector('span'); if (sp) sp.textContent = _actSelMode ? (en ? 'Exit selection' : 'إنهاء التحديد') : (en ? 'Select to delete' : 'تحديد للحذف'); }
+        _updateActSelUi(entries);
+    }
     // الرسوم البيانية الثلاثة (تعكس النطاق والفلاتر المطبّقة)
     drawActivityHeatmap(entries);
     drawActivityUsersChart(entries);
@@ -12379,7 +12501,7 @@ function renderChatMessages(messages) {
                     <span style="font-weight:400; color:#aaa; font-size:10.5px;" title="${fullTime}">${time}</span>
                     ${replyBtn}
                 </div>
-                <div style="display:inline-block; background:${isMine ? '#e8f5e9' : 'white'}; border:1px solid #e8eef5; border-radius:10px; padding:8px 11px; font-size:13px; color:#333; max-width:88%; word-wrap:break-word; text-align:start;">
+                <div style="display:inline-block; background:${isMine ? 'rgba(232,245,233,0.86)' : 'rgba(255,255,255,0.84)'}; border:1px solid rgba(225,233,240,0.9); box-shadow:0 1px 3px rgba(0,0,0,0.05); border-radius:10px; padding:8px 11px; font-size:13px; color:#333; max-width:88%; word-wrap:break-word; text-align:start;">
                     ${quote}${renderChatBody(m.message, chatIsAdmin() ? m.id : null)}
                 </div>
             </div>`;
