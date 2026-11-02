@@ -1910,7 +1910,7 @@
             <p style="font-size:12.5px; color:#666; line-height:1.7; margin-bottom:12px;">تنزيل نسخة احتياطية كاملة من جميع بيانات النظام (أوامر الشراء، المسودات، الموردون، المستخدمون، أنواع الخدمات، الأقسام، التقييمات) في ملف واحد يُحفظ لديك كأرشيف آمن.</p>
             <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
                 <button type="button" class="btn btn-success" onclick="downloadFullBackup()"><i class="fas fa-download"></i> تنزيل نسخة احتياطية كاملة</button>
-                <button type="button" class="btn btn-small" onclick="downloadAllData()"><i class="fas fa-file-excel"></i> نسخة Excel (أوامر + موردون)</button>
+                <button type="button" class="btn btn-small" style="background:#1f7a37; color:#fff;" onclick="downloadAllData()" title="ملف Excel شامل لكل أجزاء النظام — كل جزء في ورقة مستقلة"><i class="fas fa-file-excel"></i> نسخة Excel (أوامر + موردون)</button>
             </div>
             <div id="lastBackupInfo" style="font-size:12px; color:#7a8b99; margin-top:10px;"><i class="fas fa-clock"></i> <span>لم يتم إجراء أي نسخة احتياطية بعد من هذا المتصفح.</span></div>
         </div>
@@ -3478,6 +3478,7 @@ const I18N = {
     'تنزيل نسخة احتياطية كاملة من جميع بيانات النظام (أوامر الشراء، المسودات، الموردون، المستخدمون، أنواع الخدمات، الأقسام، التقييمات) في ملف واحد يُحفظ لديك كأرشيف آمن.': 'Download a full backup of all system data (purchase orders, drafts, suppliers, users, service types, departments, evaluations) in a single secure archive file.',
     'تنزيل نسخة احتياطية كاملة': 'Download Full Backup',
     'نسخة Excel (أوامر + موردون)': 'Excel Copy (Orders + Suppliers)',
+    'ملف Excel شامل لكل أجزاء النظام — كل جزء في ورقة مستقلة': 'A complete Excel file of every part of the system — each part in its own sheet',
     'لم يتم إجراء أي نسخة احتياطية بعد من هذا المتصفح.': 'No backup has been made from this browser yet.',
     'تغذية بيانات الموردين من ملف إكسل': 'Import Suppliers from Excel',
     'نزّل القالب الجاهز، أدخل بيانات الموردين فيه، ثم ارفعه ليُضيف النظام جميع الموردين دفعةً واحدة. الأعمدة: اسم المورد (إلزامي)، نوع الخدمة (يمكن فصل أكثر من نوع بفاصلة)، التصنيف، الهاتف، البريد، المدينة، الرقم الضريبي، تاريخ انتهاء الضريبة، السجل التجاري، تاريخ انتهاء السجل التجاري، ملاحظات.': 'Download the ready template, enter supplier data, then upload it to add all suppliers at once. Columns: Supplier Name (required), Service Type (multiple types separated by comma), Classification, Phone, Email, City, VAT No, VAT Expiry, C.R No, C.R Expiry, Notes.',
@@ -7078,99 +7079,120 @@ async function printLPOListPDF() {
 
 // تصدير قائمة أوامر الشراء المُصفّاة إلى ملف Excel احترافي بورقتين
 // (ملخص الأوامر الكامل + تفاصيل البنود) مع ترويسة الشركة وتاريخ الإصدار.
+// يبني ورقتَي أوامر الشراء (الملخص + تفاصيل البنود) بنفس تنسيق "تصدير Excel" في صفحة أوامر الشراء
+// o: { sheet1, title1, sheet2, title2, extended }  — extended يضيف أعمدة تفصيلية للنسخة الاحتياطية
+function buildOrdersExcelSheets(wb, list, en, o) {
+    o = o || {};
+    const statusText = (l) => orderStageText(l, en);
+    const fmtDT = (iso) => iso ? new Date(iso).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : '';
+    const fmtD  = (iso) => iso ? new Date(iso).toLocaleDateString('en-GB') : '';
+
+    // ===== الورقة 1: ملخّص أوامر الشراء (أعمدة شاملة + كل التواريخ) =====
+    const columns = [
+        { header: '#', headerEn: '#', key: 'sl', width: 5, align: 'center' },
+        { header: 'رقم الأمر', headerEn: 'Order No.', key: 'number', width: 16, align: 'center' },
+        { header: 'المرجع L.P.O', headerEn: 'L.P.O Ref', key: 'ref', width: 14, align: 'center' },
+        { header: 'المورد', headerEn: 'Supplier', key: 'supplier', width: 28, align: 'right' },
+        { header: 'نوع الخدمة', headerEn: 'Service Type', key: 'service', width: 20, align: 'right' },
+        { header: 'القسم / الغرض', headerEn: 'Department / Purpose', key: 'dept', width: 22, align: 'right' },
+        { header: 'تاريخ الأمر', headerEn: 'Order Date', key: 'date', width: 13, align: 'center' },
+        { header: 'تاريخ التسجيل', headerEn: 'Record Date', key: 'recDate', width: 17, align: 'center' },
+        { header: 'آخر تعديل', headerEn: 'Last Modified', key: 'lastMod', width: 26, align: 'right' },
+        { header: 'الحالة', headerEn: 'Status', key: 'status', width: 16, align: 'center' },
+        { header: 'المعتمِد / الرافض', headerEn: 'Approved/Rejected By', key: 'approvedBy', width: 18, align: 'center' },
+        { header: 'تاريخ الاعتماد/الرفض', headerEn: 'Approval/Reject Date', key: 'approvedAt', width: 18, align: 'center' },
+        { header: 'سبب الرفض', headerEn: 'Rejection Reason', key: 'reason', width: 26, align: 'right' },
+        { header: 'الموظف', headerEn: 'Staff', key: 'staff', width: 16, align: 'center' },
+        { header: 'من المسودة', headerEn: 'From Draft', key: 'fromDraft', width: 14, align: 'center' },
+        { header: 'المجموع قبل الضريبة', headerEn: 'Subtotal (OMR)', key: 'subtotal', width: 17, align: 'center', numFmt: '#,##0.000' },
+        { header: 'الضريبة (ر.ع)', headerEn: 'Tax (OMR)', key: 'tax', width: 13, align: 'center', numFmt: '#,##0.000' },
+        { header: 'الإجمالي (ر.ع)', headerEn: 'Total (OMR)', key: 'total', width: 16, align: 'center', numFmt: '#,##0.000' }
+    ];
+    if (o.extended) columns.push(
+        { header: 'عدد البنود', headerEn: 'Items', key: 'nItems', width: 9, align: 'center' },
+        { header: 'ملاحظات', headerEn: 'Notes', key: 'notes', width: 30, align: 'right' },
+        { header: 'اسم المورد في الطباعة', headerEn: 'Print Name', key: 'psName', width: 24, align: 'right' },
+        { header: 'هاتف المورد في الطباعة', headerEn: 'Print Phone', key: 'psPhone', width: 16, align: 'center' },
+        { header: 'نوع الخدمة في الطباعة', headerEn: 'Print Service', key: 'psService', width: 20, align: 'right' },
+        { header: 'عرض السعر (رابط)', headerEn: 'Quotation (URL)', key: 'quotation', width: 40, align: 'left' },
+        { header: 'ملف آخر (رابط)', headerEn: 'Other File (URL)', key: 'otherFile', width: 40, align: 'left' },
+        { header: 'معرّف المورد', headerEn: 'Supplier ID', key: 'supId', width: 38, align: 'left' },
+        { header: 'معرّف السجل', headerEn: 'Record ID', key: 'rid', width: 38, align: 'left' });
+    const _actEntries = getActivityEntries();
+    const lastModText = (l) => {
+        const lm = getOrderLastAction(l, _actEntries);
+        if (!lm) return '';
+        return fmtDT(lm.createdAt) + ' · ' + activityTypeLabel(lm.actionType) + (lm.username && lm.username !== '—' ? ' · ' + lm.username : '');
+    };
+    const rows = list.map((l, i) => ({
+        sl: i + 1, number: l.number, ref: l.lpoRef || '', supplier: l.supplierName || '',
+        service: orderServiceType(l) || '', dept: l.department || '',
+        date: l.date || '', recDate: fmtDT(l.createdAt), lastMod: lastModText(l), status: statusText(l),
+        approvedBy: l.approvedBy || '', approvedAt: fmtD(l.approvedAt), reason: l.rejectionReason || '',
+        staff: l.staff || '', fromDraft: l.sourceDraftNumber || '',
+        subtotal: +(+l.subtotal || 0).toFixed(3), tax: +(+l.tax || 0).toFixed(3), total: +(+l.total || 0).toFixed(3),
+        nItems: (l.items || []).length, notes: l.notes || '',
+        psName: (l.printSupplier && l.printSupplier.name) || '', psPhone: (l.printSupplier && l.printSupplier.phone) || '', psService: (l.printSupplier && l.printSupplier.service) || '',
+        quotation: l.quotationUrl || '', otherFile: l.otherFileUrl || '', supId: l.supplierId || '', rid: l.id || ''
+    }));
+    const sumSub = list.reduce((s, l) => s + (+l.subtotal || 0), 0);
+    const sumTax = list.reduce((s, l) => s + (+l.tax || 0), 0);
+    const sumTot = list.reduce((s, l) => s + (+l.total || 0), 0);
+    const totalsRow = { number: en ? 'TOTAL' : 'الإجمالي', subtotal: +sumSub.toFixed(3), tax: +sumTax.toFixed(3), total: +sumTot.toFixed(3) };
+
+    addStyledSheet(wb, {
+        sheetName: o.sheet1 || (en ? 'Orders Summary' : 'ملخص الأوامر'),
+        reportTitle: o.title1 || (en ? 'Local Purchase Orders — Summary (Filtered)' : 'أوامر الشراء المحلية — ملخّص (حسب التصفية)'),
+        columns, rows, totalsRow
+    });
+
+    // ===== الورقة 2: تفاصيل بنود كل أمر =====
+    const itemCols = [
+        { header: 'رقم الأمر', headerEn: 'Order No.', key: 'onum', width: 16, align: 'center' },
+        { header: 'المورد', headerEn: 'Supplier', key: 'osup', width: 26, align: 'right' },
+        { header: 'تاريخ الأمر', headerEn: 'Order Date', key: 'odate', width: 13, align: 'center' },
+        { header: '#', headerEn: '#', key: 'sl', width: 5, align: 'center' },
+        { header: 'الوصف / التفاصيل', headerEn: 'Description', key: 'desc', width: 42, align: 'right' },
+        { header: 'الكمية', headerEn: 'Qty', key: 'qty', width: 8, align: 'center' },
+        { header: 'سعر الوحدة (ر.ع)', headerEn: 'Unit Price (OMR)', key: 'price', width: 15, align: 'center', numFmt: '#,##0.000' },
+        { header: 'ضريبة %', headerEn: 'Tax %', key: 'tax', width: 9, align: 'center' },
+        { header: 'إجمالي البند (ر.ع)', headerEn: 'Line Total (OMR)', key: 'lineTotal', width: 17, align: 'center', numFmt: '#,##0.000' }
+    ];
+    const itemRows = []; let grandItems = 0;
+    list.forEach(l => {
+        const items = l.items || [];
+        if (!items.length) {
+            itemRows.push({ onum: l.number, osup: l.supplierName, odate: l.date, sl: '', desc: en ? '(no items)' : '(لا توجد بنود)', qty: '', price: '', tax: '', lineTotal: '' });
+            return;
+        }
+        items.forEach((it, idx) => {
+            const rate = (it.price !== undefined && it.price !== null) ? +it.price : ((+it.riyal || 0) + (+it.baiza || 0) / 1000);
+            const qty = +it.qty || 0;
+            const lineTotal = qty * rate * (it.hasTax ? (1 + (+it.taxRate || 0) / 100) : 1);
+            grandItems += lineTotal;
+            itemRows.push({ onum: l.number, osup: l.supplierName, odate: l.date, sl: idx + 1,
+                desc: it.desc || '', qty: qty, price: +rate.toFixed(3),
+                tax: it.hasTax ? ((+it.taxRate || 0) + '%') : '—', lineTotal: +lineTotal.toFixed(3) });
+        });
+    });
+    addStyledSheet(wb, {
+        sheetName: o.sheet2 || (en ? 'Line Items' : 'تفاصيل البنود'),
+        reportTitle: o.title2 || (en ? 'Purchase Orders — Line Items Details (Filtered)' : 'تفاصيل بنود أوامر الشراء (حسب التصفية)'),
+        columns: itemCols, rows: itemRows, totalsRow: { onum: en ? 'TOTAL' : 'الإجمالي', lineTotal: +grandItems.toFixed(3) }
+    });
+
+    return { count: list.length };
+}
+
 async function exportLPOList() {
     if (!(await ensureLib('exceljs')) || !excelReady()) return;
     const list = getSortedLPOs(); // يحترم الفلترة والفرز المطبّقين في الجدول
     if (!list.length) { alert(msg('لا توجد بيانات للتصدير')); return; }
     const en = currentLanguage === 'en';
     try {
-        const statusText = (l) => orderStageText(l, en);
-        const fmtDT = (iso) => iso ? new Date(iso).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : '';
-        const fmtD  = (iso) => iso ? new Date(iso).toLocaleDateString('en-GB') : '';
-
-        // ===== الورقة 1: ملخّص أوامر الشراء (أعمدة شاملة + كل التواريخ) =====
-        const columns = [
-            { header: '#', headerEn: '#', key: 'sl', width: 5, align: 'center' },
-            { header: 'رقم الأمر', headerEn: 'Order No.', key: 'number', width: 16, align: 'center' },
-            { header: 'المرجع L.P.O', headerEn: 'L.P.O Ref', key: 'ref', width: 14, align: 'center' },
-            { header: 'المورد', headerEn: 'Supplier', key: 'supplier', width: 28, align: 'right' },
-            { header: 'نوع الخدمة', headerEn: 'Service Type', key: 'service', width: 20, align: 'right' },
-            { header: 'القسم / الغرض', headerEn: 'Department / Purpose', key: 'dept', width: 22, align: 'right' },
-            { header: 'تاريخ الأمر', headerEn: 'Order Date', key: 'date', width: 13, align: 'center' },
-            { header: 'تاريخ التسجيل', headerEn: 'Record Date', key: 'recDate', width: 17, align: 'center' },
-            { header: 'آخر تعديل', headerEn: 'Last Modified', key: 'lastMod', width: 26, align: 'right' },
-            { header: 'الحالة', headerEn: 'Status', key: 'status', width: 16, align: 'center' },
-            { header: 'المعتمِد / الرافض', headerEn: 'Approved/Rejected By', key: 'approvedBy', width: 18, align: 'center' },
-            { header: 'تاريخ الاعتماد/الرفض', headerEn: 'Approval/Reject Date', key: 'approvedAt', width: 18, align: 'center' },
-            { header: 'سبب الرفض', headerEn: 'Rejection Reason', key: 'reason', width: 26, align: 'right' },
-            { header: 'الموظف', headerEn: 'Staff', key: 'staff', width: 16, align: 'center' },
-            { header: 'من المسودة', headerEn: 'From Draft', key: 'fromDraft', width: 14, align: 'center' },
-            { header: 'المجموع قبل الضريبة', headerEn: 'Subtotal (OMR)', key: 'subtotal', width: 17, align: 'center', numFmt: '#,##0.000' },
-            { header: 'الضريبة (ر.ع)', headerEn: 'Tax (OMR)', key: 'tax', width: 13, align: 'center', numFmt: '#,##0.000' },
-            { header: 'الإجمالي (ر.ع)', headerEn: 'Total (OMR)', key: 'total', width: 16, align: 'center', numFmt: '#,##0.000' }
-        ];
-        const _actEntries = getActivityEntries();
-        const lastModText = (l) => {
-            const lm = getOrderLastAction(l, _actEntries);
-            if (!lm) return '';
-            return fmtDT(lm.createdAt) + ' · ' + activityTypeLabel(lm.actionType) + (lm.username && lm.username !== '—' ? ' · ' + lm.username : '');
-        };
-        const rows = list.map((l, i) => ({
-            sl: i + 1, number: l.number, ref: l.lpoRef || '', supplier: l.supplierName || '',
-            service: orderServiceType(l) || '', dept: l.department || '',
-            date: l.date || '', recDate: fmtDT(l.createdAt), lastMod: lastModText(l), status: statusText(l),
-            approvedBy: l.approvedBy || '', approvedAt: fmtD(l.approvedAt), reason: l.rejectionReason || '',
-            staff: l.staff || '', fromDraft: l.sourceDraftNumber || '',
-            subtotal: +(+l.subtotal || 0).toFixed(3), tax: +(+l.tax || 0).toFixed(3), total: +(+l.total || 0).toFixed(3)
-        }));
-        const sumSub = list.reduce((s, l) => s + (+l.subtotal || 0), 0);
-        const sumTax = list.reduce((s, l) => s + (+l.tax || 0), 0);
-        const sumTot = list.reduce((s, l) => s + (+l.total || 0), 0);
-        const totalsRow = { number: en ? 'TOTAL' : 'الإجمالي', subtotal: +sumSub.toFixed(3), tax: +sumTax.toFixed(3), total: +sumTot.toFixed(3) };
-
         const wb = new ExcelJS.Workbook();
         wb.creator = 'Takaful Oman — LPO System'; wb.created = new Date();
-        addStyledSheet(wb, {
-            sheetName: en ? 'Orders Summary' : 'ملخص الأوامر',
-            reportTitle: en ? 'Local Purchase Orders — Summary (Filtered)' : 'أوامر الشراء المحلية — ملخّص (حسب التصفية)',
-            columns, rows, totalsRow
-        });
-
-        // ===== الورقة 2: تفاصيل بنود كل أمر =====
-        const itemCols = [
-            { header: 'رقم الأمر', headerEn: 'Order No.', key: 'onum', width: 16, align: 'center' },
-            { header: 'المورد', headerEn: 'Supplier', key: 'osup', width: 26, align: 'right' },
-            { header: 'تاريخ الأمر', headerEn: 'Order Date', key: 'odate', width: 13, align: 'center' },
-            { header: '#', headerEn: '#', key: 'sl', width: 5, align: 'center' },
-            { header: 'الوصف / التفاصيل', headerEn: 'Description', key: 'desc', width: 42, align: 'right' },
-            { header: 'الكمية', headerEn: 'Qty', key: 'qty', width: 8, align: 'center' },
-            { header: 'سعر الوحدة (ر.ع)', headerEn: 'Unit Price (OMR)', key: 'price', width: 15, align: 'center', numFmt: '#,##0.000' },
-            { header: 'ضريبة %', headerEn: 'Tax %', key: 'tax', width: 9, align: 'center' },
-            { header: 'إجمالي البند (ر.ع)', headerEn: 'Line Total (OMR)', key: 'lineTotal', width: 17, align: 'center', numFmt: '#,##0.000' }
-        ];
-        const itemRows = []; let grandItems = 0;
-        list.forEach(l => {
-            const items = l.items || [];
-            if (!items.length) {
-                itemRows.push({ onum: l.number, osup: l.supplierName, odate: l.date, sl: '', desc: en ? '(no items)' : '(لا توجد بنود)', qty: '', price: '', tax: '', lineTotal: '' });
-                return;
-            }
-            items.forEach((it, idx) => {
-                const rate = (it.price !== undefined && it.price !== null) ? +it.price : ((+it.riyal || 0) + (+it.baiza || 0) / 1000);
-                const qty = +it.qty || 0;
-                const lineTotal = qty * rate * (it.hasTax ? (1 + (+it.taxRate || 0) / 100) : 1);
-                grandItems += lineTotal;
-                itemRows.push({ onum: l.number, osup: l.supplierName, odate: l.date, sl: idx + 1,
-                    desc: it.desc || '', qty: qty, price: +rate.toFixed(3),
-                    tax: it.hasTax ? ((+it.taxRate || 0) + '%') : '—', lineTotal: +lineTotal.toFixed(3) });
-            });
-        });
-        addStyledSheet(wb, {
-            sheetName: en ? 'Line Items' : 'تفاصيل البنود',
-            reportTitle: en ? 'Purchase Orders — Line Items Details (Filtered)' : 'تفاصيل بنود أوامر الشراء (حسب التصفية)',
-            columns: itemCols, rows: itemRows, totalsRow: { onum: en ? 'TOTAL' : 'الإجمالي', lineTotal: +grandItems.toFixed(3) }
-        });
-
+        buildOrdersExcelSheets(wb, list, en);
         const buf = await wb.xlsx.writeBuffer();
         triggerExcelDownload(buf, `LPO_Orders_${new Date().toISOString().split('T')[0]}.xlsx`);
         recordAction(en ? 'Export filtered orders Excel' : 'تصدير أوامر الشراء المُصفّاة Excel', 'export');
@@ -7422,74 +7444,86 @@ function expiryDaysColor(dateStr) {
     return null;
 }
 
+// أعمدة وصفوف ملف Excel للموردين (نفس تنسيق "تصدير Excel" في صفحة الموردين)
+// opts: { withExpiryDays, extended }
+function buildSuppliersExcelSpec(srcList, en, opts) {
+    const columns = [
+        { header: 'تاريخ التسجيل', headerEn: 'Rec Date', key: 'recDate', width: 20, align: 'center' },
+        { header: 'اسم المورد', headerEn: 'Supplier Name', key: 'name', width: 30, align: 'right' },
+        { header: 'نوع الخدمة', headerEn: 'Service Type', key: 'service', width: 22, align: 'right' },
+        { header: 'التصنيف', headerEn: 'Classification', key: 'type', width: 18, align: 'center' },
+        { header: 'الهاتف', headerEn: 'Phone', key: 'phone', width: 16, align: 'center' },
+        { header: 'البريد الإلكتروني', headerEn: 'Email', key: 'email', width: 28, align: 'right' },
+        { header: 'المدينة', headerEn: 'City', key: 'city', width: 16, align: 'center' },
+        { header: 'الرقم الضريبي', headerEn: 'VAT No.', key: 'vat', width: 18, align: 'center' },
+        { header: 'السجل التجاري', headerEn: 'C.R No.', key: 'cr', width: 18, align: 'center' },
+        { header: 'انتهاء السجل التجاري', headerEn: 'C.R Expiry', key: 'crExpiry', width: 16, align: 'center' },
+        { header: 'انتهاء الضريبة', headerEn: 'VAT Expiry', key: 'vatExpiry', width: 16, align: 'center' },
+        { header: 'التقييم العام', headerEn: 'Avg. Rating', key: 'rating', width: 14, align: 'center', numFmt: '0.0' },
+        { header: 'عدد التقييمات', headerEn: 'Ratings', key: 'ratingCount', width: 13, align: 'center' },
+        { header: 'عدد الأوامر', headerEn: 'Orders', key: 'orders', width: 12, align: 'center' },
+        { header: 'أُنشئ بواسطة', headerEn: 'Created By', key: 'createdBy', width: 26, align: 'right' },
+        { header: 'آخر تعديل', headerEn: 'Last Modified', key: 'lastMod', width: 20, align: 'center' },
+        { header: 'عُدّل بواسطة', headerEn: 'Modified By', key: 'lastModBy', width: 22, align: 'right' },
+        { header: 'المبلغ (ر.ع)', headerEn: 'Amount (OMR)', key: 'amount', width: 16, align: 'center', numFmt: '#,##0.000' },
+        { header: 'المرفقات', headerEn: 'Attachments', key: 'files', width: 34, align: 'right' },
+        { header: 'ملاحظات', headerEn: 'Notes', key: 'notes', width: 30, align: 'right' }
+    ];
+    if (opts && opts.extended) columns.push(
+        { header: 'البطاقة الضريبية (رابط)', headerEn: 'Tax Card (URL)', key: 'taxUrl', width: 40, align: 'left' },
+        { header: 'شهادة السجل التجاري (رابط)', headerEn: 'C.R Certificate (URL)', key: 'crUrl', width: 40, align: 'left' },
+        { header: 'عدد المرفقات الأخرى', headerEn: 'Other Files', key: 'nOther', width: 12, align: 'center' },
+        { header: 'معرّف المورد', headerEn: 'Supplier ID', key: 'sid', width: 38, align: 'left' });
+    // ملف التنبيهات: عمودا الأيام المتبقية/المنصرمة بعد تاريخي الانتهاء
+    if (opts && opts.withExpiryDays) {
+        const iCr = columns.findIndex(c => c.key === 'crExpiry');
+        columns.splice(iCr + 1, 0, { header: 'أيام السجل التجاري', headerEn: 'C.R Days Left', key: 'crDays', width: 20, align: 'center', fontColor: r => r._crColor });
+        const iVat = columns.findIndex(c => c.key === 'vatExpiry');
+        columns.splice(iVat + 1, 0, { header: 'أيام الضريبة', headerEn: 'VAT Days Left', key: 'vatDays', width: 20, align: 'center', fontColor: r => r._vatColor });
+    }
+    const sorted = srcList.slice().sort((a, b) => { const ca = a.createdAt || '', cb = b.createdAt || ''; return cb < ca ? -1 : cb > ca ? 1 : 0; });
+    const rows = sorted.map(s => {
+        const r = getSupplierAvgRating(s.id);
+        const orderCount = lpoDrafts.filter(l => (s.id && l.supplierId === s.id) || l.supplierName === s.name).length;
+        return {
+            recDate: s.createdAt ? new Date(s.createdAt).toLocaleString('en-GB') : '',
+            name: s.name || '',
+            service: s.serviceType || '',
+            type: s.supplierType || '',
+            phone: s.phone || '',
+            email: s.email || '',
+            city: s.city || '',
+            vat: s.vatNo || '',
+            cr: s.crNo || '',
+            crExpiry: s.crExpiry ? new Date(s.crExpiry).toLocaleDateString('en-GB') : '',
+            vatExpiry: s.vatExpiry ? new Date(s.vatExpiry).toLocaleDateString('en-GB') : '',
+            crDays: expiryDaysText(s.crExpiry, en), _crColor: expiryDaysColor(s.crExpiry),
+            vatDays: expiryDaysText(s.vatExpiry, en), _vatColor: expiryDaysColor(s.vatExpiry),
+            rating: r.count ? +r.avg.toFixed(1) : '—',
+            ratingCount: r.count,
+            orders: orderCount,
+            createdBy: s.createdBy || '',
+            lastMod: (() => { const lm = supplierLastMod(s); return lm ? new Date(lm.at).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : ''; })(),
+            lastModBy: (() => { const lm = supplierLastMod(s); return lm ? (lm.by || '') : ''; })(),
+            amount: +supplierOrdersTotal(s).total.toFixed(3),
+            files: [s.taxCardUrl ? (en ? 'Tax Card' : 'البطاقة الضريبية') : '', s.crCertUrl ? (en ? 'C.R Certificate' : 'شهادة السجل التجاري') : '',
+                    (s.otherFiles || []).length ? ((en ? 'Other' : 'مرفقات أخرى') + ' (' + s.otherFiles.length + ')') : ''].filter(Boolean).join('، '),
+            notes: s.notes || '',
+            taxUrl: s.taxCardUrl || '', crUrl: s.crCertUrl || '', nOther: (s.otherFiles || []).length, sid: s.id || ''
+        };
+    });
+    const totalOrders = rows.reduce((s, r) => s + (r.orders || 0), 0);
+    const totalAmount = rows.reduce((s, r) => s + (r.amount || 0), 0);
+    const totalsRow = { name: en ? 'TOTAL' : 'الإجمالي', orders: totalOrders, amount: +totalAmount.toFixed(3) };
+    return { columns, rows, totalsRow };
+}
 async function downloadSuppliersExcel(listOverride, titleOverride, filePrefix, opts) {
     if (!(await ensureLib('exceljs')) || !excelReady()) return;
     const srcList = Array.isArray(listOverride) ? listOverride : suppliers;
     if (!srcList.length) { alert(currentLanguage === 'en' ? 'No suppliers to export.' : 'لا يوجد موردون للتصدير.'); return; }
     try {
         const en = currentLanguage === 'en';
-        const columns = [
-            { header: 'تاريخ التسجيل', headerEn: 'Rec Date', key: 'recDate', width: 20, align: 'center' },
-            { header: 'اسم المورد', headerEn: 'Supplier Name', key: 'name', width: 30, align: 'right' },
-            { header: 'نوع الخدمة', headerEn: 'Service Type', key: 'service', width: 22, align: 'right' },
-            { header: 'التصنيف', headerEn: 'Classification', key: 'type', width: 18, align: 'center' },
-            { header: 'الهاتف', headerEn: 'Phone', key: 'phone', width: 16, align: 'center' },
-            { header: 'البريد الإلكتروني', headerEn: 'Email', key: 'email', width: 28, align: 'right' },
-            { header: 'المدينة', headerEn: 'City', key: 'city', width: 16, align: 'center' },
-            { header: 'الرقم الضريبي', headerEn: 'VAT No.', key: 'vat', width: 18, align: 'center' },
-            { header: 'السجل التجاري', headerEn: 'C.R No.', key: 'cr', width: 18, align: 'center' },
-            { header: 'انتهاء السجل التجاري', headerEn: 'C.R Expiry', key: 'crExpiry', width: 16, align: 'center' },
-            { header: 'انتهاء الضريبة', headerEn: 'VAT Expiry', key: 'vatExpiry', width: 16, align: 'center' },
-            { header: 'التقييم العام', headerEn: 'Avg. Rating', key: 'rating', width: 14, align: 'center', numFmt: '0.0' },
-            { header: 'عدد التقييمات', headerEn: 'Ratings', key: 'ratingCount', width: 13, align: 'center' },
-            { header: 'عدد الأوامر', headerEn: 'Orders', key: 'orders', width: 12, align: 'center' },
-            { header: 'أُنشئ بواسطة', headerEn: 'Created By', key: 'createdBy', width: 26, align: 'right' },
-            { header: 'آخر تعديل', headerEn: 'Last Modified', key: 'lastMod', width: 20, align: 'center' },
-            { header: 'عُدّل بواسطة', headerEn: 'Modified By', key: 'lastModBy', width: 22, align: 'right' },
-            { header: 'المبلغ (ر.ع)', headerEn: 'Amount (OMR)', key: 'amount', width: 16, align: 'center', numFmt: '#,##0.000' },
-            { header: 'المرفقات', headerEn: 'Attachments', key: 'files', width: 34, align: 'right' },
-            { header: 'ملاحظات', headerEn: 'Notes', key: 'notes', width: 30, align: 'right' }
-        ];
-        // ملف التنبيهات: عمودا الأيام المتبقية/المنصرمة بعد تاريخي الانتهاء
-        if (opts && opts.withExpiryDays) {
-            const iCr = columns.findIndex(c => c.key === 'crExpiry');
-            columns.splice(iCr + 1, 0, { header: 'أيام السجل التجاري', headerEn: 'C.R Days Left', key: 'crDays', width: 20, align: 'center', fontColor: r => r._crColor });
-            const iVat = columns.findIndex(c => c.key === 'vatExpiry');
-            columns.splice(iVat + 1, 0, { header: 'أيام الضريبة', headerEn: 'VAT Days Left', key: 'vatDays', width: 20, align: 'center', fontColor: r => r._vatColor });
-        }
-        const sorted = srcList.slice().sort((a, b) => { const ca = a.createdAt || '', cb = b.createdAt || ''; return cb < ca ? -1 : cb > ca ? 1 : 0; });
-        const rows = sorted.map(s => {
-            const r = getSupplierAvgRating(s.id);
-            const orderCount = lpoDrafts.filter(l => (s.id && l.supplierId === s.id) || l.supplierName === s.name).length;
-            return {
-                recDate: s.createdAt ? new Date(s.createdAt).toLocaleString('en-GB') : '',
-                name: s.name || '',
-                service: s.serviceType || '',
-                type: s.supplierType || '',
-                phone: s.phone || '',
-                email: s.email || '',
-                city: s.city || '',
-                vat: s.vatNo || '',
-                cr: s.crNo || '',
-                crExpiry: s.crExpiry ? new Date(s.crExpiry).toLocaleDateString('en-GB') : '',
-                vatExpiry: s.vatExpiry ? new Date(s.vatExpiry).toLocaleDateString('en-GB') : '',
-                crDays: expiryDaysText(s.crExpiry, en), _crColor: expiryDaysColor(s.crExpiry),
-                vatDays: expiryDaysText(s.vatExpiry, en), _vatColor: expiryDaysColor(s.vatExpiry),
-                rating: r.count ? +r.avg.toFixed(1) : '—',
-                ratingCount: r.count,
-                orders: orderCount,
-                createdBy: s.createdBy || '',
-                lastMod: (() => { const lm = supplierLastMod(s); return lm ? new Date(lm.at).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : ''; })(),
-                lastModBy: (() => { const lm = supplierLastMod(s); return lm ? (lm.by || '') : ''; })(),
-                amount: +supplierOrdersTotal(s).total.toFixed(3),
-                files: [s.taxCardUrl ? (en ? 'Tax Card' : 'البطاقة الضريبية') : '', s.crCertUrl ? (en ? 'C.R Certificate' : 'شهادة السجل التجاري') : '',
-                        (s.otherFiles || []).length ? ((en ? 'Other' : 'مرفقات أخرى') + ' (' + s.otherFiles.length + ')') : ''].filter(Boolean).join('، '),
-                notes: s.notes || ''
-            };
-        });
-        const totalOrders = rows.reduce((s, r) => s + (r.orders || 0), 0);
-        const totalAmount = rows.reduce((s, r) => s + (r.amount || 0), 0);
-        const totalsRow = { name: en ? 'TOTAL' : 'الإجمالي', orders: totalOrders, amount: +totalAmount.toFixed(3) };
+        const { columns, rows, totalsRow } = buildSuppliersExcelSpec(srcList, en, opts);
         const buf = await buildProWorkbook({
             sheetName: en ? 'Suppliers' : 'الموردون',
             reportTitle: titleOverride || (en ? 'Suppliers Database Report' : 'تقرير قاعدة بيانات الموردين'),
@@ -9228,19 +9262,263 @@ async function exportReportExcel() {
     }
 }
 
+// ===================== نسخة Excel شاملة لكل بيانات النظام (نسخة احتياطية منسّقة) =====================
+// كل جزء من النظام في ورقة مستقلة بنفس تنسيق تصديرات صفحتَي أوامر الشراء والموردين
 async function downloadAllData() {
-    if (!(await ensureLib('xlsx'))) { alert(msg('تعذّر تحميل مكتبة Excel. تأكد من اتصالك بالإنترنت وأعد تحميل الصفحة.')); return; }
-    if (lpoDrafts.length === 0) { alert(msg('لا توجد بيانات')); return; }
+    if (!(await ensureLib('exceljs')) || !excelReady()) return;
+    const en = currentLanguage === 'en';
+    const T = (ar, e) => en ? e : ar;
+    const admin = _isSysadmin();
+    const fmtDT = (iso) => { if (!iso) return ''; const d = new Date(iso); return isNaN(d) ? String(iso) : d.toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }); };
+    const fmtD = (iso) => { if (!iso) return ''; const d = new Date(iso); return isNaN(d) ? String(iso) : d.toLocaleDateString('en-GB'); };
+    const byNewest = (a, b) => { const ca = a.createdAt || a.date || '', cb = b.createdAt || b.date || ''; return cb < ca ? -1 : cb > ca ? 1 : 0; };
+    const r3 = (v) => +(+v || 0).toFixed(3);
+    const cellTxt = (v) => { v = v == null ? '' : String(v); return v.length > 32000 ? v.slice(0, 32000) + '…' : v; };
     try {
-        const rows = lpoDrafts.map(l => ({ 'رقم الأمر': l.number, 'المورد': l.supplierName, 'التاريخ': l.date, 'الإجمالي الجزئي': l.subtotal||0, 'الضريبة': l.tax||0, 'المبلغ الكلي': l.total, 'الحالة': l.status, 'الموظف': l.staff, 'ملاحظات': l.notes||'' }));
-        const wb = XLSX.utils.book_new();
-        const wsAll = XLSX.utils.json_to_sheet(rows); applyMoneyFormat(wsAll, ['الإجمالي الجزئي', 'الضريبة', 'المبلغ الكلي']);
-        XLSX.utils.book_append_sheet(wb, wsAll, 'جميع الأوامر');
-        const supRows = suppliers.map(s => ({ 'الاسم': s.name, 'نوع الخدمة': s.serviceType, 'الهاتف': s.phone, 'البريد': s.email, 'المدينة': s.city }));
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(supRows), 'الموردون');
-        XLSX.writeFile(wb, `جميع_البيانات_${new Date().toISOString().split('T')[0]}.xlsx`);
+        // بيانات تُجلب عند التصدير (غير محمّلة دائماً في الذاكرة)
+        let comments = null, settingsRows = null;
+        if (sb) {
+            try { const r = await sb.from('comments').select('*').order('created_at', { ascending: true }); if (!r.error) comments = r.data || []; } catch (e) {}
+            if (admin) { try { const r = await sb.from('settings').select('*'); if (!r.error) settingsRows = r.data || []; } catch (e) {} }
+        }
+        const sheets = [];   // { sheetName, reportTitle, columns, rows, totalsRow, desc } أو { orders:true }
+        const allOrders = lpoDrafts.slice().sort(byNewest);
+
+        // 1) أوامر الشراء + بنودها (نفس ملف "تصدير Excel" في صفحة أوامر الشراء + أعمدة تفصيلية)
+        const nOrderItems = allOrders.reduce((n, l) => n + Math.max(1, (l.items || []).length), 0);
+        sheets.push({ orders: true, sheetName: T('أوامر الشراء', 'Purchase Orders'), count: allOrders.length,
+            desc: T('كل أوامر الشراء بجميع الأعمدة والحالات والتواريخ والمبالغ والمرفقات وبيانات الطباعة', 'All purchase orders with every column, status, date, amount, attachment and print details') });
+        sheets.push({ ordersItems: true, sheetName: T('بنود أوامر الشراء', 'Order Line Items'), count: nOrderItems,
+            desc: T('تفاصيل بنود كل أمر (الوصف، الكمية، السعر، الضريبة، الإجمالي)', 'Line items of every order (description, qty, price, tax, total)') });
+
+        // 2) الموردون (نفس ملف "تصدير Excel" في صفحة الموردين + أيام الانتهاء + الروابط)
+        const supSpec = buildSuppliersExcelSpec(suppliers, en, { withExpiryDays: true, extended: true });
+        sheets.push({ sheetName: T('الموردون', 'Suppliers'), reportTitle: T('قاعدة بيانات الموردين — كاملة', 'Suppliers Database — Complete'),
+            columns: supSpec.columns, rows: supSpec.rows, totalsRow: supSpec.totalsRow, count: suppliers.length,
+            desc: T('كل الموردين بجميع الأعمدة، التقييم، عدد الأوامر والمبالغ، الانتهاء والأيام المتبقية، المرفقات', 'All suppliers with every column, rating, orders & amounts, expiry and days left, attachments') });
+
+        // 3) مرفقات الموردين
+        const attRows = [];
+        suppliers.forEach(sp => {
+            if (sp.taxCardUrl) { const m = supplierFileMeta(sp, sp.taxCardUrl, 'البطاقة الضريبية'); attRows.push({ sup: sp.name, kind: T('البطاقة الضريبية', 'Tax Card'), name: decodeURIComponent((sp.taxCardUrl.split('/').pop() || '').split('?')[0]), at: m && m.at ? fmtDT(m.at) : '', by: (m && m.by) || '', url: sp.taxCardUrl }); }
+            if (sp.crCertUrl) { const m = supplierFileMeta(sp, sp.crCertUrl, 'شهادة السجل التجاري'); attRows.push({ sup: sp.name, kind: T('شهادة السجل التجاري', 'C.R Certificate'), name: decodeURIComponent((sp.crCertUrl.split('/').pop() || '').split('?')[0]), at: m && m.at ? fmtDT(m.at) : '', by: (m && m.by) || '', url: sp.crCertUrl }); }
+            (sp.otherFiles || []).forEach(o => attRows.push({ sup: sp.name, kind: T('مرفق آخر', 'Other attachment'), name: o.n || '', at: fmtDT(o.at), by: o.by || '', url: o.u || '' }));
+        });
+        sheets.push({ sheetName: T('مرفقات الموردين', 'Supplier Attachments'), reportTitle: T('مرفقات الموردين', 'Supplier Attachments'),
+            columns: [
+                { header: 'المورد', headerEn: 'Supplier', key: 'sup', width: 28, align: 'right' },
+                { header: 'نوع المرفق', headerEn: 'Type', key: 'kind', width: 20, align: 'center' },
+                { header: 'اسم الملف', headerEn: 'File Name', key: 'name', width: 34, align: 'right' },
+                { header: 'تاريخ الرفع', headerEn: 'Uploaded', key: 'at', width: 18, align: 'center' },
+                { header: 'بواسطة', headerEn: 'By', key: 'by', width: 18, align: 'center' },
+                { header: 'الرابط', headerEn: 'URL', key: 'url', width: 60, align: 'left' }],
+            rows: attRows, count: attRows.length, desc: T('كل ملفات الموردين المرفوعة مع تاريخ الرفع والمستخدم والرابط', 'All supplier files with upload date, user and link') });
+
+        // 4) المسودات + بنودها
+        const allDrafts = draftSaves.slice().sort(byNewest);
+        const draftRows = allDrafts.map((d, i) => ({
+            sl: i + 1, number: d.draftNumber || '', ref: d.lpoRef || '', supplier: d.supplierName || '', service: orderServiceType(d) || '',
+            dept: d.department || '', date: d.date || '', recDate: fmtDT(d.createdAt), staff: d.staff || '', nItems: (d.items || []).length,
+            subtotal: r3(d.subtotal), tax: r3(d.tax), total: r3(d.total), notes: d.notes || '',
+            psName: (d.printSupplier && d.printSupplier.name) || '', quotation: d.quotationUrl || '', otherFile: d.otherFileUrl || ''
+        }));
+        sheets.push({ sheetName: T('المسودات', 'Drafts'), reportTitle: T('مسودات أوامر الشراء', 'Purchase Order Drafts'),
+            columns: [
+                { header: '#', headerEn: '#', key: 'sl', width: 5, align: 'center' },
+                { header: 'رقم المسودة', headerEn: 'Draft No.', key: 'number', width: 18, align: 'center' },
+                { header: 'المرجع L.P.O', headerEn: 'L.P.O Ref', key: 'ref', width: 14, align: 'center' },
+                { header: 'المورد', headerEn: 'Supplier', key: 'supplier', width: 28, align: 'right' },
+                { header: 'نوع الخدمة', headerEn: 'Service Type', key: 'service', width: 20, align: 'right' },
+                { header: 'القسم / الغرض', headerEn: 'Department / Purpose', key: 'dept', width: 22, align: 'right' },
+                { header: 'التاريخ', headerEn: 'Date', key: 'date', width: 13, align: 'center' },
+                { header: 'تاريخ التسجيل', headerEn: 'Record Date', key: 'recDate', width: 17, align: 'center' },
+                { header: 'الموظف', headerEn: 'Staff', key: 'staff', width: 16, align: 'center' },
+                { header: 'عدد البنود', headerEn: 'Items', key: 'nItems', width: 9, align: 'center' },
+                { header: 'المجموع قبل الضريبة', headerEn: 'Subtotal (OMR)', key: 'subtotal', width: 17, align: 'center', numFmt: '#,##0.000' },
+                { header: 'الضريبة (ر.ع)', headerEn: 'Tax (OMR)', key: 'tax', width: 13, align: 'center', numFmt: '#,##0.000' },
+                { header: 'الإجمالي (ر.ع)', headerEn: 'Total (OMR)', key: 'total', width: 16, align: 'center', numFmt: '#,##0.000' },
+                { header: 'ملاحظات', headerEn: 'Notes', key: 'notes', width: 30, align: 'right' },
+                { header: 'اسم المورد في الطباعة', headerEn: 'Print Name', key: 'psName', width: 22, align: 'right' },
+                { header: 'عرض السعر (رابط)', headerEn: 'Quotation (URL)', key: 'quotation', width: 40, align: 'left' },
+                { header: 'ملف آخر (رابط)', headerEn: 'Other File (URL)', key: 'otherFile', width: 40, align: 'left' }],
+            rows: draftRows, count: draftRows.length,
+            totalsRow: draftRows.length ? { number: T('الإجمالي', 'TOTAL'), subtotal: r3(draftRows.reduce((a, r) => a + r.subtotal, 0)), tax: r3(draftRows.reduce((a, r) => a + r.tax, 0)), total: r3(draftRows.reduce((a, r) => a + r.total, 0)) } : null,
+            desc: T('كل المسودات المحفوظة', 'All saved drafts') });
+        const dItemRows = []; let dItemsSum = 0;
+        allDrafts.forEach(d => (d.items || []).forEach((it, idx) => {
+            const rate = (it.price !== undefined && it.price !== null) ? +it.price : ((+it.riyal || 0) + (+it.baiza || 0) / 1000);
+            const qty = +it.qty || 0, lt = qty * rate * (it.hasTax ? (1 + (+it.taxRate || 0) / 100) : 1); dItemsSum += lt;
+            dItemRows.push({ dnum: d.draftNumber, dsup: d.supplierName, sl: idx + 1, desc: it.desc || '', qty, price: r3(rate), tax: it.hasTax ? ((+it.taxRate || 0) + '%') : '—', lineTotal: r3(lt) });
+        }));
+        sheets.push({ sheetName: T('بنود المسودات', 'Draft Line Items'), reportTitle: T('تفاصيل بنود المسودات', 'Draft Line Items'),
+            columns: [
+                { header: 'رقم المسودة', headerEn: 'Draft No.', key: 'dnum', width: 18, align: 'center' },
+                { header: 'المورد', headerEn: 'Supplier', key: 'dsup', width: 26, align: 'right' },
+                { header: '#', headerEn: '#', key: 'sl', width: 5, align: 'center' },
+                { header: 'الوصف / التفاصيل', headerEn: 'Description', key: 'desc', width: 42, align: 'right' },
+                { header: 'الكمية', headerEn: 'Qty', key: 'qty', width: 8, align: 'center' },
+                { header: 'سعر الوحدة (ر.ع)', headerEn: 'Unit Price (OMR)', key: 'price', width: 15, align: 'center', numFmt: '#,##0.000' },
+                { header: 'ضريبة %', headerEn: 'Tax %', key: 'tax', width: 9, align: 'center' },
+                { header: 'إجمالي البند (ر.ع)', headerEn: 'Line Total (OMR)', key: 'lineTotal', width: 17, align: 'center', numFmt: '#,##0.000' }],
+            rows: dItemRows, count: dItemRows.length, totalsRow: dItemRows.length ? { dnum: T('الإجمالي', 'TOTAL'), lineTotal: r3(dItemsSum) } : null,
+            desc: T('تفاصيل بنود كل مسودة', 'Line items of every draft') });
+
+        // 5) تقييمات الموردين
+        const evs = (typeof evaluations !== 'undefined' ? evaluations : []).slice().sort(byNewest);
+        sheets.push({ sheetName: T('تقييمات الموردين', 'Supplier Evaluations'), reportTitle: T('سجل تقييمات الموردين', 'Supplier Evaluations Log'),
+            columns: [
+                { header: 'التاريخ', headerEn: 'Date', key: 'at', width: 18, align: 'center' },
+                { header: 'المورد', headerEn: 'Supplier', key: 'sup', width: 28, align: 'right' },
+                { header: 'رقم الأمر', headerEn: 'Order No.', key: 'order', width: 16, align: 'center' },
+                { header: 'المقيِّم', headerEn: 'Evaluator', key: 'by', width: 18, align: 'center' },
+                { header: 'الجودة', headerEn: 'Quality', key: 'q', width: 9, align: 'center' },
+                { header: 'التسليم', headerEn: 'Delivery', key: 'd', width: 9, align: 'center' },
+                { header: 'الأسعار', headerEn: 'Pricing', key: 'p', width: 9, align: 'center' },
+                { header: 'التواصل', headerEn: 'Communication', key: 'c', width: 13, align: 'center' },
+                { header: 'المتوسط', headerEn: 'Average', key: 'avg', width: 10, align: 'center', numFmt: '0.0' },
+                { header: 'ملاحظات', headerEn: 'Notes', key: 'notes', width: 34, align: 'right' }],
+            rows: evs.map(e => { const sp = suppliers.find(x => String(x.id) === String(e.supplierId)); return { at: fmtDT(e.createdAt), sup: (sp && sp.name) || e.supplierName || '', order: e.orderNumber || '', by: e.evaluator || '', q: e.quality, d: e.delivery, p: e.pricing, c: e.communication, avg: +(((+e.quality || 0) + (+e.delivery || 0) + (+e.pricing || 0) + (+e.communication || 0)) / 4).toFixed(1), notes: e.notes || '' }; }),
+            count: evs.length, desc: T('كل تقييمات الموردين بالمعايير الأربعة', 'All supplier evaluations (four criteria)') });
+
+        // 6) المستخدمون + الأدوار والصلاحيات (لمدير النظام فقط)
+        if (admin) {
+            const us = registeredUsers.slice();
+            sheets.push({ sheetName: T('المستخدمون', 'Users'), reportTitle: T('المستخدمون وحساباتهم', 'Users & Accounts'),
+                columns: [
+                    { header: '#', headerEn: '#', key: 'sl', width: 5, align: 'center' },
+                    { header: 'اسم المستخدم', headerEn: 'Username', key: 'un', width: 22, align: 'right' },
+                    { header: 'البريد الإلكتروني', headerEn: 'Email', key: 'em', width: 30, align: 'left' },
+                    { header: 'الدور', headerEn: 'Role', key: 'role', width: 20, align: 'center' },
+                    { header: 'المسمى الوظيفي', headerEn: 'Job Title', key: 'job', width: 22, align: 'right' },
+                    { header: 'الهاتف', headerEn: 'Phone', key: 'ph', width: 15, align: 'center' },
+                    { header: 'حالة الحساب', headerEn: 'Status', key: 'st', width: 12, align: 'center', fontColor: r => r._dis ? 'FFC0392B' : null },
+                    { header: 'تاريخ الإنشاء', headerEn: 'Created', key: 'cr', width: 18, align: 'center' },
+                    { header: 'آخر دخول', headerEn: 'Last Login', key: 'll', width: 18, align: 'center' },
+                    { header: 'آخر نشاط', headerEn: 'Last Activity', key: 'la', width: 18, align: 'center' },
+                    { header: 'وصف آخر نشاط', headerEn: 'Last Activity Details', key: 'lad', width: 40, align: 'right' }],
+                rows: us.map((u, i) => ({ sl: i + 1, un: u.username || '', em: u.email || '', role: roleLabel(u.role), job: u.jobTitle || '', ph: u.phone || '',
+                    st: isUserDisabled(u) ? T('معطّل', 'Disabled') : T('مفعّل', 'Active'), _dis: isUserDisabled(u), cr: fmtDT(u.createdAt), ll: fmtDT(u.lastLogin), la: fmtDT(u.lastAction), lad: u.lastActionDesc || '' })),
+                count: us.length, desc: T('كل المستخدمين وأدوارهم وحالة حساباتهم وآخر نشاط', 'All users, roles, account status and last activity') });
+            const roles = ROLE_ORDER.filter(r => rolePermissions[r] || DEFAULT_PERMISSIONS[r]);
+            const permCols = [
+                { header: 'الدور', headerEn: 'Role', key: 'role', width: 22, align: 'right' },
+                { header: 'الوحدة', headerEn: 'Module', key: 'mod', width: 30, align: 'right' }]
+                .concat(PERM_ACTIONS.map(a => ({ header: a.ar, headerEn: a.en, key: 'a_' + a.key, width: 12, align: 'center' })));
+            const permRows = [];
+            roles.forEach(r => PERM_MODULES.forEach(m => {
+                const acts = m.acts || DEFAULT_PERM_ACTS;
+                const row = { role: roleLabel(r), mod: en ? m.en : m.ar };
+                PERM_ACTIONS.forEach(a => {
+                    if (acts.indexOf(a.key) === -1) { row['a_' + a.key] = '—'; return; }
+                    const v = r === 'sysadmin' ? true : !!(((rolePermissions[r] || {})[m.key] || {})[a.key]);
+                    row['a_' + a.key] = v ? '✓' : '✗';
+                });
+                permRows.push(row);
+            }));
+            sheets.push({ sheetName: T('الأدوار والصلاحيات', 'Roles & Permissions'), reportTitle: T('مصفوفة الأدوار والصلاحيات', 'Roles & Permissions Matrix'),
+                columns: permCols, rows: permRows, count: permRows.length, desc: T('صلاحيات كل دور على كل وحدة (✓ مسموح، ✗ غير مسموح، — لا ينطبق)', 'Permissions of each role per module (✓ allowed, ✗ denied, — n/a)') });
+        }
+
+        // 7) القوائم المرجعية: الأقسام، أنواع الخدمات، نصوص البنود
+        const listSheet = (nameAr, nameEn, items, extraCol) => {
+            const cols = [{ header: '#', headerEn: '#', key: 'sl', width: 6, align: 'center' }, { header: nameAr, headerEn: nameEn, key: 'name', width: 46, align: 'right' }];
+            if (extraCol) cols.push(extraCol.col);
+            return { cols, rows: items.map((x, i) => Object.assign({ sl: i + 1, name: x.name || '' }, extraCol ? { [extraCol.col.key]: extraCol.val(x) } : {})) };
+        };
+        const dl = listSheet('القسم / الغرض', 'Department / Purpose', departments, { col: { header: 'عدد الأوامر', headerEn: 'Orders', key: 'n', width: 12, align: 'center' }, val: x => lpoDrafts.filter(l => l.department === x.name).length });
+        sheets.push({ sheetName: T('الأقسام', 'Departments'), reportTitle: T('قائمة الأقسام / أغراض الطلب', 'Departments / Purposes List'), columns: dl.cols, rows: dl.rows, count: dl.rows.length, desc: T('قائمة الأقسام مع عدد الأوامر لكل قسم', 'Departments with order count') });
+        const sl2 = listSheet('نوع الخدمة', 'Service Type', serviceTypes, { col: { header: 'عدد الموردين', headerEn: 'Suppliers', key: 'n', width: 12, align: 'center' }, val: x => suppliers.filter(sp => splitSvc(sp.serviceType).indexOf(x.name) !== -1).length });
+        sheets.push({ sheetName: T('أنواع الخدمات', 'Service Types'), reportTitle: T('قائمة أنواع الخدمات', 'Service Types List'), columns: sl2.cols, rows: sl2.rows, count: sl2.rows.length, desc: T('أنواع الخدمات مع عدد الموردين لكل نوع', 'Service types with supplier count') });
+        const ds = listSheet('نص البند (Description)', 'Item Description', descriptions || []);
+        sheets.push({ sheetName: T('نصوص البنود', 'Item Descriptions'), reportTitle: T('نصوص بنود أوامر الشراء المحفوظة', 'Saved Item Descriptions'), columns: ds.cols, rows: ds.rows, count: ds.rows.length, desc: T('نصوص الوصف المحفوظة للبنود', 'Saved line-item descriptions') });
+
+        // 8) سجل العمليات (حسب صلاحية الرؤية)
+        const acts = getVisibleActivityEntries();
+        sheets.push({ sheetName: T('سجل العمليات', 'Operations Log'), reportTitle: T('سجل عمليات النظام', 'System Operations Log') + (canViewAllActivity() ? '' : T(' (عملياتك فقط)', ' (your operations only)')),
+            columns: [
+                { header: '#', headerEn: '#', key: 'sl', width: 7, align: 'center' },
+                { header: 'التاريخ والوقت', headerEn: 'Date & Time', key: 'at', width: 20, align: 'center' },
+                { header: 'المستخدم', headerEn: 'User', key: 'u', width: 20, align: 'center' },
+                { header: 'البريد', headerEn: 'Email', key: 'em', width: 28, align: 'left' },
+                { header: 'نوع العملية', headerEn: 'Operation Type', key: 't', width: 16, align: 'center' },
+                { header: 'التفاصيل', headerEn: 'Details', key: 'd', width: 70, align: 'right' }],
+            rows: acts.map((e, i) => ({ sl: i + 1, at: fmtDT(e.createdAt), u: e.username || '', em: e.userEmail || '', t: activityTypeLabel(e.actionType), d: cellTxt(e.details) })),
+            count: acts.length, desc: T('كل العمليات المسجلة في النظام', 'Every recorded operation') });
+
+        // 9) المحادثات والتعليقات
+        if (comments) {
+            sheets.push({ sheetName: T('المحادثات', 'Chat & Comments'), reportTitle: T('محادثات وتعليقات أوامر الشراء والمسودات', 'Orders & Drafts Chat / Comments'),
+                columns: [
+                    { header: 'التاريخ والوقت', headerEn: 'Date & Time', key: 'at', width: 20, align: 'center' },
+                    { header: 'النوع', headerEn: 'Type', key: 'type', width: 12, align: 'center' },
+                    { header: 'المرجع', headerEn: 'Reference', key: 'ref', width: 18, align: 'center' },
+                    { header: 'المستخدم', headerEn: 'User', key: 'u', width: 20, align: 'center' },
+                    { header: 'البريد', headerEn: 'Email', key: 'em', width: 26, align: 'left' },
+                    { header: 'الرسالة', headerEn: 'Message', key: 'm', width: 60, align: 'right' },
+                    { header: 'المرفقات', headerEn: 'Attachments', key: 'att', width: 34, align: 'right' },
+                    { header: 'رد على', headerEn: 'Reply To', key: 'rp', width: 30, align: 'right' }],
+                rows: comments.map(c => { const pm = parseChatMessage(c.message); return { at: fmtDT(c.created_at), type: c.ref_type === 'draft' ? T('مسودة', 'Draft') : T('أمر شراء', 'Order'), ref: c.ref_number || '', u: c.user_name || '', em: c.user_email || '', m: cellTxt(pm.text), att: pm.atts.map(a => a.n || a.name || '').filter(Boolean).join('، '), rp: c.reply_to_id ? ((c.reply_author || '') + (c.reply_snippet ? ': ' + c.reply_snippet : '')) : '' }; }),
+                count: comments.length, desc: T('كل رسائل المحادثة مع المرفقات والردود', 'All chat messages with attachments and replies') });
+        }
+
+        // 10) الإعدادات (لمدير النظام)
+        if (admin) {
+            const setRows = [
+                { k: T('نسبة الضريبة الافتراضية %', 'Default tax rate %'), v: String(defaultTaxRate), src: T('النظام', 'System') },
+                { k: T('أيام التنبيه قبل الانتهاء', 'Notify-before days'), v: String(crNotifyDays), src: T('النظام', 'System') },
+                { k: T('مدة الخمول قبل تسجيل الخروج (دقائق)', 'Idle auto-logout (minutes)'), v: String(typeof idleTimeoutMin !== 'undefined' ? idleTimeoutMin : ''), src: T('النظام', 'System') },
+                { k: T('المستخدمون المعطّلون', 'Disabled users'), v: (disabledUsers || []).join(', '), src: T('النظام', 'System') }
+            ];
+            (settingsRows || []).forEach(r => setRows.push({ k: r.key, v: cellTxt(r.value), src: T('جدول الإعدادات', 'Settings table') }));
+            sheets.push({ sheetName: T('الإعدادات', 'Settings'), reportTitle: T('إعدادات النظام', 'System Settings'),
+                columns: [
+                    { header: 'الإعداد', headerEn: 'Setting', key: 'k', width: 36, align: 'right' },
+                    { header: 'القيمة', headerEn: 'Value', key: 'v', width: 80, align: 'left' },
+                    { header: 'المصدر', headerEn: 'Source', key: 'src', width: 16, align: 'center' }],
+                rows: setRows, count: setRows.length, desc: T('إعدادات النظام وكل مفاتيح جدول الإعدادات', 'System settings and every settings-table key') });
+        }
+
+        // 11) سلة المهملات
+        const trash = [];
+        (deletedOrders || []).forEach(l => trash.push({ type: T('أمر شراء', 'Order'), id: l.number || '', sup: l.supplierName || '', total: r3(l.total), staff: l.staff || '', at: fmtDT(l.deletedAt) }));
+        (deletedDrafts || []).forEach(d => trash.push({ type: T('مسودة', 'Draft'), id: d.draftNumber || '', sup: d.supplierName || '', total: r3(d.total), staff: d.staff || '', at: fmtDT(d.deletedAt) }));
+        (deletedSuppliers || []).forEach(sp => trash.push({ type: T('مورد', 'Supplier'), id: sp.name || '', sup: sp.serviceType || '', total: '', staff: sp.createdBy || '', at: fmtDT(sp.deletedAt) }));
+        sheets.push({ sheetName: T('سلة المهملات', 'Recycle Bin'), reportTitle: T('العناصر المحذوفة (سلة المهملات)', 'Deleted Items (Recycle Bin)'),
+            columns: [
+                { header: 'النوع', headerEn: 'Type', key: 'type', width: 12, align: 'center' },
+                { header: 'الرقم / الاسم', headerEn: 'Number / Name', key: 'id', width: 26, align: 'right' },
+                { header: 'المورد / نوع الخدمة', headerEn: 'Supplier / Service', key: 'sup', width: 28, align: 'right' },
+                { header: 'الإجمالي (ر.ع)', headerEn: 'Total (OMR)', key: 'total', width: 15, align: 'center', numFmt: '#,##0.000' },
+                { header: 'بواسطة', headerEn: 'By', key: 'staff', width: 18, align: 'center' },
+                { header: 'تاريخ الحذف', headerEn: 'Deleted At', key: 'at', width: 18, align: 'center' }],
+            rows: trash, count: trash.length, desc: T('الأوامر والمسودات والموردون المحذوفون', 'Deleted orders, drafts and suppliers') });
+
+        // ===== بناء المصنّف: ورقة الفهرس أولاً ثم بقية الأوراق بالترتيب =====
+        const wb = new ExcelJS.Workbook();
+        wb.creator = 'Takaful Oman — LPO System'; wb.created = new Date();
+        const totalAmount = lpoDrafts.reduce((a, l) => a + (+l.total || 0), 0);
+        const idxRows = sheets.map((sh, i) => ({ sl: i + 1, sheet: sh.sheetName, n: sh.count, desc: sh.desc }));
+        idxRows.push({ sl: '', sheet: T('إجمالي مبالغ أوامر الشراء (ر.ع)', 'Total purchase orders amount (OMR)'), n: r3(totalAmount), desc: '' });
+        idxRows.push({ sl: '', sheet: T('أُنشئت بواسطة', 'Exported by'), n: '', desc: ((currentUser && currentUser.username) || '') + ((currentUser && currentUser.email) ? ' — ' + currentUser.email : '') });
+        idxRows.push({ sl: '', sheet: T('تاريخ ووقت النسخة', 'Backup date & time'), n: '', desc: new Date().toLocaleString('en-GB') });
+        addStyledSheet(wb, { sheetName: T('فهرس النسخة', 'Backup Index'), reportTitle: T('نسخة Excel شاملة لبيانات نظام أوامر الشراء — الفهرس', 'Complete Excel Backup of the LPO System — Index'),
+            columns: [
+                { header: '#', headerEn: '#', key: 'sl', width: 6, align: 'center' },
+                { header: 'الورقة', headerEn: 'Sheet', key: 'sheet', width: 34, align: 'right' },
+                { header: 'عدد السجلات', headerEn: 'Records', key: 'n', width: 14, align: 'center' },
+                { header: 'المحتوى', headerEn: 'Contents', key: 'desc', width: 80, align: 'right' }],
+            rows: idxRows });
+        sheets.forEach(sh => {
+            if (sh.orders) { buildOrdersExcelSheets(wb, allOrders, en, { extended: true, sheet1: sh.sheetName, title1: T('أوامر الشراء المحلية — جميع الأوامر', 'Local Purchase Orders — All Orders'), sheet2: T('بنود أوامر الشراء', 'Order Line Items'), title2: T('تفاصيل بنود جميع أوامر الشراء', 'Line Items of All Purchase Orders') }); return; }
+            if (sh.ordersItems) return;   // تُنشأ مع ورقة الأوامر
+            addStyledSheet(wb, { sheetName: sh.sheetName, reportTitle: sh.reportTitle, columns: sh.columns, rows: sh.rows, totalsRow: sh.totalsRow || null });
+        });
+        const buf = await wb.xlsx.writeBuffer();
+        const ds8 = new Date().toISOString().split('T')[0];
+        triggerExcelDownload(buf, `LPO_Full_Backup_${ds8}.xlsx`);
+        recordAction(T('تنزيل نسخة Excel شاملة لبيانات النظام', 'Download complete Excel backup'), 'export');
     } catch (e) {
-        alert(msg('تعذّر تصدير الملف: ') + e.message);
+        alert(msg('تعذّر تصدير الملف: ') + (e && e.message ? e.message : ''));
     }
 }
 
