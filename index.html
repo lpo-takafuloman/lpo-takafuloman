@@ -1424,8 +1424,7 @@
             <div class="card-title"><i class="fas fa-sliders-h"></i> معايير التقرير والتصفية</div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
                 <button type="button" class="btn btn-danger btn-small" onclick="clearReportFilters()"><i class="fas fa-eraser"></i> مسح التصفية</button>
-                <button type="button" class="btn btn-primary btn-small" onclick="exportReportExcel()"><i class="fas fa-file-excel"></i> تصدير Excel</button>
-                <button type="button" class="btn btn-success btn-small" onclick="downloadAllData()"><i class="fas fa-download"></i> تنزيل جميع البيانات</button>
+                <button type="button" class="btn btn-success btn-small" onclick="downloadReportsExcel()" title="كل تقارير الصفحة برسومها وجداولها + بيانات المصدر، حسب التصفية الحالية"><i class="fas fa-file-excel"></i> تنزيل جميع البيانات وتصدير Excel</button>
                 <button type="button" class="btn btn-small" style="background:#c0392b; color:white;" onclick="exportReportPDF()"><i class="fas fa-file-pdf"></i> طباعة التقرير PDF</button>
             </div>
         </div>
@@ -1505,8 +1504,41 @@
         </div>
     </div>
 
-    <!-- الرسوم البيانية -->
+    <!-- رسوم جديدة: نوع الخدمة + متوسط الإنفاق الشهري -->
     <div class="charts-row">
+        <div class="card" style="margin:0;">
+            <div class="card-header"><div class="card-title"><i class="fas fa-concierge-bell"></i> الإنفاق حسب نوع الخدمة</div></div>
+            <div class="chart-container"><canvas id="reportServiceChart"></canvas></div>
+            <div class="table-responsive" style="margin-top:12px;">
+                <table id="reportServiceTable">
+                    <thead><tr>
+                        <th class="sortable" data-colid="0" onclick="sortGenericTable('reportServiceTable', this)">نوع الخدمة <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="1" onclick="sortGenericTable('reportServiceTable', this)">المبلغ (ر.ع) <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="2" onclick="sortGenericTable('reportServiceTable', this)">النسبة <span class="sort-arrow">⇅</span></th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card" style="margin:0;">
+            <div class="card-header"><div class="card-title"><i class="fas fa-chart-line"></i> متوسط الإنفاق الشهري</div></div>
+            <div class="chart-container"><canvas id="reportMonthlyChart"></canvas></div>
+            <div class="table-responsive" style="margin-top:12px;">
+                <table id="reportMonthlyTable">
+                    <thead><tr>
+                        <th class="sortable" data-colid="0" onclick="sortGenericTable('reportMonthlyTable', this)">الشهر <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="1" onclick="sortGenericTable('reportMonthlyTable', this)">عدد الأوامر <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="2" onclick="sortGenericTable('reportMonthlyTable', this)">إجمالي الإنفاق (ر.ع) <span class="sort-arrow">⇅</span></th>
+                        <th class="sortable" data-colid="3" onclick="sortGenericTable('reportMonthlyTable', this)">متوسط الإنفاق (ر.ع) <span class="sort-arrow">⇅</span></th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- الرسوم البيانية: الإنفاق حسب التاريخ + حسب المورد -->
+    <div class="charts-row" style="margin-top:1.5rem;">
         <div class="card" style="margin:0;">
             <div class="card-header"><div class="card-title"><i class="fas fa-chart-bar"></i> الإنفاق حسب التاريخ</div></div>
             <div class="chart-container"><canvas id="reportChart"></canvas></div>
@@ -1537,25 +1569,20 @@
         </div>
     </div>
 
-    <!-- رسوم جديدة: نوع الخدمة + متوسط الإنفاق الشهري -->
-    <div class="charts-row">
-        <div class="card" style="margin:0;">
-            <div class="card-header"><div class="card-title"><i class="fas fa-concierge-bell"></i> الإنفاق حسب نوع الخدمة</div></div>
-            <div class="chart-container"><canvas id="reportServiceChart"></canvas></div>
-            <div class="table-responsive" style="margin-top:12px;">
-                <table id="reportServiceTable">
-                    <thead><tr>
-                        <th class="sortable" data-colid="0" onclick="sortGenericTable('reportServiceTable', this)">نوع الخدمة <span class="sort-arrow">⇅</span></th>
-                        <th class="sortable" data-colid="1" onclick="sortGenericTable('reportServiceTable', this)">المبلغ (ر.ع) <span class="sort-arrow">⇅</span></th>
-                        <th class="sortable" data-colid="2" onclick="sortGenericTable('reportServiceTable', this)">النسبة <span class="sort-arrow">⇅</span></th>
-                    </tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
-        <div class="card" style="margin:0;">
-            <div class="card-header"><div class="card-title"><i class="fas fa-chart-line"></i> متوسط الإنفاق الشهري</div></div>
-            <div class="chart-container"><canvas id="reportMonthlyChart"></canvas></div>
+    <!-- إحصائيات القسم المعني -->
+    <div class="card" style="margin-top:1.5rem;">
+        <div class="card-header"><div class="card-title"><i class="fas fa-sitemap"></i> إحصائيات حسب القسم المعني</div></div>
+        <div id="deptStatsCards" class="stats-grid" style="margin-bottom:1rem;"></div>
+        <div class="chart-container" style="margin-bottom:1rem;"><canvas id="reportDeptChart"></canvas></div>
+        <div class="table-responsive">
+            <table id="deptStatsTable">
+                <thead><tr>
+                    <th class="sortable" data-colid="0" onclick="sortGenericTable('deptStatsTable', this)">القسم / الغرض <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="1" onclick="sortGenericTable('deptStatsTable', this)">عدد الأوامر <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="2" onclick="sortGenericTable('deptStatsTable', this)">إجمالي المبلغ (ر.ع) <span class="sort-arrow">⇅</span></th>
+                </tr></thead>
+                <tbody></tbody>
+            </table>
         </div>
     </div>
 
@@ -1586,23 +1613,6 @@
                     <th class="sortable" data-colid="1" onclick="sortGenericTable('topSuppliersTable', this)">المورد <span class="sort-arrow">⇅</span></th>
                     <th class="sortable" data-colid="2" onclick="sortGenericTable('topSuppliersTable', this)">عدد الأوامر <span class="sort-arrow">⇅</span></th>
                     <th class="sortable" data-colid="3" onclick="sortGenericTable('topSuppliersTable', this)">إجمالي الإنفاق (ر.ع) <span class="sort-arrow">⇅</span></th>
-                </tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- إحصائيات القسم المعني -->
-    <div class="card" style="margin-top:1.5rem;">
-        <div class="card-header"><div class="card-title"><i class="fas fa-sitemap"></i> إحصائيات حسب القسم المعني</div></div>
-        <div id="deptStatsCards" class="stats-grid" style="margin-bottom:1rem;"></div>
-        <div class="chart-container" style="margin-bottom:1rem;"><canvas id="reportDeptChart"></canvas></div>
-        <div class="table-responsive">
-            <table id="deptStatsTable">
-                <thead><tr>
-                    <th class="sortable" data-colid="0" onclick="sortGenericTable('deptStatsTable', this)">القسم / الغرض <span class="sort-arrow">⇅</span></th>
-                    <th class="sortable" data-colid="1" onclick="sortGenericTable('deptStatsTable', this)">عدد الأوامر <span class="sort-arrow">⇅</span></th>
-                    <th class="sortable" data-colid="2" onclick="sortGenericTable('deptStatsTable', this)">إجمالي المبلغ (ر.ع) <span class="sort-arrow">⇅</span></th>
                 </tr></thead>
                 <tbody></tbody>
             </table>
@@ -3189,6 +3199,7 @@ const I18N = {
     'معايير التقرير': 'Report Criteria',
     'تصدير التقرير': 'Export Report',
     'تنزيل جميع البيانات': 'Download All Data',
+    'تنزيل جميع البيانات وتصدير Excel': 'Download All Data Export Excel',
     'الإنفاق حسب التاريخ': 'Spending by Date',
     'الإنفاق حسب المورد': 'Spending by Supplier',
     'خريطة استخدام النظام (اليوم × الساعة)': 'System Usage Heatmap (Day × Hour)',
@@ -3400,6 +3411,8 @@ const I18N = {
     'مبالغ أوامر الشراء حسب القسم المعني (ر.ع)': 'Purchase Order Amounts by Department (OMR)',
     'الإنفاق حسب نوع الخدمة': 'Spending by Service Type',
     'متوسط الإنفاق الشهري': 'Average Monthly Spending',
+    'الشهر': 'Month',
+    'متوسط الإنفاق (ر.ع)': 'Average Spending (OMR)',
     'مؤشر أداء الموردين (Vendor Performance Index)': 'Vendor Performance Index',
     'تفاصيل الأوامر': 'Order Details',
     'سجل نشاط المستخدمين': 'User Activity Log',
@@ -3478,6 +3491,7 @@ const I18N = {
     'تنزيل نسخة احتياطية كاملة من جميع بيانات النظام (أوامر الشراء، المسودات، الموردون، المستخدمون، أنواع الخدمات، الأقسام، التقييمات) في ملف واحد يُحفظ لديك كأرشيف آمن.': 'Download a full backup of all system data (purchase orders, drafts, suppliers, users, service types, departments, evaluations) in a single secure archive file.',
     'تنزيل نسخة احتياطية كاملة': 'Download Full Backup',
     'نسخة Excel (أوامر + موردون)': 'Excel Copy (Orders + Suppliers)',
+    'كل تقارير الصفحة برسومها وجداولها + بيانات المصدر، حسب التصفية الحالية': "All of this page's reports with their charts and tables + the source data, according to the current filters",
     'ملف Excel شامل لكل أجزاء النظام — كل جزء في ورقة مستقلة': 'A complete Excel file of every part of the system — each part in its own sheet',
     'لم يتم إجراء أي نسخة احتياطية بعد من هذا المتصفح.': 'No backup has been made from this browser yet.',
     'تغذية بيانات الموردين من ملف إكسل': 'Import Suppliers from Excel',
@@ -7261,7 +7275,7 @@ function addStyledSheet(wb, opts) {
     ws.mergeCells(`A3:${lastCol}3`);
     const h3 = ws.getCell('A3');
     const dstr = new Date().toISOString().split('T')[0];
-    h3.value = en ? `Issued: ${dstr}    —    Records: ${rows.length}` : `تاريخ الإصدار: ${dstr}    —    عدد السجلات: ${rows.length}`;
+    h3.value = (en ? `Issued: ${dstr}    —    Records: ${rows.length}` : `تاريخ الإصدار: ${dstr}    —    عدد السجلات: ${rows.length}`) + (opts.note ? '    —    ' + opts.note : '');
     h3.font = { name: 'Arial', size: 10, italic: true, color: { argb: 'FF555555' } };
     h3.alignment = { horizontal: 'center', vertical: 'middle' };
     h3.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F6F8' } };
@@ -8936,7 +8950,7 @@ function generateReport() {
     renderDepartmentStats(list);
 
     // تفعيل الفرز/السحب/التمديد لأعمدة جداول التقارير (مرة واحدة) ثم تطبيق الترتيب والفرز المحفوظ
-    ['reportServiceTable', 'reportDateTable', 'reportSupplierTable', 'top5Table', 'topSuppliersTable', 'deptStatsTable', 'vpiTable'].forEach(tid => {
+    ['reportServiceTable', 'reportMonthlyTable', 'reportDateTable', 'reportSupplierTable', 'top5Table', 'topSuppliersTable', 'deptStatsTable', 'vpiTable'].forEach(tid => {
         initColumnDrag(tid, function () { applyColumnOrder(tid); applyGenericSort(tid); });
         applyColumnOrder(tid);
         applyGenericSort(tid);
@@ -9020,6 +9034,29 @@ function renderMonthlyAvgChart(list) {
         data: { labels: monthNames, datasets: [{ label: currentLanguage === 'en' ? 'Avg Expense (OMR)' : 'متوسط الإنفاق (ر.ع)', data: avgByMonth, borderColor: '#0093c4', backgroundColor: 'rgba(0,147,196,0.1)', fill: true, tension: 0.3, pointRadius: 4 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
     });
+    // جدول ملخص إحصائيات الرسم (الأشهر التي فيها أوامر فقط) + صف إجمالي
+    const tb = document.querySelector('#reportMonthlyTable tbody');
+    if (tb) {
+        const en = currentLanguage === 'en';
+        tb.innerHTML = '';
+        const months = [];
+        for (let m = 0; m < 12; m++) if (countByMonth[m]) months.push(m);
+        if (!months.length) {
+            tb.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999;">${en ? 'No data' : 'لا توجد بيانات'}</td></tr>`;
+        } else {
+            months.forEach(m => {
+                tb.insertRow().innerHTML = `<td data-sort="${m + 1}">${monthNames[m]}</td><td data-sort="${countByMonth[m]}">${countByMonth[m]}</td><td style="font-weight:600;" data-sort="${sumByMonth[m]}">${fmt(sumByMonth[m])}</td><td style="font-weight:600; color:#0093c4;" data-sort="${avgByMonth[m]}">${fmt(avgByMonth[m])}</td>`;
+            });
+        }
+        // صف الإجمالي في تذييل الجدول (لا يدخل في الفرز)
+        const table = document.getElementById('reportMonthlyTable');
+        let tf = table.tFoot; if (tf) tf.remove();
+        if (months.length) {
+            const totC = countByMonth.reduce((a, b) => a + b, 0), totS = sumByMonth.reduce((a, b) => a + b, 0);
+            tf = table.createTFoot();
+            tf.innerHTML = `<tr style="background:#e8f5e9; font-weight:700; color:#1b5e20;"><td>${en ? 'Total' : 'الإجمالي'}</td><td>${totC}</td><td>${fmt(totS)}</td><td>${fmt(totC ? totS / totC : 0)}</td></tr>`;
+        }
+    }
 }
 
 // أكبر 5 أوامر شراء حسب القيمة
@@ -9259,6 +9296,198 @@ async function exportReportExcel() {
         XLSX.writeFile(wb, `تقرير-${new Date().toISOString().split('T')[0]}.xlsx`);
     } catch (e) {
         alert(msg('تعذّر تصدير الملف: ') + e.message);
+    }
+}
+
+// ===================== Excel تقارير صفحة التقارير (كل تقرير: جدول ملخص + رسمه البياني) + بيانات المصدر =====================
+// وصف الفلاتر المطبّقة في صفحة التقارير (نص واحد)
+function reportFiltersText(en) {
+    const defs = [['msRepMonth', 'الشهر', 'Month'], ['msRepYear', 'السنة', 'Year'], ['msRepSupplier', 'المورد', 'Supplier'],
+                  ['msRepStatus', 'الحالة', 'Status'], ['msRepService', 'نوع الخدمة', 'Service Type'], ['msRepStaff', 'الموظف', 'Staff']];
+    const parts = [];
+    defs.forEach(([k, ar, e]) => {
+        const m = MS[k]; if (!m || !m.selected || !m.selected.size) return;
+        const labels = [...m.selected].map(v => { const o = (m.options || []).find(x => x.value === v); return o ? o.label : v; });
+        parts.push((en ? e : ar) + ': ' + labels.join(en ? ', ' : '، '));
+    });
+    return parts;
+}
+// قراءة جدول ملخص من الصفحة كما يظهر (نفس الترتيب والفرز) وتحويله لأعمدة/صفوف Excel
+function _repTableSpec(tableId, en) {
+    const t = document.getElementById(tableId); if (!t || !t.tHead) return null;
+    const ths = Array.from(t.tHead.rows[0].cells).filter(th => th.offsetParent !== null || getComputedStyle(th).display !== 'none');
+    const heads = ths.map(th => th.textContent.replace(/[⇅▲▼]/g, '').replace(/\s+/g, ' ').trim());
+    const isMoney = (h) => /ر\.ع|OMR|المبلغ|Amount|القيمة|Value|الإنفاق|Spending|Expense/i.test(h);
+    const isCount = (h) => /عدد|Count|Orders|Ratings/i.test(h) && !isMoney(h);
+    const isRating = (h) => /التقييم|Rating/i.test(h) && !isCount(h);
+    const columns = heads.map((h, i) => {
+        const c = { header: h, headerEn: h, key: 'c' + i, width: i === 0 && h !== '#' ? 32 : (h === '#' ? 6 : 18), align: 'center' };
+        if (isMoney(h)) c.numFmt = '#,##0.000'; else if (isRating(h)) c.numFmt = '0.0';
+        return c;
+    });
+    const rows = [];
+    Array.from(t.tBodies[0].rows).forEach((tr, ri) => {
+        const cells = Array.from(tr.cells).filter(td => getComputedStyle(td).display !== 'none');
+        if (cells.length !== heads.length) return;   // صف "لا توجد بيانات"
+        const r = {};
+        cells.forEach((td, i) => {
+            const txt = td.textContent.replace(/\s+/g, ' ').trim();
+            const ds = td.getAttribute('data-sort');
+            if (heads[i] === '#') { r['c' + i] = ri + 1; return; }
+            if (ds !== null && ds !== '' && /\d/.test(txt) && !isNaN(+ds)) {
+                if (/%$/.test(txt)) { r['c' + i] = +(+ds).toFixed(1); columns[i].numFmt = '0.0"%"'; }
+                else r['c' + i] = isCount(heads[i]) ? Math.round(+ds) : +(+ds).toFixed(3);
+            } else if (isRating(heads[i])) r['c' + i] = txt.replace(/[★☆]/g, '').trim() || '—';
+            else r['c' + i] = txt;
+        });
+        rows.push(r);
+    });
+    return { columns, rows, heads };
+}
+// صورة الرسم البياني بخلفية بيضاء (PNG base64) أو null إن لم يكن ظاهراً
+function _repChartImage(canvasId) {
+    const c = document.getElementById(canvasId);
+    if (!c || !c.width || !c.height) return null;
+    try {
+        const k = document.createElement('canvas'); k.width = c.width; k.height = c.height;
+        const g = k.getContext('2d'); g.fillStyle = '#ffffff'; g.fillRect(0, 0, k.width, k.height); g.drawImage(c, 0, 0);
+        const css = c.getBoundingClientRect();
+        return { data: k.toDataURL('image/png'), w: Math.round(css.width || c.width), h: Math.round(css.height || c.height) };
+    } catch (e) { return null; }
+}
+async function downloadReportsExcel() {
+    if (!(await ensureLib('exceljs')) || !excelReady()) return;
+    const en = currentLanguage === 'en';
+    const T = (ar, e) => en ? e : ar;
+    try {
+        // التأكد من أن الجداول والرسوم محدّثة حسب الفلاتر الحالية
+        try { generateReport(); } catch (e) {}
+        await new Promise(r => setTimeout(r, 450));   // انتظار انتهاء رسم المخططات
+        const list = getReportFiltered();
+        if (!list.length) { alert(msg('لا توجد بيانات للتصدير')); return; }
+        const filters = reportFiltersText(en);
+        const filtersLine = filters.length ? filters.join('   |   ') : T('بدون تصفية (كل البيانات)', 'No filters (all data)');
+        const r3 = (v) => +(+v || 0).toFixed(3);
+
+        const wb = new ExcelJS.Workbook();
+        wb.creator = 'Takaful Oman — LPO System'; wb.created = new Date();
+        const sheetsInfo = [];   // للفهرس
+
+        // ---- تعريف أقسام التقارير بنفس ترتيب الصفحة ----
+        const reports = [
+            { tid: 'reportServiceTable', chart: 'reportServiceChart', ar: 'الإنفاق حسب نوع الخدمة', en: 'Spending by Service Type', sum: true },
+            { tid: 'reportMonthlyTable', chart: 'reportMonthlyChart', ar: 'متوسط الإنفاق الشهري', en: 'Average Monthly Spending', monthly: true },
+            { tid: 'reportDateTable', chart: 'reportChart', ar: 'الإنفاق حسب التاريخ', en: 'Spending by Date', sum: true },
+            { tid: 'reportSupplierTable', chart: 'reportSupplierChart', ar: 'الإنفاق حسب المورد', en: 'Spending by Supplier', sum: true },
+            { tid: 'deptStatsTable', chart: 'reportDeptChart', ar: 'إحصائيات حسب القسم', en: 'Statistics by Department', sum: true },
+            { tid: 'top5Table', ar: 'أكبر 10 أوامر شراء', en: 'Top 10 Purchase Orders' },
+            { tid: 'topSuppliersTable', ar: 'أفضل 10 موردين', en: 'Top 10 Suppliers' },
+            { tid: 'vpiTable', ar: 'مؤشر أداء الموردين', en: 'Vendor Performance Index', note: T('يعتمد التقييم على كل تقييمات المورد؛ عدد الأوامر والمبلغ حسب التصفية', 'Ratings use all supplier evaluations; orders and amount follow the filters') }
+        ];
+
+        // ---- 1) الفهرس + 2) المؤشرات الرئيسية (تُنشأ أولاً ثم تُملأ بعد معرفة الأوراق) ----
+        const total = list.reduce((a, l) => a + (+l.total || 0), 0), tax = list.reduce((a, l) => a + (+l.tax || 0), 0);
+        const bySt = { pending: [0, 0], approved: [0, 0], rejected: [0, 0] };
+        list.forEach(l => { const st = l.approvalStatus || 'approved'; if (bySt[st]) { bySt[st][0]++; bySt[st][1] += +l.total || 0; } });
+        const kpiRows = [
+            { k: T('إجمالي الأوامر', 'Total Orders'), n: list.length, a: '' },
+            { k: T('إجمالي الإنفاق (ر.ع)', 'Total Spending (OMR)'), n: '', a: r3(total) },
+            { k: T('إجمالي الضرائب (ر.ع)', 'Total Tax (OMR)'), n: '', a: r3(tax) },
+            { k: T('متوسط الأمر (ر.ع)', 'Average Order (OMR)'), n: '', a: r3(list.length ? total / list.length : 0) },
+            { k: T('بانتظار الاعتماد', 'Pending Approval'), n: bySt.pending[0], a: r3(bySt.pending[1]) },
+            { k: T('معتمدة', 'Approved'), n: bySt.approved[0], a: r3(bySt.approved[1]) },
+            { k: T('مرفوضة', 'Rejected'), n: bySt.rejected[0], a: r3(bySt.rejected[1]) },
+            { k: T('عدد الموردين في التقرير', 'Suppliers in report'), n: new Set(list.map(l => l.supplierId || l.supplierName)).size, a: '' },
+            { k: T('عدد الأقسام في التقرير', 'Departments in report'), n: new Set(list.map(l => l.department || '')).size, a: '' }
+        ];
+        filters.forEach(f => kpiRows.push({ k: T('الفلتر المطبّق', 'Applied filter'), n: '', a: '', f }));
+        if (!filters.length) kpiRows.push({ k: T('الفلتر المطبّق', 'Applied filter'), n: '', a: '', f: filtersLine });
+
+        // نُنشئ الأوراق في مصنّف مؤقت للحصول على الترتيب، ثم نبني المصنّف النهائي بالترتيب: الفهرس، المؤشرات، التقارير، المصدر
+        const build = [];
+        build.push({ name: T('المؤشرات الرئيسية', 'Key Indicators'), desc: T('بطاقات الإحصائيات أعلى الصفحة + الفلاتر المطبّقة', 'Statistic cards at the top of the page + applied filters'), n: kpiRows.length,
+            fn: () => addStyledSheet(wb, { sheetName: T('المؤشرات الرئيسية', 'Key Indicators'), reportTitle: T('التقارير — المؤشرات الرئيسية', 'Reports — Key Indicators'), note: filtersLine,
+                columns: [
+                    { header: 'المؤشر', headerEn: 'Indicator', key: 'k', width: 32, align: 'right' },
+                    { header: 'العدد', headerEn: 'Count', key: 'n', width: 12, align: 'center' },
+                    { header: 'المبلغ (ر.ع)', headerEn: 'Amount (OMR)', key: 'a', width: 18, align: 'center', numFmt: '#,##0.000' },
+                    { header: 'التفاصيل', headerEn: 'Details', key: 'f', width: 60, align: 'right' }],
+                rows: kpiRows }) });
+
+        reports.forEach(rp => {
+            const spec = _repTableSpec(rp.tid, en); if (!spec) return;
+            const name = en ? rp.en : rp.ar;
+            let totalsRow = null;
+            if (spec.rows.length && (rp.sum || rp.monthly)) {
+                totalsRow = { c0: T('الإجمالي', 'TOTAL') };
+                spec.columns.forEach((c, i) => {
+                    if (i === 0) return;
+                    const vals = spec.rows.map(r => r[c.key]).filter(v => typeof v === 'number');
+                    if (!vals.length) return;
+                    if (c.numFmt === '0.0"%"') totalsRow[c.key] = 100;
+                    else if (rp.monthly && /متوسط|Average/i.test(c.header)) {
+                        const iCnt = spec.columns.findIndex(x => /عدد|Count/i.test(x.header)), iSum = spec.columns.findIndex(x => /إجمالي|Total/i.test(x.header));
+                        const cnt = spec.rows.reduce((a, r) => a + (+r['c' + iCnt] || 0), 0), sm = spec.rows.reduce((a, r) => a + (+r['c' + iSum] || 0), 0);
+                        totalsRow[c.key] = r3(cnt ? sm / cnt : 0);
+                    } else totalsRow[c.key] = c.numFmt === '#,##0.000' ? r3(vals.reduce((a, b) => a + b, 0)) : vals.reduce((a, b) => a + b, 0);
+                });
+            }
+            const img = rp.chart ? _repChartImage(rp.chart) : null;
+            build.push({ name, desc: T('جدول ملخص الأرقام', 'Summary table') + (img ? T(' + الرسم البياني', ' + chart') : ''), n: spec.rows.length,
+                fn: () => {
+                    const ws = addStyledSheet(wb, { sheetName: name, reportTitle: T('التقارير — ', 'Reports — ') + name, note: (rp.note ? rp.note + '    —    ' : '') + filtersLine, columns: spec.columns, rows: spec.rows, totalsRow });
+                    if (img) {
+                        const id = wb.addImage({ base64: img.data, extension: 'png' });
+                        const scale = Math.min(1, 620 / img.w);
+                        ws.addImage(id, { tl: { col: spec.columns.length + 0.4, row: 3.2 }, ext: { width: Math.round(img.w * scale), height: Math.round(img.h * scale) } });
+                        const capCell = ws.getRow(4).getCell(spec.columns.length + 2);
+                        if (!capCell.value) { capCell.value = T('الرسم البياني: ', 'Chart: ') + name; capCell.font = { name: 'Arial', size: 10, bold: true, color: { argb: XL_AZURE } }; }
+                    }
+                } });
+        });
+
+        // ---- بيانات المصدر (حسب نفس التصفية) ----
+        const srcOrders = list.slice().sort((a, b) => { const ca = a.createdAt || a.date || '', cb = b.createdAt || b.date || ''; return cb < ca ? -1 : cb > ca ? 1 : 0; });
+        build.push({ name: T('المصدر - أوامر الشراء', 'Source - Orders'), desc: T('أوامر الشراء المطابقة للتصفية (مصدر كل الإحصائيات والرسوم)', 'Purchase orders matching the filters (source of every statistic and chart)'), n: srcOrders.length, orders: true });
+        build.push({ name: T('المصدر - بنود الأوامر', 'Source - Line Items'), desc: T('بنود الأوامر المطابقة للتصفية', 'Line items of the filtered orders'), n: srcOrders.reduce((n, l) => n + Math.max(1, (l.items || []).length), 0), skip: true });
+        const supIds = new Set(list.map(l => l.supplierId).filter(Boolean)), supNames = new Set(list.map(l => l.supplierName));
+        const srcSup = suppliers.filter(sp => supIds.has(sp.id) || supNames.has(sp.name));
+        build.push({ name: T('المصدر - الموردون', 'Source - Suppliers'), desc: T('بيانات الموردين الظاهرين في التقرير (مصدر نوع الخدمة والمورد)', 'Suppliers appearing in the report (source of service type and supplier)'), n: srcSup.length,
+            fn: () => { const sp = buildSuppliersExcelSpec(srcSup, en, {}); addStyledSheet(wb, { sheetName: T('المصدر - الموردون', 'Source - Suppliers'), reportTitle: T('بيانات المصدر — الموردون في التقرير', 'Source Data — Suppliers in the Report'), note: filtersLine, columns: sp.columns, rows: sp.rows, totalsRow: sp.rows.length ? sp.totalsRow : null }); } });
+        const evs = (typeof evaluations !== 'undefined' ? evaluations : []).slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        build.push({ name: T('المصدر - التقييمات', 'Source - Evaluations'), desc: T('تقييمات الموردين (مصدر مؤشر أداء الموردين)', 'Supplier evaluations (source of the Vendor Performance Index)'), n: evs.length,
+            fn: () => addStyledSheet(wb, { sheetName: T('المصدر - التقييمات', 'Source - Evaluations'), reportTitle: T('بيانات المصدر — تقييمات الموردين', 'Source Data — Supplier Evaluations'),
+                columns: [
+                    { header: 'التاريخ', headerEn: 'Date', key: 'at', width: 18, align: 'center' },
+                    { header: 'المورد', headerEn: 'Supplier', key: 'sup', width: 28, align: 'right' },
+                    { header: 'رقم الأمر', headerEn: 'Order No.', key: 'order', width: 16, align: 'center' },
+                    { header: 'المقيِّم', headerEn: 'Evaluator', key: 'by', width: 18, align: 'center' },
+                    { header: 'الجودة', headerEn: 'Quality', key: 'q', width: 9, align: 'center' },
+                    { header: 'التسليم', headerEn: 'Delivery', key: 'd', width: 9, align: 'center' },
+                    { header: 'الأسعار', headerEn: 'Pricing', key: 'p', width: 9, align: 'center' },
+                    { header: 'التواصل', headerEn: 'Communication', key: 'c', width: 13, align: 'center' },
+                    { header: 'المتوسط', headerEn: 'Average', key: 'avg', width: 10, align: 'center', numFmt: '0.0' },
+                    { header: 'ملاحظات', headerEn: 'Notes', key: 'notes', width: 34, align: 'right' }],
+                rows: evs.map(e => { const sp = suppliers.find(x => String(x.id) === String(e.supplierId)); return { at: e.createdAt ? new Date(e.createdAt).toLocaleString('en-GB', { dateStyle: 'short', timeStyle: 'short' }) : '', sup: (sp && sp.name) || e.supplierName || '', order: e.orderNumber || '', by: e.evaluator || '', q: e.quality, d: e.delivery, p: e.pricing, c: e.communication, avg: +(((+e.quality || 0) + (+e.delivery || 0) + (+e.pricing || 0) + (+e.communication || 0)) / 4).toFixed(1), notes: e.notes || '' }; }) }) });
+
+        // ---- الفهرس أولاً ----
+        addStyledSheet(wb, { sheetName: T('فهرس التقرير', 'Report Index'), reportTitle: T('تقارير نظام أوامر الشراء — الفهرس', 'LPO System Reports — Index'), note: filtersLine,
+            columns: [
+                { header: '#', headerEn: '#', key: 'sl', width: 6, align: 'center' },
+                { header: 'الورقة', headerEn: 'Sheet', key: 'sheet', width: 34, align: 'right' },
+                { header: 'المحتوى', headerEn: 'Contents', key: 'desc', width: 70, align: 'right' },
+                { header: 'عدد السجلات', headerEn: 'Records', key: 'n', width: 14, align: 'center' }],
+            rows: build.map((b, i) => ({ sl: i + 1, sheet: b.name, desc: b.desc, n: b.n })) });
+        build.forEach(b => {
+            if (b.skip) return;
+            if (b.orders) { buildOrdersExcelSheets(wb, srcOrders, en, { sheet1: T('المصدر - أوامر الشراء', 'Source - Orders'), title1: T('بيانات المصدر — أوامر الشراء (حسب التصفية)', 'Source Data — Purchase Orders (Filtered)'), sheet2: T('المصدر - بنود الأوامر', 'Source - Line Items'), title2: T('بيانات المصدر — بنود الأوامر (حسب التصفية)', 'Source Data — Line Items (Filtered)') }); return; }
+            b.fn();
+        });
+        const buf = await wb.xlsx.writeBuffer();
+        triggerExcelDownload(buf, `LPO_Reports_${new Date().toISOString().split('T')[0]}.xlsx`);
+        recordAction(T('تنزيل تقارير Excel (مع الرسوم وبيانات المصدر)', 'Download reports Excel (with charts and source data)'), 'export');
+    } catch (e) {
+        alert((en ? 'Export failed: ' : 'تعذّر التصدير: ') + (e && e.message ? e.message : ''));
     }
 }
 
