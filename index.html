@@ -257,6 +257,9 @@
         .btn-small { padding: 5px 10px; font-size: 12px; }
 
         .content { flex: 1; overflow: auto; padding: 2rem; }
+        #uiTip { position: fixed; z-index: 2147483647; left: 0; top: 0; max-width: 260px; padding: 6px 10px; border-radius: 7px; background: rgba(28,34,41,0.96); color: #fff; font-size: 12px; line-height: 1.45; font-weight: 500; pointer-events: none; box-shadow: 0 4px 14px rgba(0,0,0,0.28); opacity: 0; transform: translateY(-3px); transition: opacity .14s ease, transform .14s ease; white-space: normal; text-align: start; }
+        #uiTip.show { opacity: 1; transform: none; }
+        @media print { #uiTip { display: none !important; } }
         .page { display: none; }
         .page.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -314,6 +317,9 @@
         #reportPrintArea.pdf-exporting .stat-label { font-size: 11px; }
         #reportPrintArea.pdf-exporting .card-title { font-size: 15px; display: block !important; }
         #reportPrintArea.pdf-exporting .card-title i { margin-inline-end: 8px; }
+        #reportPrintArea.pdf-exporting .dept-pies { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        #reportPrintArea.pdf-exporting .dept-pie { page-break-inside: avoid; break-inside: avoid; }
+        #reportPrintArea.pdf-exporting .dept-pie .dp-canvas { height: 130px; }
         #reportPrintArea.pdf-exporting .__pdfKeep { page-break-inside: avoid; break-inside: avoid; }
         #reportPrintArea.pdf-exporting .table-responsive { overflow: visible !important; border-radius: 6px; }
         #reportPrintArea.pdf-exporting table { width: 100%; font-size: 12px; }
@@ -614,7 +620,7 @@
         .bgt-edit-row input { flex: 1; min-width: 140px; }
         .bgt-hint { font-size: 11.5px; color: #8a97a3; margin-top: 7px; line-height: 1.6; }
         /* المتبقي من مخصّص القسم بجانب حقل القسم في نافذة أمر الشراء */
-        .lpo-bgt { margin-top: 8px; border-radius: 9px; padding: 7px 11px; font-size: 12px; font-weight: 600; display: none; align-items: center; gap: 8px; flex-wrap: wrap; border: 1px solid #d8e6ee; background: #f4fafd; color: #2a3b47; }
+        .lpo-bgt { margin-top: 5px; border-radius: 8px; padding: 3px 9px; line-height: 1.25; font-size: 12px; font-weight: 600; display: none; align-items: center; gap: 1px 8px; flex-wrap: wrap; border: 1px solid #d8e6ee; background: #f4fafd; color: #2a3b47; }
         .lpo-bgt .lb-strong { font-weight: 800; font-size: 13px; }
         .lpo-bgt.ok { border-color: #cfe8d6; background: #f3fbf5; }
         .lpo-bgt.warn { border-color: #f3dcc3; background: #fdf6ec; }
@@ -626,6 +632,39 @@
         .dept-pie .dp-nums { display: flex; justify-content: center; gap: 10px; font-size: 11.5px; color: #6b7c89; margin-top: 6px; flex-wrap: wrap; }
         .dept-pie .dp-nums b { font-weight: 800; unicode-bidi: isolate; direction: ltr; display: inline-block; }
         .dept-pie .dp-pk { font-size: 11px; color: #93a3b0; margin-top: 2px; }
+        /* Sparkline / Mini bars داخل بطاقات الإحصاءات: خلفية شفافة لا تغيّر حجم البطاقة */
+        .stat-card { position: relative; overflow: hidden; }
+        .stat-card > svg.spark { position: absolute; inset-inline: 0; bottom: 0; width: 100%; height: 55%; pointer-events: none; z-index: 0;
+            -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 20%, #000 80%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 20%, #000 80%, transparent 100%); }
+        .stats-grid-slim .stat-card > svg.spark { height: 44%; }
+        .report-stats-row .stat-card > svg.spark { height: 42%; }
+        .stat-card > :not(svg.spark) { position: relative; z-index: 1; }
+        /* حركة الرسوم المصغّرة: ظهور تدريجي للخط، نمو الأعمدة بتتابع، وانتقال سلس عند تغيّر البيانات */
+        .stat-card { transition: transform .22s ease, box-shadow .22s ease; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 60, 90, .10); }
+        .stat-card > svg.spark { opacity: .85; transition: opacity .25s ease; }
+        .stat-card:hover > svg.spark { opacity: 1; }
+        svg.spark.sp-enter:not(.sp-bars) { animation: spReveal 1s cubic-bezier(.22,.61,.36,1) both; }
+        svg.spark.sp-enter.sp-bars rect { transform-box: fill-box; transform-origin: 50% 100%; animation: spGrow .75s cubic-bezier(.22,.61,.36,1) both; animation-delay: calc(var(--i, 0) * 40ms); }
+        svg.spark rect { transition: y .8s cubic-bezier(.22,.61,.36,1), height .8s cubic-bezier(.22,.61,.36,1); }
+        svg.spark path { transition: d .8s cubic-bezier(.22,.61,.36,1); }
+        /* تفاعل الماوس: توهّج الخط، إبراز العمود، نقطة نشطة وخط إرشادي */
+        svg.spark.sp-enter.sp-replay:not(.sp-bars) { animation-duration: .7s; }
+        svg.spark.sp-enter.sp-replay.sp-bars rect { animation-duration: .5s; animation-delay: calc(var(--i, 0) * 28ms); }
+        svg.spark .sp-line { transition: d .8s cubic-bezier(.22,.61,.36,1), stroke-opacity .25s ease, stroke-width .25s ease, filter .25s ease; }
+        .stat-card:hover svg.spark .sp-line { stroke-opacity: .95; stroke-width: 2.4; filter: drop-shadow(0 0 3px currentColor); }
+        svg.spark .sp-area { transition: d .8s cubic-bezier(.22,.61,.36,1), opacity .25s ease; opacity: .85; }
+        .stat-card:hover svg.spark .sp-area { opacity: 1; }
+        svg.spark.sp-bars rect { transform-box: fill-box; transform-origin: 50% 100%; transition: y .8s cubic-bezier(.22,.61,.36,1), height .8s cubic-bezier(.22,.61,.36,1), fill-opacity .18s ease, scale .18s ease; }
+        .stat-card:hover svg.spark.sp-bars rect { fill-opacity: .24; }
+        svg.spark.sp-bars rect.sp-hot { fill-opacity: .62 !important; scale: 1 1.07; filter: drop-shadow(0 0 3px currentColor); }
+        .stat-card > span.sp-dot, .stat-card > span.sp-guide { position: absolute !important; pointer-events: none; opacity: 0; z-index: 0 !important; transition: opacity .15s ease, left .08s linear, top .08s linear; }
+        .stat-card > span.sp-dot { width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: var(--sp-col, #0093c4); border: 2px solid #fff; box-shadow: 0 0 0 3px color-mix(in srgb, var(--sp-col, #0093c4) 30%, transparent); }
+        .stat-card > span.sp-guide { width: 0; border-inline-start: 1px dashed color-mix(in srgb, var(--sp-col, #0093c4) 55%, transparent); transition: opacity .15s ease; }
+        .stat-card > span.sp-dot.on, .stat-card > span.sp-guide.on { opacity: 1; }
+        @keyframes spReveal { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+        @keyframes spGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+        @media (prefers-reduced-motion: reduce) { svg.spark, svg.spark * { animation: none !important; transition: none !important; } .stat-card { transition: none; } .stat-card:hover { transform: none; } }
         .stats-grid.has-bgt { grid-template-columns: repeat(5, 1fr); }
         .stat-card.stat-click { cursor: pointer; transition: transform .15s, box-shadow .15s; }
         .stat-card.stat-click:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,147,196,.18); }
@@ -1182,7 +1221,6 @@
                         <div id="deptComboList" class="combo-list" style="display:none;"></div>
                     </div>
                     <button type="button" class="btn btn-small hidden-for-guest" data-perm="control:create" onclick="openQuickDeptModal()" title="القسم غير موجود في القائمة؟ أضِفه الآن وسيظهر مباشرةً للاختيار" style="margin-top:8px; width:100%; background:#eaf7ee; color:#1f7a37; border:1px solid #bfe3c9; font-size:12px; font-weight:600;"><i class="fas fa-plus-circle"></i> إضافة قسم جديد</button>
-                    <div id="lpoDeptBudget" class="lpo-bgt"></div>
                 </div>
                 <div class="form-group-item">
                     <label><i class="fas fa-hashtag"></i> L.P.O Ref</label>
@@ -1190,6 +1228,7 @@
                         <span style="background:#f0f2f5; border:1px solid #ddd; border-right:none; padding:9px 10px; border-radius:6px 0 0 6px; font-size:13px; color:#666; white-space:nowrap; font-weight:600;">Ref-</span>
                         <input type="text" id="lpoRef" lang="en" dir="ltr" placeholder="أدخل الرقم المرجعي..." style="border-radius:0 6px 6px 0; border-left:none; text-align:center;">
                     </div>
+                    <div id="lpoDeptBudget" class="lpo-bgt"></div>
                 </div>
             </div>
 
@@ -1769,6 +1808,10 @@
     <div class="card" id="repBudgetCard" style="margin-top:1.5rem;">
         <div class="card-header"><div class="card-title"><i class="fas fa-wallet"></i> المخصصات المالية للأقسام (Procurement Package)</div></div>
         <p style="font-size:12px; color:#8a97a3; line-height:1.7; margin-bottom:10px;">المخصص والمنصرف والمتبقي محسوبة من كل أوامر القسم (عدا المرفوضة) ولا تتأثر بالتصفية، أما العمودان الأخيران فيعكسان أوامر التقرير بعد التصفية.</p>
+        <div id="repBudgetPiesWrap" style="margin-bottom:1rem;">
+            <div class="pkg-section-head" style="margin-top:4px;"><i class="fas fa-chart-pie"></i> <span id="repPiesTitle">استهلاك مخصص كل قسم (Procurement Package)</span></div>
+            <div id="repBudgetPies" class="dept-pies"></div>
+        </div>
         <div class="chart-container" style="margin-bottom:1rem;"><canvas id="reportBudgetChart"></canvas></div>
         <div class="table-responsive">
             <table id="budgetStatsTable">
@@ -4543,6 +4586,7 @@ function showPage(pageId, navItem) {
         const alt = order.find(canViewPage) || 'about';
         if (alt !== pageId) { const nv = Array.from(document.querySelectorAll('.nav-item')).find(n => (n.getAttribute('onclick') || '').indexOf("showPage('" + alt + "'") !== -1); return showPage(alt, nv || null); }
     }
+    if (window.hideUiTip) hideUiTip();
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const pageEl = document.getElementById('page-' + pageId);
@@ -4587,7 +4631,15 @@ function showPage(pageId, navItem) {
 
     // حركة دخول الصفحة
     animatePage(pageEl);
+    // الانتقال التلقائي لأعلى الصفحة عند كل تنقّل (Scroll to Top)
+    scrollPageTop();
+    requestAnimationFrame(scrollPageTop);
+    setTimeout(scrollPageTop, 120);
 }
+function scrollPageTop() {
+    try { const c = document.getElementById('contentArea'); if (c) c.scrollTop = 0; window.scrollTo(0, 0); document.documentElement.scrollTop = 0; document.body.scrollTop = 0; } catch (e) { }
+}
+try { if ('scrollRestoration' in history) history.scrollRestoration = 'manual'; } catch (e) { }
 
 // التبويبات داخل صفحة إدارة أوامر الشراء (أوامر الشراء / المسودات فقط)
 function showLpoTab(tab, btn) {
@@ -5667,6 +5719,676 @@ function clearLPOFields() {
         resetForm();
     }
 }
+// ===================== الحركة والتفاعل في الرسوم البيانية (Interactive & Animated Charts) =====================
+// 1) Entrance: نمو الأعمدة من الأسفل بتتابع، رسم الخطوط تدريجياً (Path reveal)، دوران الدوائر
+// 2) Data Transition: عند تغيير الفلاتر/البيانات يُحدَّث الرسم في مكانه فينتقل بسلاسة (Tweening) بدل إعادة بنائه
+// 3) Count-up: الأرقام في بطاقات الإحصاء تعدّ من القيمة السابقة إلى الجديدة
+// 4) Hover: تلميح أنيق، تمييز العنصر وتخفيف الباقي، خط إرشادي عمودي ونقطة نشطة على الخطوط
+const FX_REDUCE = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+const FX_DUR = 900;
+const FX_DIM_TYPES = { bar: 1, doughnut: 1, pie: 1, polarArea: 1 };
+
+// إنشاء رسم أو تحديثه في مكانه (نفس اللوحة ونفس النوع) ⇒ انتقال سلس للبيانات
+function mkChart(key, ctx, cfg) {
+    applyChartFx();
+    const old = chartInstances[key];
+    const canvas = ctx && (ctx.canvas || ctx);
+    if (old && old.canvas === canvas && canvas.isConnected && old.config && old.config.type === cfg.type) {
+        try {
+            old.data.labels = (cfg.data && cfg.data.labels) || [];
+            const nd = (cfg.data && cfg.data.datasets) || [], od = old.data.datasets;
+            nd.forEach((ds, i) => {
+                if (!od[i]) { od.push(ds); return; }
+                Object.keys(od[i]).forEach(k => { if (!(k in ds) && k.charAt(0) !== '_') delete od[i][k]; });
+                Object.assign(od[i], ds);
+            });
+            od.length = nd.length;
+            old.options = cfg.options || {};
+            old.update();
+            return old;
+        } catch (e) { try { old.destroy(); } catch (e2) {} }
+    } else if (old) { try { old.destroy(); } catch (e) {} }
+    return new Chart(ctx, cfg);
+}
+
+// إنهاء أي حركة جارية ورسم الحالة النهائية فوراً (قبل التقاط صورة للرسم في PDF / Excel)
+function chartFinalize(ch) {
+    if (!ch) return;
+    try { ch.$rv = null; ch.$dimA = 1; ch.$cShown = undefined; if (ch.stop) ch.stop(); if (ch.update) ch.update('none'); } catch (e) {}
+}
+function chartsFinalizeAll() { Object.keys(chartInstances || {}).forEach(k => chartFinalize(chartInstances[k])); fxFlushNumbers(); }
+
+// النص في منتصف دوائر المخصصات (نسبة الاستهلاك) — يعدّ من القيمة السابقة إلى الجديدة
+const PIE_CENTER_PLUGIN = { id: 'pieCenter', afterDraw(ch) {
+    const ds = ch.data.datasets[0], info = ds && ds._center; if (!info) return;
+    const a = ch.chartArea; if (!a) return;
+    const now = performance.now();
+    if (ch.$cTarget !== info.val) { ch.$cFrom = (ch.$cShown === undefined ? 0 : ch.$cShown); ch.$cTarget = info.val; ch.$cT0 = now; }
+    const k = FX_REDUCE ? 1 : Math.max(0, Math.min(1, (now - (ch.$cT0 || now)) / FX_DUR)), e = 1 - Math.pow(1 - k, 3);
+    ch.$cShown = ch.$cFrom + (ch.$cTarget - ch.$cFrom) * e;
+    const x = (a.left + a.right) / 2, y = (a.top + a.bottom) / 2, c = ch.ctx;
+    c.save(); c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = info.col; c.font = '800 19px Cairo, Tahoma, sans-serif';
+    c.fillText(Math.round(ch.$cShown) + '%', x, y); c.restore();
+    if (k < 1) requestAnimationFrame(() => { try { if (ch.ctx) ch.draw(); } catch (e2) {} });
+} };
+
+let _fxApplied = false;
+function applyChartFx() {
+    if (_fxApplied || !window.Chart || !Chart.defaults) return;
+    _fxApplied = true;
+    try {
+        const d = Chart.defaults;
+        d.locale = 'en-US';
+        if (FX_REDUCE) { d.animation = false; return; }
+        const setD = (scope, vals) => { if (typeof d.set === 'function') d.set(scope, vals); else d[scope] = Object.assign({}, d[scope], vals); };
+        setD('animation', {
+            duration: FX_DUR, easing: 'easeOutQuart',
+            // Entrance: تتابع ظهور العناصر (Stagger) في أول رسم فقط
+            delay: (c) => (c && c.type === 'data' && c.chart && !c.chart.$fxInit) ? Math.min(650, (c.dataIndex || 0) * 45 + (c.datasetIndex || 0) * 120) : 0
+        });
+        if (d.transitions && d.transitions.active) d.transitions.active.animation = Object.assign({}, d.transitions.active.animation, { duration: 220 });
+        setD('interaction', { mode: 'index', intersect: false });
+        setD('hover', { mode: 'index', intersect: false });
+        ['doughnut', 'pie', 'polarArea'].forEach(t => { if (Chart.overrides && Chart.overrides[t]) {
+            Chart.overrides[t].interaction = { mode: 'point', intersect: true };
+            Chart.overrides[t].hover = { mode: 'point', intersect: true };
+            if (Chart.overrides[t].animation) { Chart.overrides[t].animation.animateRotate = true; Chart.overrides[t].animation.animateScale = true; }
+        } });
+        // تلميح (Tooltip) أنيق
+        const tt = d.plugins && d.plugins.tooltip;
+        if (tt) Object.assign(tt, { backgroundColor: 'rgba(16,38,54,0.92)', titleColor: '#fff', bodyColor: '#e8f3f8', padding: 10, cornerRadius: 9, caretSize: 6, boxPadding: 5, borderColor: 'rgba(255,255,255,0.12)', borderWidth: 1, titleFont: { weight: '700', size: 12.5 }, bodyFont: { size: 12 }, animation: { duration: 180, easing: 'easeOutQuad' } });
+        // نقطة نشطة واضحة على الخطوط
+        if (d.elements && d.elements.point) Object.assign(d.elements.point, { hoverRadius: 6, hoverBorderWidth: 3 });
+        if (d.elements && d.elements.arc) d.elements.arc.hoverOffset = 6;
+        const FXP = {
+            id: 'fxCore',
+            afterInit(ch) { try { if (ch.config.type === 'line' || ch.config.type === 'radar') ch.$rv = { t0: null }; } catch (e) {} },
+            afterUpdate(ch) { ch.$fxInit = true; },
+            beforeDatasetsDraw(ch) { try { FXP._before(ch); } catch (e) { ch.$dimOn = false; } },
+            afterDatasetsDraw(ch) { try { FXP._after(ch); } catch (e) {} },
+            _before(ch) {
+                const ctx = ch.ctx, a = ch.chartArea; if (!a) return;
+                // Line drawing: كشف الخط تدريجياً من البداية للنهاية عند أول ظهور
+                if (ch.$rv) {
+                    const now = performance.now(); if (ch.$rv.t0 === null) ch.$rv.t0 = now;
+                    const p = Math.max(0, Math.min(1, (now - ch.$rv.t0) / 1200)), e = 1 - Math.pow(1 - p, 3);
+                    ctx.save(); ctx.beginPath(); ctx.rect(a.left - 8, a.top - 12, (a.right - a.left + 16) * e, a.bottom - a.top + 24); ctx.clip(); ch.$rvClip = true;
+                    if (p < 1) requestAnimationFrame(() => { try { if (ch.ctx) ch.draw(); } catch (er) {} }); else ch.$rv = null;
+                }
+                // Highlight: تخفيف بقية الأعمدة/الأجزاء عند تمييز أحدها (بتدرّج ناعم)
+                if (FX_DIM_TYPES[ch.config.type]) {
+                    const act = ch.getActiveElements ? ch.getActiveElements() : [];
+                    const target = act.length ? 0.35 : 1;
+                    if (ch.$dimA === undefined) ch.$dimA = 1;
+                    ch.$dimA += (target - ch.$dimA) * 0.3;
+                    if (Math.abs(target - ch.$dimA) < 0.02) ch.$dimA = target;
+                    else requestAnimationFrame(() => { try { if (ch.ctx) ch.draw(); } catch (er) {} });
+                    if (ch.$dimA < 0.999) { ctx.save(); ctx.globalAlpha = ch.$dimA; ch.$dimOn = true; }
+                }
+            },
+            _after(ch) {
+                const ctx = ch.ctx, a = ch.chartArea;
+                if (ch.$dimOn) {
+                    ctx.restore(); ch.$dimOn = false;
+                    (ch.getActiveElements() || []).forEach(x => { try { x.element.draw(ctx, a); } catch (er) {} });
+                }
+                if (ch.$rvClip) { ctx.restore(); ch.$rvClip = false; }
+                // Crosshair: خط إرشادي عمودي يتبع الماوس في الرسوم الخطية
+                if (a && ch.config.type === 'line') {
+                    const act = ch.getActiveElements ? ch.getActiveElements() : [];
+                    if (act.length && act[0].element) {
+                        const x = act[0].element.x;
+                        ctx.save(); ctx.beginPath(); ctx.setLineDash([4, 4]); ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(0,147,196,0.55)';
+                        ctx.moveTo(x, a.top); ctx.lineTo(x, a.bottom); ctx.stroke(); ctx.restore();
+                    }
+                }
+            }
+        };
+        Chart.register(FXP);
+    } catch (e) { console.error(e); }
+}
+window.addEventListener('load', function () { try { applyChartFx(); } catch (e) {} });
+
+// ===== Count-up: عدّاد متحرك لأرقام بطاقات الإحصاء =====
+const FX_NUM_SEL = '.stat-card .stat-value, .stat-card .stg-amt, .bm-card .bm-val, .dept-pie .dp-nums b';
+const _fxNumState = new WeakMap();
+const _fxJobs = new Set();
+function _fxParse(t) {
+    const m = /^([^\d\-]*?)(-?)(\d[\d,]*(?:\.\d+)?)([^\d]*)$/s.exec(t || '');
+    if (!m) return null;
+    const num = m[3];
+    return { pre: m[1], neg: m[2] === '-', num, dec: (num.split('.')[1] || '').length, grp: num.indexOf(',') !== -1, suf: m[4], val: (m[2] === '-' ? -1 : 1) * parseFloat(num.replace(/,/g, '')) };
+}
+function _fxFmt(p, v) {
+    const s = Math.abs(v).toFixed(p.dec), parts = s.split('.');
+    const ip = p.grp ? parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') : parts[0];
+    return p.pre + (v < 0 && parseFloat(s) !== 0 ? '-' : '') + ip + (parts[1] ? '.' + parts[1] : '') + p.suf;
+}
+function _fxAnchor(leaf) { return leaf.id ? leaf : (leaf.parentElement && leaf.parentElement.id ? leaf.parentElement : leaf); }
+function _fxLeaf(leaf) {
+    const t = leaf.textContent;
+    if (leaf.__fxW !== undefined && t === leaf.__fxW) return;      // كتابة من العدّاد نفسه
+    const anchor = _fxAnchor(leaf), p = _fxParse(t);
+    if (leaf.__fxRaf) { cancelAnimationFrame(leaf.__fxRaf); leaf.__fxRaf = 0; if (leaf.__fxJob) { _fxJobs.delete(leaf.__fxJob); if (leaf.__fxJob.unlock) leaf.__fxJob.unlock(); } }
+    if (!p) { _fxNumState.delete(anchor); return; }
+    const from = (leaf.__fxCur !== undefined && leaf.__fxBusy) ? leaf.__fxCur : (_fxNumState.has(anchor) ? _fxNumState.get(anchor) : 0);
+    _fxNumState.set(anchor, p.val);
+    leaf.__fxBusy = false;
+    if (FX_REDUCE || from === p.val || !isFinite(from)) return;
+    const t0 = performance.now(), job = { leaf, final: t };
+    _fxJobs.add(job); leaf.__fxJob = job; leaf.__fxBusy = true;
+    // تثبيت عرض الرقم النهائي أثناء العدّ حتى لا يتغير التفاف النص أو ارتفاع البطاقة
+    let lock = false;
+    try { if (!leaf.__fxLock && getComputedStyle(leaf).display === 'inline') { const w = leaf.getBoundingClientRect().width; if (w > 0) { leaf.__fxLock = [leaf.style.display, leaf.style.minWidth]; leaf.style.display = 'inline-block'; leaf.style.minWidth = w + 'px'; lock = true; } } } catch (e) {}
+    const unlock = () => { if (leaf.__fxLock) { leaf.style.display = leaf.__fxLock[0]; leaf.style.minWidth = leaf.__fxLock[1]; leaf.__fxLock = null; } };
+    job.unlock = unlock;
+    const step = (now) => {
+        const k = Math.max(0, Math.min(1, (now - t0) / FX_DUR)), e = 1 - Math.pow(1 - k, 3);
+        const v = from + (p.val - from) * e; leaf.__fxCur = v;
+        const txt = k >= 1 ? t : _fxFmt(p, v);
+        leaf.__fxW = txt; leaf.textContent = txt;
+        if (k < 1) leaf.__fxRaf = requestAnimationFrame(step); else { leaf.__fxRaf = 0; leaf.__fxBusy = false; _fxJobs.delete(job); unlock(); }
+    };
+    step(t0);   // كتابة القيمة الابتدائية قبل الرسم مباشرة (دون وميض للقيمة النهائية)
+}
+function _fxScan(el) {
+    if (!el.children.length) { _fxLeaf(el); return; }
+    el.querySelectorAll('*').forEach(c => { if (!c.children.length && c.closest(FX_NUM_SEL)) _fxLeaf(c); });
+}
+function fxFlushNumbers() {
+    _fxJobs.forEach(j => { try { cancelAnimationFrame(j.leaf.__fxRaf); j.leaf.__fxRaf = 0; j.leaf.__fxBusy = false; j.leaf.__fxW = j.final; j.leaf.textContent = j.final; if (j.unlock) j.unlock(); } catch (e) {} });
+    _fxJobs.clear();
+}
+(function initCountUp() {
+    if (typeof MutationObserver === 'undefined') return;
+    const start = () => {
+        const seen = new Set();
+        new MutationObserver(recs => {
+            seen.clear();
+            recs.forEach(r => {
+                const el = r.target.nodeType === 3 ? r.target.parentElement : r.target;
+                if (!el || !el.closest) return;
+                const host = el.closest(FX_NUM_SEL);
+                if (host) { seen.add(el); return; }
+                if (r.type === 'childList' && r.addedNodes.length && el.querySelectorAll) el.querySelectorAll(FX_NUM_SEL).forEach(x => seen.add(x));
+            });
+            seen.forEach(el => { try { _fxScan(el); } catch (e) {} });
+        }).observe(document.body, { subtree: true, childList: true, characterData: true });
+    };
+    if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+})();
+
+// ===================== التلميحات المنبثقة (Tooltips) لكل الأزرار =====================
+// تظهر أسفل مؤشر الماوس بعد لحظة قصيرة. الأولوية: data-tip ← title الموجود ← قاموس الدوال أدناه.
+const TIP_MAP = {
+    // الدخول والحساب
+    loginAsGuest: ['تصفّح النظام للقراءة فقط دون حساب', 'Browse the system read-only without an account'],
+    toggleAuthMode: ['التبديل بين تسجيل الدخول وإنشاء حساب', 'Switch between sign-in and sign-up'],
+    openPasswordModal: ['تغيير كلمة السر الخاصة بحسابك', 'Change your account password'],
+    changeProfilePassword: ['حفظ كلمة السر الجديدة لحسابك', 'Save your new password'],
+    handleLogout: ['إنهاء الجلسة والخروج من النظام', 'End the session and sign out'],
+    goHome: ['العودة إلى لوحة التحكم', 'Back to the dashboard'],
+    stopImpersonation: ['إنهاء المعاينة والعودة إلى حسابك الأصلي', 'Stop viewing as this user and return to your account'],
+    impersonateUser: ['معاينة النظام كما يراه هذا المستخدم', 'View the system as this user sees it'],
+    idleStayLoggedIn: ['متابعة الجلسة الحالية', 'Keep the current session'],
+    idleLogoutNow: ['تسجيل الخروج الآن', 'Sign out now'],
+    // أوامر الشراء
+    goToNewLPO: ['إنشاء أمر شراء جديد', 'Create a new purchase order'],
+    closeNewLPO: ['إغلاق النموذج دون حفظ', 'Close the form without saving'],
+    addItemRow: ['إضافة بند جديد إلى الأمر', 'Add a new line item'],
+    removeItemRow: ['حذف هذا البند من الأمر', 'Remove this line item'],
+    clearLPOFields: ['مسح كل بيانات النموذج والبدء من جديد', 'Clear the whole form and start over'],
+    saveDraft: ['حفظ الأمر كمسودة لإكماله لاحقاً', 'Save as a draft to finish later'],
+    previewLPO: ['معاينة الأمر كما سيُطبع', 'Preview the order as it will print'],
+    printPDF: ['إنشاء ملف PDF للأمر وطباعته', 'Generate a PDF of the order'],
+    downloadPreviewPDF: ['تنزيل نسخة PDF من هذا الأمر', 'Download this order as PDF'],
+    closePreview: ['إغلاق المعاينة', 'Close the preview'],
+    clearLPOFilters: ['إزالة كل المرشّحات وعرض كل الأوامر', 'Remove all filters and show all orders'],
+    clearDraftFilters: ['إزالة كل المرشّحات وعرض كل المسودات', 'Remove all filters and show all drafts'],
+    clearSupplierFilters: ['إزالة كل المرشّحات وعرض كل الموردين', 'Remove all filters and show all suppliers'],
+    clearReportFilters: ['إزالة مرشّحات التقرير والعودة للكل', 'Reset the report filters'],
+    resetActivityFilters: ['إعادة ضبط مرشّحات سجل النشاط', 'Reset the activity log filters'],
+    resetLpoTableFromProfile: ['إعادة ترتيب وأحجام أعمدة جدول الأوامر للوضع الافتراضي', 'Restore default order and widths of the orders table columns'],
+    resetSuppliersTableFromProfile: ['إعادة أعمدة جدول الموردين للوضع الافتراضي', 'Restore default columns of the suppliers table'],
+    exportLPOList: ['تصدير قائمة الأوامر الظاهرة إلى Excel', 'Export the listed orders to Excel'],
+    printLPOListPDF: ['طباعة قائمة الأوامر الظاهرة بصيغة PDF', 'Print the listed orders as PDF'],
+    downloadOrdersExcel: ['تصدير الأوامر إلى ملف Excel', 'Export orders to Excel'],
+    openRowMenu: ['خيارات هذا الأمر', 'Order actions'],
+    openDraftRowMenu: ['خيارات هذه المسودة', 'Draft actions'],
+    openSupplierRowMenu: ['خيارات هذا المورد', 'Supplier actions'],
+    goLpoPage: ['الانتقال إلى هذه الصفحة من القائمة', 'Go to this page of the list'],
+    goSupPage: ['الانتقال إلى هذه الصفحة من القائمة', 'Go to this page of the list'],
+    goActPage: ['الانتقال إلى هذه الصفحة من السجل', 'Go to this page of the log'],
+    confirmRejectOrder: ['تأكيد رفض الأمر مع السبب المكتوب', 'Confirm rejecting the order with the given reason'],
+    closeRejectModal: ['إلغاء الرفض وإغلاق النافذة', 'Cancel the rejection'],
+    viewDepartment: ['عرض بيانات القسم وكشفه المالي', 'Open department details and ledger'],
+    openPkgSummary: ['ملخّص باقات الأقسام (للعرض فقط)', 'Departments package summary (view only)'],
+    openPkgLedger: ['آخر الحركات المالية على الباقات', 'Latest package transactions'],
+    closePkgSummary: ['إغلاق الملخّص', 'Close the summary'],
+    closePkgLedger: ['إغلاق الكشف', 'Close the ledger'],
+    // الموردون
+    openSupplierModal: ['إضافة مورد جديد', 'Add a new supplier'],
+    openQuickServiceTypeModal: ['إضافة نوع خدمة جديد', 'Add a new service type'],
+    openQuickDeptModal: ['إضافة قسم/غرض جديد', 'Add a new department / purpose'],
+    openSupplierSvcModal: ['تعديل نوع الخدمة لهذا المورد', 'Edit this supplier\'s service type'],
+    saveSupplierSvcFromLpo: ['حفظ نوع الخدمة للمورد', 'Save the supplier service type'],
+    closeSupplierModal: ['إغلاق دون حفظ', 'Close without saving'],
+    closeSupplierViewModal: ['إغلاق نافذة المورد', 'Close supplier window'],
+    closeSupplierSvcModal: ['إغلاق دون حفظ', 'Close without saving'],
+    closeQuickServiceTypeModal: ['إغلاق دون حفظ', 'Close without saving'],
+    closeQuickDeptModal: ['إغلاق النافذة', 'Close the window'],
+    saveQuickServiceType: ['حفظ نوع الخدمة واختياره مباشرةً', 'Save the service type and select it'],
+    addDepartmentQuick: ['إضافة القسم واختياره مباشرةً', 'Add the department and select it'],
+    openPrintSupplierModal: ['تعديل بيانات المورد في ملف PDF فقط', 'Edit supplier details for this PDF only'],
+    setPrintSupEditMode: ['تفعيل تعديل بيانات المورد للطباعة', 'Enable editing of print-only supplier data'],
+    savePrintSupplier: ['حفظ بيانات الطباعة لهذا الأمر فقط', 'Save the print-only data for this order'],
+    resetPrintSupplier: ['استعادة بيانات المورد الأصلية', 'Restore the original supplier data'],
+    closePrintSupplierModal: ['إغلاق دون حفظ', 'Close without saving'],
+    openEvalFromSupplierModal: ['تقييم أداء هذا المورد بالنجوم', 'Rate this supplier\'s performance'],
+    saveEvaluation: ['حفظ تقييم المورد', 'Save the supplier rating'],
+    closeEvalModal: ['إغلاق دون حفظ التقييم', 'Close without saving the rating'],
+    editEvaluation: ['تعديل هذا التقييم', 'Edit this rating'],
+    cancelEvalEdit: ['إلغاء تعديل التقييم', 'Cancel editing the rating'],
+    downloadSuppliersExcel: ['تصدير الموردين الظاهرين إلى Excel', 'Export the listed suppliers to Excel'],
+    printSuppliersPDF: ['طباعة قائمة الموردين بصيغة PDF', 'Print the suppliers list as PDF'],
+    showAlertSuppliers: ['عرض الموردين المشمولين بالتنبيه في صفحة الموردين', 'Show alerted suppliers on the Suppliers page'],
+    downloadAlertSuppliersExcel: ['تصدير موردي التنبيهات إلى Excel', 'Export alerted suppliers to Excel'],
+    filterSuppliersByAlertKind: ['تصفية الموردين حسب هذا التنبيه', 'Filter suppliers by this alert'],
+    toggleNotifPanel: ['الإشعارات والتنبيهات', 'Notifications & alerts'],
+    // التقارير
+    downloadReportsExcel: ['تصدير كل التقرير إلى Excel', 'Export the whole report to Excel'],
+    exportReportPDF: ['طباعة التقرير كاملاً بصيغة PDF', 'Print the full report as PDF'],
+    // الإدارة والتحكم
+    addDepartment: ['إضافة قسم/غرض جديد', 'Add a new department / purpose'],
+    addServiceType: ['إضافة نوع خدمة جديد', 'Add a new service type'],
+    addDescription: ['إضافة نص بند جاهز للاستخدام', 'Add a reusable item description'],
+    saveDefaultTax: ['حفظ نسبة الضريبة الافتراضية', 'Save the default tax rate'],
+    saveNotifDays: ['حفظ مدد التنبيه قبل الانتهاء', 'Save the expiry notice periods'],
+    editDepartmentPrompt: ['تعديل القسم أو مخصصه المالي', 'Edit the department or its budget'],
+    deleteDepartment: ['حذف هذا القسم', 'Delete this department'],
+    startDeptNameEdit: ['تعديل اسم القسم', 'Edit the department name'],
+    saveDeptNameOnly: ['حفظ الاسم الجديد فقط', 'Save the new name only'],
+    cancelDeptNameEdit: ['إلغاء تعديل الاسم', 'Cancel the name edit'],
+    saveDeptBudgetOnly: ['حفظ المخصص المالي فقط', 'Save the budget only'],
+    clearDeptBudget: ['إلغاء المخصص المالي لهذا القسم', 'Remove this department\'s budget'],
+    saveDeptEdit: ['حفظ تعديلات القسم', 'Save department changes'],
+    closeDeptEditModal: ['إغلاق دون حفظ', 'Close without saving'],
+    closeDeptViewModal: ['إغلاق النافذة', 'Close the window'],
+    downloadControlPanelExcel: ['تصدير بيانات الإدارة والتحكم إلى Excel', 'Export control data to Excel'],
+    toggleActSelectMode: ['تفعيل/إلغاء وضع تحديد السجلات للحذف', 'Toggle selecting log entries for deletion'],
+    deleteSelectedActivity: ['حذف السجلات المحددة نهائياً', 'Permanently delete the selected entries'],
+    downloadActivityExcel: ['تصدير سجل النشاط إلى Excel', 'Export the activity log to Excel'],
+    deleteOpsEntry: ['حذف هذا البند من سجل العمليات', 'Delete this operations entry'],
+    // الاستيراد والقوالب
+    downloadSupplierTemplate: ['تنزيل ملف Excel فارغ لتعبئة الموردين', 'Download a blank Excel template for suppliers'],
+    downloadServiceTypeTemplate: ['تنزيل ملف Excel فارغ لأنواع الخدمات', 'Download a blank Excel template for service types'],
+    downloadDepartmentTemplate: ['تنزيل ملف Excel فارغ للأقسام', 'Download a blank Excel template for departments'],
+    downloadDescriptionTemplate: ['تنزيل ملف Excel فارغ لنصوص البنود', 'Download a blank Excel template for descriptions'],
+    importSuppliersFromExcel: ['رفع ملف الموردين المعبّأ واستيراده', 'Upload and import the filled suppliers file'],
+    importServiceTypesFromExcel: ['رفع ملف أنواع الخدمات واستيراده', 'Upload and import the service types file'],
+    importDepartmentsFromExcel: ['رفع ملف الأقسام واستيراده', 'Upload and import the departments file'],
+    importDescriptionsFromExcel: ['رفع ملف نصوص البنود واستيراده', 'Upload and import the descriptions file'],
+    // مدير النظام
+    openUserModal: ['إضافة مستخدم جديد', 'Add a new user'],
+    closeUserModal: ['إغلاق دون حفظ', 'Close without saving'],
+    closePasswordModal: ['إغلاق دون حفظ', 'Close without saving'],
+    deleteUser: ['حذف هذا المستخدم', 'Delete this user'],
+    toggleUserDisabled: ['تعطيل أو تمكين دخول هذا المستخدم', 'Disable or enable this user\'s login'],
+    savePermissionsMatrix: ['حفظ جدول الصلاحيات', 'Save the permissions matrix'],
+    resetPermissionsDefault: ['استعادة الصلاحيات الافتراضية', 'Restore default permissions'],
+    saveIdleTimeout: ['حفظ مدة الخمول قبل الخروج التلقائي', 'Save the idle time before auto sign-out'],
+    downloadFullBackup: ['تنزيل نسخة احتياطية كاملة من البيانات', 'Download a full data backup'],
+    downloadAllData: ['ملف Excel شامل لكل أجزاء النظام', 'One Excel file with every part of the system'],
+    loadDbTable: ['إعادة تحميل بيانات الجدول', 'Reload the table data'],
+    saveDbRow: ['حفظ تعديلات هذا السطر', 'Save changes to this row'],
+    deleteDbRow: ['حذف هذا السطر نهائياً', 'Permanently delete this row'],
+    // سلة المهملات
+    restoreTrashItem: ['استرجاع العنصر إلى مكانه', 'Restore the item'],
+    purgeTrashItem: ['حذف العنصر نهائياً دون رجعة', 'Delete permanently - cannot be undone'],
+    // الملف الشخصي
+    saveProfile: ['حفظ بيانات ملفك الشخصي', 'Save your profile'],
+    startEditOtherProfile: ['تعديل بيانات هذا المستخدم', 'Edit this user\'s profile'],
+    saveOtherProfile: ['حفظ بيانات المستخدم', 'Save the user\'s profile'],
+    cancelEditOtherProfile: ['إلغاء التعديل', 'Cancel editing'],
+    resetChatFromProfile: ['إعادة نافذة المحادثة لمكانها وحجمها الافتراضي', 'Reset the chat window position and size'],
+    saveLpoTablesAsDefault: ['اعتماد ترتيب الأعمدة الحالي كافتراضي للجميع', 'Save current column layout as default for everyone'],
+    clearLpoTablesDefault: ['إلغاء الافتراضي المعتمد', 'Remove the saved default layout'],
+    downloadProfileStatement: ['تنزيل كشف حسابك', 'Download your statement'],
+    downloadProfileActivity: ['تنزيل سجل نشاطك', 'Download your activity log'],
+    profileViewSelf: ['العودة لملفك الشخصي', 'Back to your own profile'],
+    // المحادثة
+    sendComment: ['إرسال الرسالة', 'Send message'],
+    fabClick: ['فتح المحادثة (يمكن سحب الزر)', 'Open chat (drag to move)'],
+    closeChatPanel: ['إغلاق المحادثة', 'Close chat'],
+    cancelReply: ['إلغاء الرد', 'Cancel reply'],
+    startReply: ['الرد على هذه الرسالة', 'Reply to this message'],
+    deleteChatMessage: ['حذف هذه الرسالة', 'Delete this message'],
+    deleteChatAttachment: ['حذف هذا المرفق', 'Delete this attachment'],
+    deleteWholeChat: ['حذف المحادثة بالكامل', 'Delete the whole chat'],
+    removeChatPending: ['إزالة المرفق قبل الإرسال', 'Remove the attachment before sending'],
+    removeLpoAtt: ['إزالة هذا المرفق', 'Remove this attachment'],
+    toggleCollapse: ['طيّ أو توسيع هذا القسم', 'Collapse or expand this section']
+};
+const TIP_PAGES = {
+    'dashboard': ['ملخّص الأرقام والرسوم الرئيسية', 'Key figures and charts overview'],
+    'lpo-management': ['إنشاء أوامر الشراء ومتابعتها', 'Create and track purchase orders'],
+    'suppliers': ['بيانات الموردين وتقييمهم', 'Supplier data and ratings'],
+    'reports': ['تقارير الإنفاق والتصدير', 'Spending reports and export'],
+    'control-panel': ['الأقسام وأنواع الخدمات وإعدادات النظام', 'Departments, service types and settings'],
+    'admin': ['المستخدمون والصلاحيات والنسخ الاحتياطي', 'Users, permissions and backups'],
+    'trash': ['استرجاع المحذوفات أو حذفها نهائياً', 'Restore or permanently delete items'],
+    'profile': ['بياناتك وتفضيلاتك', 'Your data and preferences'],
+    'about': ['معلومات عن البرنامج', 'About the application']
+};
+const TIP_ARGS = {
+    changeLanguage: { ar: ['عرض النظام بالعربية', 'Show the system in Arabic'], en: ['عرض النظام بالإنجليزية', 'Show the system in English'] },
+    setChatMode: { floating: ['عرض المحادثة كنافذة عائمة', 'Show chat as a floating window'], docked: ['تثبيت المحادثة على جانب الشاشة', 'Dock chat to the side'], hidden: ['إخفاء المحادثة مؤقتاً', 'Hide chat for now'] },
+    showTrashTab: { orders: ['الأوامر المحذوفة', 'Deleted orders'], drafts: ['المسودات المحذوفة', 'Deleted drafts'], suppliers: ['الموردون المحذوفون', 'Deleted suppliers'] },
+    showLpoTab: { list: ['الأوامر المحفوظة', 'Saved orders'], drafts: ['المسودات غير المكتملة', 'Unfinished drafts'] }
+};
+const TIP_IDS = {
+    lpoSaveOrderBtn: ['حفظ الأمر نهائياً وإضافته إلى قائمة الأوامر', 'Save the order and add it to the orders list'],
+    supplierModalSubmitBtn: ['حفظ بيانات المورد', 'Save supplier data'],
+    supplierViewEditBtn: ['فتح نموذج تعديل بيانات المورد', 'Open the supplier edit form'],
+    deptViewEditBtn: ['فتح نموذج تعديل القسم ومخصصه', 'Open the department edit form'],
+    psEditBtn: ['تفعيل تعديل بيانات المورد للطباعة', 'Enable editing of print-only supplier data'],
+    psSaveBtn: ['حفظ بيانات الطباعة لهذا الأمر فقط', 'Save the print-only data for this order'],
+    profileSaveBtn: ['حفظ بيانات ملفك الشخصي', 'Save your profile'],
+    chatSendBtn: ['إرسال الرسالة', 'Send message']
+};
+const TIP_SORT = ['ترتيب الجدول حسب هذا العمود (اضغط للتبديل تصاعدي/تنازلي)', 'Sort by this column (click to toggle asc/desc)'];
+const TIP_CLOSE = ['إغلاق النافذة', 'Close the window'];
+const TIP_SORT_FNS = { sortGenericTable: 1, sortSuppliers: 1, sortLPOTable: 1, sortActivity: 1 };
+
+function _tipPick(pair) { return currentLanguage === 'en' ? pair[1] : pair[0]; }
+function tipFor(el) {
+    if (el.dataset && el.dataset.tip) return el.dataset.tip;
+    let t = el.getAttribute('title') || el.__tipTitle;
+    if (t) {
+        if (currentLanguage === 'en') { try { t = (dict('en')[t]) || t; } catch (e) { } }
+        return t;
+    }
+    if (el.classList.contains('modal-close')) return _tipPick(TIP_CLOSE);
+    const oc = el.getAttribute('onclick') || '';
+    const re = /([A-Za-z_]\w*)\(([^)]*)\)/g;
+    let m;
+    while ((m = re.exec(oc))) {
+        const fn = m[1];
+        if (TIP_SORT_FNS[fn]) return _tipPick(TIP_SORT);
+        if (fn === 'showPage') {
+            const pid = (m[2].match(/['"]([\w-]+)['"]/) || [])[1];
+            if (TIP_PAGES[pid]) return _tipPick(TIP_PAGES[pid]);
+            continue;
+        }
+        if (TIP_ARGS[fn]) {
+            const a = (m[2].match(/['"]([\w-]+)['"]/) || [])[1];
+            if (TIP_ARGS[fn][a]) return _tipPick(TIP_ARGS[fn][a]);
+            continue;
+        }
+        if (TIP_MAP[fn]) return _tipPick(TIP_MAP[fn]);
+    }
+    if (el.id && TIP_IDS[el.id]) return _tipPick(TIP_IDS[el.id]);
+    if (el.classList.contains('login-btn')) {
+        const f = el.closest('form'); const reg = f && /register|signup/i.test(f.id || '');
+        return reg ? _tipPick(['إنشاء حساب جديد بالبيانات المُدخلة', 'Create an account with these details']) : _tipPick(['تسجيل الدخول إلى النظام', 'Sign in to the system']);
+    }
+    if (el.tagName === 'BUTTON' && el.type === 'submit') {
+        const m = el.closest('.modal-content, .modal, form');
+        return _tipPick(['حفظ البيانات المُدخلة', 'Save the entered data']);
+    }
+    return '';
+}
+(function initTooltips() {
+    const SEL = '[data-tip], button, .btn, a[onclick], th[onclick], .nav-item, [onclick], .modal-close';
+    let tipEl = null, timer = null, cur = null, mx = 0, my = 0;
+    const DELAY = 450;
+    function ensure() {
+        if (tipEl) return tipEl;
+        tipEl = document.createElement('div');
+        tipEl.id = 'uiTip'; tipEl.setAttribute('role', 'tooltip');
+        document.body.appendChild(tipEl);
+        return tipEl;
+    }
+    function restoreTitle(el) {
+        if (el && el.__tipTitle != null) { el.setAttribute('title', el.__tipTitle); delete el.__tipTitle; }
+    }
+    function hide() {
+        clearTimeout(timer); timer = null;
+        if (tipEl) tipEl.classList.remove('show');
+        restoreTitle(cur); cur = null;
+    }
+    function place() {
+        const t = ensure(), pad = 8;
+        t.style.left = '0px'; t.style.top = '0px';
+        const w = t.offsetWidth, h = t.offsetHeight, vw = innerWidth, vh = innerHeight;
+        let x = mx - w / 2, y = my + 20;
+        if (y + h > vh - pad) y = my - h - 14;           // لا مساحة تحت المؤشر → فوقه
+        x = Math.max(pad, Math.min(x, vw - w - pad));
+        y = Math.max(pad, y);
+        t.style.left = x + 'px'; t.style.top = y + 'px';
+    }
+    function show() {
+        if (!cur || !document.contains(cur)) return hide();
+        const txt = tipFor(cur);
+        if (!txt) return;
+        const t = ensure();
+        t.textContent = txt;
+        t.setAttribute('dir', currentLanguage === 'en' ? 'ltr' : 'rtl');
+        place();
+        t.classList.add('show');
+    }
+    document.addEventListener('pointermove', e => { mx = e.clientX; my = e.clientY; }, true);
+    document.addEventListener('pointerover', e => {
+        if (e.pointerType === 'touch') return;
+        const el = e.target.closest && e.target.closest(SEL);
+        if (el === cur) return;
+        hide();
+        if (!el || el.tagName === 'TR' || el.tagName === 'TD' || el.tagName === 'BODY') return;
+        if (el.disabled && !el.dataset.tip && !el.getAttribute('title')) return;
+        mx = e.clientX; my = e.clientY;
+        if (!tipFor(el)) return;
+        cur = el;
+        // نمنع تلميح المتصفح الأصلي حتى لا يظهر تلميحان معاً
+        const ti = el.getAttribute('title');
+        if (ti) { el.__tipTitle = ti; el.removeAttribute('title'); }
+        timer = setTimeout(show, DELAY);
+    }, true);
+    document.addEventListener('pointerout', e => {
+        if (cur && !cur.contains(e.relatedTarget)) hide();
+    }, true);
+    ['pointerdown', 'keydown', 'wheel', 'scroll', 'blur'].forEach(ev => window.addEventListener(ev, hide, true));
+    window.hideUiTip = hide;
+})();
+
+// ===================== SPARKLINES داخل بطاقات الإحصاءات =====================
+// رسوم مصغّرة شفافة (خط/مساحة/أعمدة) بـ SVG خالص؛ تُرسم خلف نص البطاقة دون تغيير حجمها.
+let _sparkId = 0;
+function _spMonths(n) {
+    const out = [], d = new Date(); d.setDate(1);
+    for (let i = n - 1; i >= 0; i--) { const x = new Date(d.getFullYear(), d.getMonth() - i, 1); out.push(x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0')); }
+    return out;
+}
+function _spMonthOf(v) { const t = new Date(v); return isNaN(t.getTime()) ? '' : t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0'); }
+// سلسلة شهرية (آخر n شهراً) من قائمة أوامر: pick(l) يرجع القيمة المضافة (أو null للتجاهل)
+function _spSeries(list, pick, n) {
+    const keys = _spMonths(n || 12), idx = {}; keys.forEach((k, i) => idx[k] = i);
+    const arr = keys.map(() => 0);
+    (list || []).forEach(l => { const m = _spMonthOf(l.date || l.createdAt); if (!(m in idx)) return; const v = pick(l); if (v) arr[idx[m]] += v; });
+    return arr;
+}
+function _spAvg(list, n) {
+    const s = _spSeries(list, l => +l.total || 0, n), c = _spSeries(list, () => 1, n);
+    return s.map((v, i) => c[i] ? v / c[i] : 0);
+}
+function _spDistinctSuppliers(list, n) {
+    const keys = _spMonths(n || 12), sets = keys.map(() => new Set()), idx = {}; keys.forEach((k, i) => idx[k] = i);
+    (list || []).forEach(l => { const m = _spMonthOf(l.date || l.createdAt); if (m in idx) sets[idx[m]].add(String(l.supplierId || l.supplierName || '')); });
+    return sets.map(x => x.size);
+}
+function _spCumulative(arr) { let a = 0; return arr.map(v => a += v); }
+function _spSuppliersCum(n) {
+    const keys = _spMonths(n || 12), last = keys[keys.length - 1];
+    const dates = (suppliers || []).map(s => _spMonthOf(s.createdAt || s.created_at)).filter(Boolean);
+    const base = dates.filter(m => m < keys[0]).length;
+    return keys.map((k, i) => base + dates.filter(m => m >= keys[0] && m <= k).length);
+}
+function _spMonthPath(pts) {   // منحنى ناعم بين النقاط
+    let d = 'M' + pts[0][0].toFixed(2) + ',' + pts[0][1].toFixed(2);
+    for (let i = 1; i < pts.length; i++) { const [x0, y0] = pts[i - 1], [x1, y1] = pts[i], mx = (x0 + x1) / 2; d += ` C${mx.toFixed(2)},${y0.toFixed(2)} ${mx.toFixed(2)},${y1.toFixed(2)} ${x1.toFixed(2)},${y1.toFixed(2)}`; }
+    return d;
+}
+// type: 'line' | 'area' | 'bar'
+function sparkOn(target, data, type, color) {
+    const val = typeof target === 'string' ? document.getElementById(target) : target;
+    const card = val && (val.classList && val.classList.contains('stat-card') ? val : val.closest('.stat-card'));
+    if (!card) return;
+    const old = card.querySelector(':scope > svg.spark');
+    data = (data || []).map(v => +v || 0);
+    if (data.length < 2) data = data.length ? [data[0], data[0]] : [0, 0];
+    const col = color || getComputedStyle(card).borderTopColor || '#0093c4';
+    const W = 120, H = 40, top = 5, bot = 38, n = data.length, mx = Math.max(...data), mn = Math.min(...data);
+    const sig = type + '|' + n + '|' + col;
+    const bars = () => { const bw = W / n, gap = Math.min(3, bw * 0.28); return data.map((v, i) => { const h = mx > 0 ? Math.max(v > 0 ? 2 : 0.8, (v / mx) * (bot - top)) : 0.8; return { x: i * bw + gap / 2, y: bot - h, w: bw - gap, h }; }); };
+    const linePts = () => { const span = (mx - mn) || 1; return data.map((v, i) => [i * (W / (n - 1)), (mx === mn) ? (top + bot) / 2 : bot - ((v - mn) / span) * (bot - top)]); };
+    card.style.setProperty('--sp-col', col);
+    const linePath = () => { const span = (mx - mn) || 1; return _spMonthPath(data.map((v, i) => [i * (W / (n - 1)), (mx === mn) ? (top + bot) / 2 : bot - ((v - mn) / span) * (bot - top)])); };
+    // Data transition: نفس الشكل ونفس عدد النقاط ⇒ تحريك الأعمدة/المنحنى من الشكل القديم إلى الجديد
+    if (old && old.dataset.sig === sig) {
+        if (type === 'bar') {
+            const rs = old.querySelectorAll('rect');
+            bars().forEach((b, i) => { if (rs[i]) { rs[i].style.y = b.y.toFixed(2) + 'px'; rs[i].style.height = b.h.toFixed(2) + 'px'; } });
+        } else {
+            const line = linePath(), ps = old.querySelectorAll('path');
+            ps.forEach(p => { p.style.d = 'path("' + (p.classList.contains('sp-area') ? `${line} L${W},${H} L0,${H} Z` : line) + '")'; });
+            old._pts = linePts();
+        }
+        return;
+    }
+    if (old) old.remove();
+    const gid = 'spg' + (++_sparkId);
+    let inner = '';
+    if (type === 'bar') {
+        inner = bars().map((b, i) => `<rect style="--i:${i}" x="${b.x.toFixed(2)}" y="${b.y.toFixed(2)}" width="${b.w.toFixed(2)}" height="${b.h.toFixed(2)}" rx="1.4" fill="${col}" fill-opacity="${i === n - 1 ? 0.36 : 0.17}"/>`).join('');
+    } else {
+        const line = linePath();
+        inner = `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity="0.28"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>`
+            + (type === 'area' ? `<path class="sp-area" d="${line} L${W},${H} L0,${H} Z" fill="url(#${gid})"/>` : '')
+            + `<path class="sp-line" d="${line}" fill="none" stroke="${col}" stroke-opacity="0.5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`;
+    }
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('class', 'spark sp-enter' + (type === 'bar' ? ' sp-bars' : '')); svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('preserveAspectRatio', 'none'); svg.setAttribute('aria-hidden', 'true');
+    svg.dataset.sig = sig;
+    svg._n = n; svg._H = H; svg._type = type;
+    if (type !== 'bar') svg._pts = linePts();
+    svg.style.color = col;
+    svg.innerHTML = inner;
+    card.insertBefore(svg, card.firstChild);
+}
+
+// ===== تفاعل الرسوم المصغّرة داخل البطاقات عند مرور الماوس =====
+// إعادة تشغيل حركة الظهور + إبراز العمود/النقطة الأقرب للمؤشر + خط إرشادي ونقطة نشطة على المنحنيات
+(function initSparkHover() {
+    let cur = null, lastReplay = 0;
+    const cardOf = t => (t && t.closest) ? t.closest('.stat-card') : null;
+    function parts(card) {
+        let dot = card.querySelector(':scope > span.sp-dot'), guide = card.querySelector(':scope > span.sp-guide');
+        if (!dot) { guide = document.createElement('span'); guide.className = 'sp-guide'; dot = document.createElement('span'); dot.className = 'sp-dot'; card.appendChild(guide); card.appendChild(dot); }
+        return { dot, guide };
+    }
+    function clear(card) {
+        if (!card) return;
+        card.querySelectorAll(':scope > svg.spark rect.sp-hot').forEach(r => r.classList.remove('sp-hot'));
+        const d = card.querySelector(':scope > span.sp-dot'), g = card.querySelector(':scope > span.sp-guide');
+        if (d) d.classList.remove('on'); if (g) g.classList.remove('on');
+    }
+    function replay(svg) {
+        if (FX_REDUCE || !svg) return;
+        const now = performance.now(); if (now - lastReplay < 700) return; lastReplay = now;
+        svg.classList.remove('sp-enter', 'sp-replay'); void svg.getBoundingClientRect();
+        svg.classList.add('sp-enter', 'sp-replay');
+    }
+    document.addEventListener('pointerover', e => {
+        if (e.pointerType === 'touch') return;
+        const card = cardOf(e.target);
+        if (!card || card === cur) return;
+        clear(cur); cur = card;
+        replay(card.querySelector(':scope > svg.spark'));
+    }, true);
+    document.addEventListener('pointermove', e => {
+        if (e.pointerType === 'touch' || !cur) return;
+        const card = cardOf(e.target); if (card !== cur) return;
+        const svg = card.querySelector(':scope > svg.spark'); if (!svg || !svg._n) return;
+        const r = svg.getBoundingClientRect(), cr = card.getBoundingClientRect();
+        if (!r.width) return;
+        const f = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+        if (svg._type === 'bar') {
+            const i = Math.min(svg._n - 1, Math.floor(f * svg._n));
+            svg.querySelectorAll('rect').forEach((rc, k) => rc.classList.toggle('sp-hot', k === i));
+            const { dot, guide } = parts(card); dot.classList.remove('on'); guide.classList.remove('on');
+        } else if (svg._pts) {
+            const i = Math.round(f * (svg._n - 1)), pt = svg._pts[i]; if (!pt) return;
+            const { dot, guide } = parts(card);
+            const x = r.left - cr.left + (pt[0] / 120) * r.width, y = r.top - cr.top + (pt[1] / svg._H) * r.height;
+            dot.style.left = x + 'px'; dot.style.top = y + 'px';
+            guide.style.left = x + 'px'; guide.style.top = (r.top - cr.top) + 'px'; guide.style.height = r.height + 'px';
+            dot.classList.add('on'); guide.classList.add('on');
+        }
+    }, true);
+    document.addEventListener('pointerout', e => {
+        if (!cur) return;
+        if (!cur.contains(e.relatedTarget)) { clear(cur); cur = null; }
+    }, true);
+})();
+function _spDeptBars(kind) {
+    const rows = (departments || []).filter(d => d.budget !== null && d.budget !== undefined).map(d => deptBudgetStats(d));
+    return rows.map(st => kind === 'alloc' ? st.alloc : Math.max(0, st.remaining)).sort((a, b) => b - a).slice(0, 12);
+}
+function sparkDashboard() {
+    const L = lpoDrafts || [];
+    sparkOn('dashOrderCount', _spSeries(L, () => 1), 'bar');
+    sparkOn('dashTotalAmount', _spSeries(L, l => +l.total || 0), 'area');
+    sparkOn('dashAvgOrder', _spAvg(L), 'line');
+    sparkOn('dashSuppliers', _spSuppliersCum(), 'area');
+    sparkOn('dashAllOrders', _spCumulative(_spSeries(L, () => 1)), 'bar');
+}
+function sparkOrdersPage(filtered) {
+    const L = filtered || [];
+    sparkOn('lpoStatCount', _spSeries(L, () => 1), 'bar');
+    sparkOn('lpoStatTotal', _spSeries(L, l => +l.total || 0), 'area');
+    sparkOn('lpoStatAvg', _spAvg(L), 'line');
+    sparkOn('lpoStatSuppliers', _spDistinctSuppliers(L), 'bar');
+    [['lpoStgPending', 'pending'], ['lpoStgApproved', 'approved'], ['lpoStgPayment', 'payment'], ['lpoStgClosed', 'closed']].forEach(([id, k]) =>
+        sparkOn(id, _spSeries(L, l => orderStage(l) === k ? 1 : 0), 'bar'));
+    if (canSeeBudget()) {
+        sparkOn('lpoBgtAlloc', _spDeptBars('alloc'), 'bar');
+        sparkOn('lpoBgtRemain', _spDeptBars('remain'), 'area');
+    }
+}
+function sparkSuppliersPage(full) {
+    const S = full || [];
+    const keys = _spMonths(12), idx = {}; keys.forEach((k, i) => idx[k] = i);
+    const regs = keys.map(() => 0); let base = 0;
+    S.forEach(s => { const m = _spMonthOf(s.createdAt || s.created_at); if (!m) return; if (m < keys[0]) base++; else if (m in idx) regs[idx[m]]++; });
+    let acc = base; sparkOn('supStatCount', regs.map(v => acc += v), 'area');
+    const bySvc = {}; S.forEach(s => splitSvc(s.serviceType).forEach(t => { if (t) bySvc[t] = (bySvc[t] || 0) + 1; }));
+    sparkOn('supStatSvc', Object.values(bySvc).sort((a, b) => b - a).slice(0, 12), 'bar');
+    // توزيع تواريخ الانتهاء: منتهٍ ثم 0-30 ثم 31-60 ... 6 أشهر فأكثر
+    const edges = [0, 31, 61, 91, 121, 181];
+    const bucket = (field) => { const a = [0, 0, 0, 0, 0, 0, 0]; (suppliers || []).forEach(s => { const dl = crDaysLeft(s[field]); if (dl === null) return; if (dl < 0) { a[0]++; return; } let b = 1; for (let i = 0; i < edges.length; i++) if (dl >= edges[i]) b = i + 1; a[b]++; }); return a; };
+    sparkOn('supStatCr', bucket('crExpiry'), 'bar');
+    sparkOn('supStatVat', bucket('vatExpiry'), 'area');
+}
+function sparkReport(list) {
+    const L = list || [];
+    sparkOn('repStatCount', _spSeries(L, () => 1), 'bar');
+    sparkOn('repStatTotal', _spSeries(L, l => +l.total || 0), 'area');
+    sparkOn('repStatTax', _spSeries(L, l => +l.tax || 0), 'line');
+    sparkOn('repStatAvg', _spAvg(L), 'line');
+    sparkOn('repStatPending', _spSeries(L, l => l.approvalStatus === 'pending' ? 1 : 0), 'bar');
+    sparkOn('repStatApproved', _spSeries(L, l => (l.approvalStatus || 'approved') === 'approved' ? 1 : 0), 'bar');
+    sparkOn('repStatRejected', _spSeries(L, l => l.approvalStatus === 'rejected' ? 1 : 0), 'bar');
+}
+
 // ===================== DASHBOARD =====================
 function loadDashboard() {
     const today = new Date();
@@ -5702,6 +6424,7 @@ function loadDashboard() {
     drawDashSupplierSpend();
     drawDashDeptChart();
     drawDashBudgetChart();
+    try { sparkDashboard(); } catch (e) { console.error(e); }
     try { drawDashBudgetPies(); } catch (e) { console.error(e); }
     drawUsageHeatmap();
     updateNotifBadge();
@@ -5719,8 +6442,7 @@ function drawDashDeptChart() {
     });
     const depts = Object.keys(byDept).sort((a, b) => byDept[b] - byDept[a]);
     const palette = ['#0093c4','#7cb342','#f39c12','#e74c3c','#9b59b6','#1abc9c','#34495e','#e67e22','#16a085','#2980b9'];
-    destroyChart('dashDept');
-    chartInstances.dashDept = new Chart(el.getContext('2d'), {
+        chartInstances.dashDept = mkChart('dashDept', el.getContext('2d'), {
         type: 'bar',
         data: { labels: depts, datasets: [{ label: en ? 'Amount (OMR)' : 'المبلغ (ر.ع)', data: depts.map(d => +byDept[d].toFixed(3)), backgroundColor: depts.map((_, i) => palette[i % palette.length]), borderRadius: 6, maxBarThickness: 48 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
@@ -5749,8 +6471,7 @@ function drawDashBudgetChart() {
     const el = document.getElementById('dashBudgetChart'); if (!el) return;
     const rows = (departments || []).filter(d => d.budget !== null && d.budget !== undefined)
         .map(d => ({ name: d.name, st: deptBudgetStats(d) })).sort((a, b) => b.st.alloc - a.st.alloc).slice(0, 12);
-    destroyChart('dashBudget');
-    chartInstances.dashBudget = new Chart(el.getContext('2d'), {
+        chartInstances.dashBudget = mkChart('dashBudget', el.getContext('2d'), {
         type: 'bar',
         data: { labels: rows.map(r => r.name), datasets: [
             { label: en ? 'Package' : 'المخصص', data: rows.map(r => +r.st.alloc.toFixed(3)), backgroundColor: '#bcdff0', borderRadius: 6, maxBarThickness: 40 },
@@ -5761,45 +6482,78 @@ function drawDashBudgetChart() {
 }
 
 // رسم دائري لكل قسم له مخصص: المستهلك مقابل المتبقي (كلها داخل صندوق واحد)
-let _dashPieKeys = [];
-function drawDashBudgetPies() {
-    _dashPieKeys.forEach(k => destroyChart(k)); _dashPieKeys = [];
-    const card = document.getElementById('dashBudgetPiesCard'), box = document.getElementById('dashBudgetPies');
-    if (!card || !box) return;
+// يُستخدم في لوحة التحكم وفي صفحة التقارير؛ prefix يميّز مفاتيح الرسوم، ويرجع قائمة المفاتيح
+function buildBudgetPies(box, prefix) {
+    const keys = [];
     const rows = (departments || []).filter(d => d.budget !== null && d.budget !== undefined)
         .map(d => ({ d, st: deptBudgetStats(d) })).sort((a, b) => b.st.alloc - a.st.alloc);
-    const show = canSeeBudget() && rows.length > 0;
-    card.style.display = show ? '' : 'none';
-    box.innerHTML = '';
-    if (!show) return;
+    if (!rows.length) { box.innerHTML = ''; box.dataset.sig = ''; return { keys, count: 0 }; }
     const en = currentLanguage === 'en', cur = en ? ' OMR' : ' ر.ع';
-    document.getElementById('dashPiesTitle').textContent = en ? 'Package usage per department (Procurement Package)' : 'استهلاك مخصص كل قسم (Procurement Package)';
-    document.getElementById('dashPiesHint').textContent = en ? 'Each circle shows what the department has consumed against what is left of its package. A dark red slice means the department exceeded its package.' : 'كل دائرة تعرض ما استهلكه القسم مقابل المتبقي من مخصصه. الجزء الأحمر الداكن يعني أن القسم تجاوز مخصصه.';
+    // نفس الأقسام بنفس الترتيب ⇒ نحدّث الدوائر في مكانها (انتقال سلس للبيانات) بدل إعادة بنائها
+    const sig = rows.map(r => r.d.id).join('|') + '#' + currentLanguage;
+    const reuse = box.dataset.sig === sig && box.children.length === rows.length;
+    if (!reuse) box.innerHTML = '';
+    box.dataset.sig = sig;
     rows.forEach(({ d, st }, i) => {
         const over = st.remaining < 0, pct = st.alloc ? (st.spent / st.alloc) * 100 : (st.spent > 0 ? 100 : 0);
         const used = Math.min(st.spent, st.alloc), left = Math.max(0, st.remaining), exc = over ? -st.remaining : 0;
         const col = budgetColor(st.pct, over);
-        const tile = document.createElement('div'); tile.className = 'dept-pie';
-        tile.innerHTML = `<div class="dp-name" title="${escapeHtml(d.name || '')}"><i class="fas fa-sitemap" style="color:#8aa2b0;"></i> ${escapeHtml(d.name || '')}</div>
-            <div class="dp-canvas"><canvas id="dashPie_${i}"></canvas></div>
+        let tile;
+        if (reuse) {
+            tile = box.children[i];
+            const bs = tile.querySelectorAll('.dp-nums b');
+            if (bs[0]) { bs[0].textContent = fmt(st.spent); bs[0].style.color = col; }
+            if (bs[1]) { bs[1].textContent = fmt(st.remaining); bs[1].style.color = over ? '#c0392b' : '#2e7d32'; }
+            const pk = tile.querySelector('.dp-pk'); if (pk) pk.textContent = 'Package: ' + fmt(st.alloc) + cur;
+        } else {
+            tile = document.createElement('div'); tile.className = 'dept-pie';
+            tile.innerHTML = `<div class="dp-name" title="${escapeHtml(d.name || '')}"><i class="fas fa-sitemap" style="color:#8aa2b0;"></i> ${escapeHtml(d.name || '')}</div>
+            <div class="dp-canvas"><canvas></canvas></div>
             <div class="dp-nums"><span>${en ? 'Spent' : 'المستهلك'}: <b style="color:${col};">${fmt(st.spent)}</b></span><span>${en ? 'Left' : 'المتبقي'}: <b style="color:${over ? '#c0392b' : '#2e7d32'};">${fmt(st.remaining)}</b></span></div>
             <div class="dp-pk">Package: ${fmt(st.alloc)}${cur}</div>`;
-        box.appendChild(tile);
-        const key = 'dashPie_' + i; _dashPieKeys.push(key);
+            box.appendChild(tile);
+        }
+        const key = prefix + i; keys.push(key);
         const labels = [en ? 'Spent' : 'المستهلك', en ? 'Remaining' : 'المتبقي'], data = [used, left], colors = [col, '#dbe7ef'];
-        if (over) { labels.push(en ? 'Over package' : 'تجاوز المخصص'); data.push(exc); colors.push('#7b1e14'); }
+        // الجزء الثالث (التجاوز) موجود دائماً بقيمة 0 حتى يبقى عدد الأجزاء ثابتاً ويتحرك الانتقال بسلاسة
+        labels.push(en ? 'Over package' : 'تجاوز المخصص'); data.push(exc); colors.push('#7b1e14');
         if (!st.alloc && !st.spent) { data[1] = 1; }   // مخصص صفر بلا إنفاق: دائرة رمادية فارغة
-        chartInstances[key] = new Chart(tile.querySelector('canvas').getContext('2d'), {
+        chartInstances[key] = mkChart(key, tile.querySelector('canvas').getContext('2d'), {
             type: 'doughnut',
-            data: { labels, datasets: [{ data: data.map(v => +(+v).toFixed(3)), backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
-            options: { responsive: true, maintainAspectRatio: false, cutout: '64%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + c.label + ': ' + fmt(c.parsed) + cur } } } },
-            plugins: [{ id: 'pieCenter', afterDraw(ch) {
-                const a = ch.chartArea; if (!a) return; const x = (a.left + a.right) / 2, y = (a.top + a.bottom) / 2, c = ch.ctx;
-                c.save(); c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = col; c.font = '800 19px Cairo, Tahoma, sans-serif';
-                c.fillText(Math.round(pct) + '%', x, y); c.restore();
-            } }]
+            data: { labels, datasets: [{ data: data.map(v => +(+v).toFixed(3)), backgroundColor: colors, borderWidth: 2, borderColor: '#fff', hoverOffset: 6, _center: { val: pct, col } }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '64%', plugins: { legend: { display: false }, tooltip: { filter: it => it.parsed > 0, callbacks: { label: c => ' ' + c.label + ': ' + fmt(c.parsed) + cur } } } },
+            plugins: [PIE_CENTER_PLUGIN]
         });
     });
+    return { keys, count: rows.length };
+}
+let _dashPieKeys = [];
+function drawDashBudgetPies() {
+    const card = document.getElementById('dashBudgetPiesCard'), box = document.getElementById('dashBudgetPies');
+    if (!card || !box) return;
+    const show = canSeeBudget() && (departments || []).some(d => d.budget !== null && d.budget !== undefined);
+    card.style.display = show ? '' : 'none';
+    const oldKeys = _dashPieKeys;
+    if (!show) { oldKeys.forEach(k => destroyChart(k)); _dashPieKeys = []; box.innerHTML = ''; box.dataset.sig = ''; return; }
+    const en = currentLanguage === 'en';
+    document.getElementById('dashPiesTitle').textContent = en ? 'Package usage per department (Procurement Package)' : 'استهلاك مخصص كل قسم (Procurement Package)';
+    document.getElementById('dashPiesHint').textContent = en ? 'Each circle shows what the department has consumed against what is left of its package. A dark red slice means the department exceeded its package.' : 'كل دائرة تعرض ما استهلكه القسم مقابل المتبقي من مخصصه. الجزء الأحمر الداكن يعني أن القسم تجاوز مخصصه.';
+    _dashPieKeys = buildBudgetPies(box, 'dashPie_').keys;
+    oldKeys.filter(k => !_dashPieKeys.includes(k)).forEach(k => destroyChart(k));
+}
+// نفس الرسوم الدائرية داخل بطاقة المخصصات في صفحة التقارير (قبل رسم الأعمدة)
+let _repPieKeys = [];
+function drawReportBudgetPies() {
+    const wrap = document.getElementById('repBudgetPiesWrap'), box = document.getElementById('repBudgetPies');
+    if (!wrap || !box) return;
+    const show = canSeeBudget() && (departments || []).some(d => d.budget !== null && d.budget !== undefined);
+    wrap.style.display = show ? '' : 'none';
+    const oldKeys = _repPieKeys;
+    if (!show) { oldKeys.forEach(k => destroyChart(k)); _repPieKeys = []; box.innerHTML = ''; box.dataset.sig = ''; return; }
+    const en = currentLanguage === 'en';
+    document.getElementById('repPiesTitle').textContent = en ? 'Package usage per department (Procurement Package)' : 'استهلاك مخصص كل قسم (Procurement Package)';
+    _repPieKeys = buildBudgetPies(box, 'repPie_').keys;
+    oldKeys.filter(k => !_repPieKeys.includes(k)).forEach(k => destroyChart(k));
 }
 
 function destroyChart(key) { if (chartInstances[key]) { chartInstances[key].destroy(); delete chartInstances[key]; } }
@@ -5811,8 +6565,7 @@ function drawDashSupplierSpend() {
     const bySup = {};
     lpoDrafts.forEach(l => { bySup[l.supplierName] = (bySup[l.supplierName] || 0) + l.total; });
     const sups = Object.keys(bySup);
-    destroyChart('dashSupplierSpend');
-    chartInstances.dashSupplierSpend = new Chart(el.getContext('2d'), {
+        chartInstances.dashSupplierSpend = mkChart('dashSupplierSpend', el.getContext('2d'), {
         type: 'bar',
         data: { labels: sups, datasets: [{ label: currentLanguage === 'en' ? 'Spending (OMR)' : 'الإنفاق (ر.ع)', data: sups.map(s => +bySup[s].toFixed(3)), backgroundColor: '#7cb342', borderRadius: 6, maxBarThickness: 45 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
@@ -5882,8 +6635,7 @@ window.addEventListener('resize', function() {
 function drawSuppliersChart() {
     const ctx = document.getElementById('suppliersChart').getContext('2d');
     const data = suppliers.map(s => ({ name: s.name, count: lpoDrafts.filter(l => l.supplierId === s.id).length }));
-    destroyChart('suppliers');
-    chartInstances.suppliers = new Chart(ctx, {
+        chartInstances.suppliers = mkChart('suppliers', ctx, {
         type: 'bar',
         data: {
             labels: data.map(d => d.name),
@@ -5904,8 +6656,7 @@ function drawServiceTypeChart() {
         const share = l.total / types.length;   // توزيع المبلغ بالتساوي على أنواع خدمة المورد
         types.forEach(t => { svc[t] = (svc[t] || 0) + share; });
     });
-    destroyChart('serviceType');
-    chartInstances.serviceType = new Chart(ctx, {
+        chartInstances.serviceType = mkChart('serviceType', ctx, {
         type: 'bar',
         data: {
             labels: Object.keys(svc),
@@ -5921,8 +6672,7 @@ function drawMonthlyChart() {
     const year = new Date().getFullYear();
     const monthly = new Array(12).fill(0);
     lpoDrafts.forEach(l => { const d = new Date(l.date); if (d.getFullYear() === year) monthly[d.getMonth()] += l.total; });
-    destroyChart('monthly');
-    chartInstances.monthly = new Chart(ctx, {
+        chartInstances.monthly = mkChart('monthly', ctx, {
         type: 'line',
         data: {
             labels: monthNames,
@@ -5937,8 +6687,7 @@ function drawStatusChart() {
     const signed = lpoDrafts.filter(l => l.status === 'موقعة' || l.status === LPO_STAGE_PAYMENT || l.status === LPO_STAGE_CLOSED).length;
     const pending = lpoDrafts.filter(l => l.status === 'معلقة').length;
     const drafts = draftSaves.length;
-    destroyChart('status');
-    chartInstances.status = new Chart(ctx, {
+        chartInstances.status = mkChart('status', ctx, {
         type: 'doughnut',
         data: {
             labels: ['موقعة', 'معلقة', 'مسودات'],
@@ -7082,6 +7831,7 @@ function renderLPOList() {
             rem.style.color = t.remaining < 0 ? '#c0392b' : '#2e7d32';
             document.getElementById('lpoBgtRemainSub').textContent = (en ? 'Spent ' : 'المنصرف ') + fmtInt(t.spent) + cur;
         }
+        try { sparkOrdersPage(filtered); } catch (e) { console.error(e); }
     } catch (e) {}
 
     const tbody = document.querySelector('#lpoListTable tbody');
@@ -8414,7 +9164,7 @@ function renderSuppliersTable() {
     const svcCountEl = document.getElementById('supStatSvc');
     if (svcCountEl) { const set = new Set(); full.forEach(s => splitSvc(s.serviceType).forEach(t => { if (t) set.add(t); })); svcCountEl.textContent = set.size; }
 
-    try { updateSupAlertCards(); } catch (e) {}
+    try { updateSupAlertCards(); sparkSuppliersPage(full); } catch (e) { console.error(e); }
 
     // حساب التقسيم إلى صفحات
     const total = full.length;
@@ -9458,8 +10208,7 @@ function generateReport() {
     const byDate = {};
     list.forEach(l => { byDate[l.date] = (byDate[l.date] || 0) + l.total; });
     const dates = Object.keys(byDate).sort();
-    destroyChart('report');
-    chartInstances.report = new Chart(document.getElementById('reportChart').getContext('2d'), {
+        chartInstances.report = mkChart('report', document.getElementById('reportChart').getContext('2d'), {
         type: 'bar',
         data: { labels: dates, datasets: [{ label: 'الإنفاق (ر.ع)', data: dates.map(d => +byDate[d].toFixed(3)), backgroundColor: '#0093c4', borderRadius: 6, maxBarThickness: 45 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
@@ -9471,8 +10220,7 @@ function generateReport() {
     const bySup = {};
     list.forEach(l => { bySup[l.supplierName] = (bySup[l.supplierName] || 0) + l.total; });
     const sups = Object.keys(bySup);
-    destroyChart('reportSupplier');
-    chartInstances.reportSupplier = new Chart(document.getElementById('reportSupplierChart').getContext('2d'), {
+        chartInstances.reportSupplier = mkChart('reportSupplier', document.getElementById('reportSupplierChart').getContext('2d'), {
         type: 'bar',
         data: { labels: sups, datasets: [{ label: 'الإنفاق (ر.ع)', data: sups.map(s => +bySup[s].toFixed(3)), backgroundColor: '#7cb342', borderRadius: 6, maxBarThickness: 45 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
@@ -9491,6 +10239,7 @@ function generateReport() {
     renderTopSuppliers(list);
     renderDepartmentStats(list);
     renderBudgetStats(list);
+    try { sparkReport(list); } catch (e) { console.error(e); }
 
     // تفعيل الفرز/السحب/التمديد لأعمدة جداول التقارير (مرة واحدة) ثم تطبيق الترتيب والفرز المحفوظ
     ['reportServiceTable', 'reportMonthlyTable', 'reportDateTable', 'reportSupplierTable', 'budgetStatsTable', 'top5Table', 'topSuppliersTable', 'deptStatsTable', 'vpiTable'].forEach(tid => {
@@ -9535,8 +10284,7 @@ function renderServiceTypeChart(list) {
     });
     const labels = Object.keys(byService).sort((a, b) => byService[b] - byService[a]);
     const palette = ['#0093c4','#7cb342','#f39c12','#e74c3c','#9b59b6','#1abc9c','#34495e','#e67e22','#16a085','#2980b9'];
-    destroyChart('reportService');
-    chartInstances.reportService = new Chart(document.getElementById('reportServiceChart').getContext('2d'), {
+        chartInstances.reportService = mkChart('reportService', document.getElementById('reportServiceChart').getContext('2d'), {
         type: 'doughnut',
         data: { labels: labels, datasets: [{ data: labels.map(s => +byService[s].toFixed(3)), backgroundColor: labels.map((_, i) => palette[i % palette.length]) }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: chartMoneyTooltip } },
@@ -9571,8 +10319,7 @@ function renderMonthlyAvgChart(list) {
         if (!isNaN(d)) { const m = d.getMonth(); sumByMonth[m] += l.total; countByMonth[m]++; }
     });
     const avgByMonth = sumByMonth.map((s, i) => countByMonth[i] ? +(s / countByMonth[i]).toFixed(3) : 0);
-    destroyChart('reportMonthly');
-    chartInstances.reportMonthly = new Chart(document.getElementById('reportMonthlyChart').getContext('2d'), {
+        chartInstances.reportMonthly = mkChart('reportMonthly', document.getElementById('reportMonthlyChart').getContext('2d'), {
         type: 'line',
         data: { labels: monthNames, datasets: [{ label: currentLanguage === 'en' ? 'Avg Expense (OMR)' : 'متوسط الإنفاق (ر.ع)', data: avgByMonth, borderColor: '#0093c4', backgroundColor: 'rgba(0,147,196,0.1)', fill: true, tension: 0.3, pointRadius: 4 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
@@ -9634,8 +10381,7 @@ function renderDepartmentStats(list) {
     const deptChartEl = document.getElementById('reportDeptChart');
     if (deptChartEl) {
         const palette = ['#0093c4','#7cb342','#f39c12','#e74c3c','#9b59b6','#1abc9c','#34495e','#e67e22','#16a085','#2980b9'];
-        destroyChart('reportDept');
-        chartInstances.reportDept = new Chart(deptChartEl.getContext('2d'), {
+                chartInstances.reportDept = mkChart('reportDept', deptChartEl.getContext('2d'), {
             type: 'bar',
             data: { labels: depts, datasets: [{ label: currentLanguage === 'en' ? 'Amount (OMR)' : 'المبلغ (ر.ع)', data: depts.map(d => +byDept[d].total.toFixed(3)), backgroundColor: depts.map((_, i) => palette[i % palette.length]), borderRadius: 6, maxBarThickness: 48 }] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
@@ -9675,7 +10421,8 @@ function renderBudgetStats(list) {
     const en = currentLanguage === 'en';
     const show = canSeeBudget();
     card.style.display = show ? '' : 'none';
-    if (!show) { destroyChart('reportBudget'); return; }
+    if (!show) { destroyChart('reportBudget'); try { drawReportBudgetPies(); } catch (e) {} return; }
+    try { drawReportBudgetPies(); } catch (e) { console.error(e); }
     // أوامر التقرير (بعد التصفية) لكل قسم
     const fCount = {}, fAmt = {};
     (list || []).forEach(l => {
@@ -9719,8 +10466,7 @@ function renderBudgetStats(list) {
     const el = document.getElementById('reportBudgetChart');
     if (el) {
         const top = rows.filter(r => r.st.hasAlloc || r.st.spent).slice(0, 12);
-        destroyChart('reportBudget');
-        chartInstances.reportBudget = new Chart(el.getContext('2d'), {
+                chartInstances.reportBudget = mkChart('reportBudget', el.getContext('2d'), {
             type: 'bar',
             data: { labels: top.map(r => r.name), datasets: [
                 { label: en ? 'Package' : 'المخصص', data: top.map(r => +r.st.alloc.toFixed(3)), backgroundColor: '#bcdff0', borderRadius: 6, maxBarThickness: 40 },
@@ -9780,7 +10526,7 @@ async function exportReportPDF() {
     el.insertBefore(header, el.firstChild);
 
     // ===== استبدال الرسوم البيانية بصور ثابتة لمنع التشوّه عند التقاط html2canvas =====
-    const chartKeys = ['report', 'reportSupplier', 'reportService', 'reportMonthly', 'reportDept', 'reportBudget'];
+    const chartKeys = ['report', 'reportSupplier', 'reportService', 'reportMonthly', 'reportDept', 'reportBudget'].concat(_repPieKeys);
     const chartSnaps = [];
     // نصوص عربية تحوي كلمات إنجليزية: نعزل كل مقطع لاتيني في صندوق مستقل كي لا تتداخل الأحرف عند الالتقاط (html2canvas لا يرتّب النصوص ثنائية الاتجاه جيداً)
     const bidiSwaps = [];
@@ -9808,8 +10554,10 @@ async function exportReportPDF() {
         keepWraps.push(w);
     });
     // إعادة رسم الرسوم بمقاسات تخطيط الطباعة (العرض الثابت) قبل التقاطها كصور
-    chartKeys.forEach(k => { try { if (chartInstances[k]) chartInstances[k].resize(); } catch (e) {} });
+    try { fxFlushNumbers(); } catch (e) {}
+    chartKeys.forEach(k => { try { if (chartInstances[k]) { chartInstances[k].resize(); chartFinalize(chartInstances[k]); } } catch (e) {} });
     await new Promise(r => setTimeout(r, 350));
+    chartKeys.forEach(k => { try { chartFinalize(chartInstances[k]); } catch (e) {} });
     chartKeys.forEach(k => {
         const ch = chartInstances[k];
         if (!ch || !ch.canvas) return;
@@ -9989,6 +10737,7 @@ function _repTableSpec(tableId, en) {
 function _repChartImage(canvasId) {
     const c = document.getElementById(canvasId);
     if (!c || !c.width || !c.height) return null;
+    try { const ch = Object.values(chartInstances || {}).find(x => x && x.canvas === c); if (ch) chartFinalize(ch); } catch (e) {}
     try {
         const k = document.createElement('canvas'); k.width = c.width; k.height = c.height;
         const g = k.getContext('2d'); g.fillStyle = '#ffffff'; g.fillRect(0, 0, k.width, k.height); g.drawImage(c, 0, 0);
@@ -11543,8 +12292,7 @@ function drawActivityUsersChart(entries) {
     (entries || []).forEach(e => { const u = e.username || '—'; byUser[u] = (byUser[u] || 0) + 1; });
     const ranked = Object.keys(byUser).map(u => ({ u, c: byUser[u] })).sort((a, b) => b.c - a.c).slice(0, 8);
     const palette = ['#0093c4','#7cb342','#f39c12','#e74c3c','#9b59b6','#1abc9c','#34495e','#e67e22'];
-    destroyChart('activityUsers');
-    chartInstances.activityUsers = new Chart(el.getContext('2d'), {
+        chartInstances.activityUsers = mkChart('activityUsers', el.getContext('2d'), {
         type: 'bar',
         data: { labels: ranked.map(r => r.u), datasets: [{ label: en ? 'Operations' : 'عدد العمليات', data: ranked.map(r => r.c), backgroundColor: ranked.map((_, i) => palette[i % palette.length]), borderRadius: 6, maxBarThickness: 42 }] },
         options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } } } }
@@ -11558,8 +12306,7 @@ function drawActivityOpsChart(entries) {
     const byType = {};
     (entries || []).forEach(e => { const t = e.actionType || 'other'; byType[t] = (byType[t] || 0) + 1; });
     const keys = Object.keys(byType).sort((a, b) => byType[b] - byType[a]);
-    destroyChart('activityOps');
-    chartInstances.activityOps = new Chart(el.getContext('2d'), {
+        chartInstances.activityOps = mkChart('activityOps', el.getContext('2d'), {
         type: 'doughnut',
         data: { labels: keys.map(k => activityTypeLabel(k)), datasets: [{ data: keys.map(k => byType[k]), backgroundColor: keys.map(k => activityTypeColor(k)) }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
@@ -12084,8 +12831,7 @@ function drawProfileStatsChart(rows) {
     const el = document.getElementById('profileStatsChart');
     if (!el || typeof Chart === 'undefined') return;
     const colors = ['#0093c4', '#2e7d32', '#f39c12', '#e74c3c', '#9b59b6', '#7cb342'];
-    destroyChart('profileStats');
-    chartInstances.profileStats = new Chart(el.getContext('2d'), {
+        chartInstances.profileStats = mkChart('profileStats', el.getContext('2d'), {
         type: 'bar',
         data: {
             labels: rows.map(r => r.label),
