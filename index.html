@@ -783,7 +783,7 @@
         .ram-item i { width: 16px; text-align: center; }
 
         .chart-container { position: relative; height: 320px; width: 100%; max-width: 100%; min-width: 0; }
-        .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+        .charts-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
         /* خريطة حرارية لاستخدام النظام */
         .heatmap-wrap { overflow-x: auto; padding: 6px 2px 2px; }
         .heatmap-grid { display: grid; grid-template-columns: 46px repeat(24, 1fr); gap: 3px; min-width: 580px; }
@@ -1190,38 +1190,74 @@
         
     </div>
 
+    <!-- الرسوم البيانية (كل رسم يعلوه جدول ملخص بياناته أسفله، كما في صفحة التقارير) -->
     <div class="charts-row">
-        <div class="card">
-            <div class="card-header"><div class="card-title"><i class="fas fa-chart-bar"></i> توزيع الموردين</div></div>
-            <div class="chart-container"><canvas id="suppliersChart"></canvas></div>
+        <div class="card" style="margin:0;">
+            <div class="card-header"><div class="card-title"><i class="fas fa-concierge-bell"></i> الإنفاق حسب نوع الخدمة</div></div>
+            <div class="chart-container"><canvas id="dashServiceChart"></canvas></div>
+            <div class="table-responsive" style="margin-top:12px;">
+                <table id="dashServiceTable">
+                    <thead><tr><th class="sortable" data-colid="0" onclick="sortGenericTable('dashServiceTable', this)">نوع الخدمة <span class="sort-arrow">⇅</span></th><th class="sortable" data-colid="1" onclick="sortGenericTable('dashServiceTable', this)">المبلغ (ر.ع) <span class="sort-arrow">⇅</span></th><th class="sortable" data-colid="2" onclick="sortGenericTable('dashServiceTable', this)">النسبة <span class="sort-arrow">⇅</span></th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
-        <div class="card">
-            <div class="card-header"><div class="card-title"><i class="fas fa-chart-bar"></i> الإنفاق حسب نوع الخدمة (ر.ع)</div></div>
-            <div class="chart-container"><canvas id="serviceTypeChart"></canvas></div>
-        </div>
-    </div>
-
-    <div class="charts-row">
-        <div class="card">
+        <div class="card" style="margin:0;">
             <div class="card-header"><div class="card-title"><i class="fas fa-chart-line"></i> الإنفاق الشهري (ر.ع)</div></div>
             <div class="chart-container"><canvas id="monthlyChart"></canvas></div>
+            <div class="table-responsive" style="margin-top:12px;">
+                <table id="dashMonthlyTable">
+                    <thead><tr><th class="sortable" data-colid="0" onclick="sortGenericTable('dashMonthlyTable', this)">الشهر <span class="sort-arrow">⇅</span></th><th class="sortable" data-colid="1" onclick="sortGenericTable('dashMonthlyTable', this)">عدد الأوامر <span class="sort-arrow">⇅</span></th><th class="sortable" data-colid="2" onclick="sortGenericTable('dashMonthlyTable', this)">إجمالي الإنفاق (ر.ع) <span class="sort-arrow">⇅</span></th><th class="sortable" data-colid="3" onclick="sortGenericTable('dashMonthlyTable', this)">متوسط الإنفاق (ر.ع) <span class="sort-arrow">⇅</span></th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
-        <div class="card">
+    </div>
+
+    <div class="charts-row" style="margin-top:1.5rem;">
+        <div class="card" style="margin:0;">
             <div class="card-header"><div class="card-title"><i class="fas fa-chart-pie"></i> حالة الأوامر</div></div>
             <div class="chart-container"><canvas id="statusChart"></canvas></div>
+            <div class="table-responsive" style="margin-top:12px;">
+                <table id="dashStatusTable">
+                    <thead><tr><th class="sortable" data-colid="0" onclick="sortGenericTable('dashStatusTable', this)">الحالة <span class="sort-arrow">⇅</span></th><th class="sortable" data-colid="1" onclick="sortGenericTable('dashStatusTable', this)">عدد الأوامر <span class="sort-arrow">⇅</span></th><th class="sortable" data-colid="2" onclick="sortGenericTable('dashStatusTable', this)">النسبة <span class="sort-arrow">⇅</span></th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card" style="margin:0;">
+            <div class="card-header"><div class="card-title"><i class="fas fa-chart-bar"></i> الإنفاق حسب المورد</div></div>
+            <div class="chart-container"><canvas id="dashSupplierSpendChart"></canvas></div>
+            <div class="table-responsive" style="margin-top:12px;">
+                <table id="dashSupplierTable">
+                    <thead><tr><th class="sortable" data-colid="0" onclick="sortGenericTable('dashSupplierTable', this)">المورد <span class="sort-arrow">⇅</span></th><th class="sortable" data-colid="1" onclick="sortGenericTable('dashSupplierTable', this)">المبلغ (ر.ع) <span class="sort-arrow">⇅</span></th><th class="sortable" data-colid="2" onclick="sortGenericTable('dashSupplierTable', this)">النسبة <span class="sort-arrow">⇅</span></th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <!-- الإنفاق حسب المورد (مثل صفحة التقارير) -->
-    <div class="card">
-        <div class="card-header"><div class="card-title"><i class="fas fa-chart-bar"></i> الإنفاق حسب المورد</div></div>
-        <div class="chart-container"><canvas id="dashSupplierSpendChart"></canvas></div>
-    </div>
-
-    <!-- تصنيف مبالغ أوامر الشراء حسب القسم المعني -->
-    <div class="card">
-        <div class="card-header"><div class="card-title"><i class="fas fa-sitemap"></i> مبالغ أوامر الشراء حسب القسم المعني (ر.ع)</div></div>
-        <div class="chart-container"><canvas id="dashDeptChart"></canvas></div>
+    <div class="charts-row" style="margin-top:1.5rem;">
+        <div class="card" style="margin:0;">
+            <div class="card-header"><div class="card-title"><i class="fas fa-chart-bar"></i> توزيع الموردين</div></div>
+            <div class="chart-container"><canvas id="suppliersChart"></canvas></div>
+            <div class="table-responsive" style="margin-top:12px;">
+                <table id="dashSuppliersTable">
+                    <thead><tr><th class="sortable" data-colid="0" onclick="sortGenericTable('dashSuppliersTable', this)">المورد <span class="sort-arrow">⇅</span></th><th class="sortable" data-colid="1" onclick="sortGenericTable('dashSuppliersTable', this)">عدد الأوامر <span class="sort-arrow">⇅</span></th><th class="sortable" data-colid="2" onclick="sortGenericTable('dashSuppliersTable', this)">النسبة <span class="sort-arrow">⇅</span></th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card" style="margin:0;">
+            <div class="card-header"><div class="card-title"><i class="fas fa-sitemap"></i> مبالغ أوامر الشراء حسب القسم المعني (ر.ع)</div></div>
+            <div class="chart-container"><canvas id="dashDeptChart"></canvas></div>
+            <div class="table-responsive" style="margin-top:12px;">
+                <table id="dashDeptTable">
+                    <thead><tr><th class="sortable" data-colid="0" onclick="sortGenericTable('dashDeptTable', this)">القسم / الغرض <span class="sort-arrow">⇅</span></th><th class="sortable" data-colid="1" onclick="sortGenericTable('dashDeptTable', this)">المبلغ (ر.ع) <span class="sort-arrow">⇅</span></th><th class="sortable" data-colid="2" onclick="sortGenericTable('dashDeptTable', this)">النسبة <span class="sort-arrow">⇅</span></th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- رسم دائري لكل قسم: المستهلك والمتبقي من المخصص (كلها في صندوق واحد) -->
@@ -1241,6 +1277,12 @@
             <div class="bm-card"><div class="bm-lbl"><i class="fas fa-triangle-exclamation"></i> أقسام تجاوزت المخصص</div><div class="bm-val" id="dashBgtOver">0</div><div class="bm-sub" id="dashBgtOverSub"></div></div>
         </div>
         <div class="chart-container"><canvas id="dashBudgetChart"></canvas></div>
+            <div class="table-responsive" style="margin-top:12px;">
+                <table id="dashBudgetTable">
+                    <thead><tr><th class="sortable" data-colid="0" onclick="sortGenericTable('dashBudgetTable', this)">القسم / الغرض <span class="sort-arrow">⇅</span></th><th class="sortable" data-colid="1" onclick="sortGenericTable('dashBudgetTable', this)">المخصص <span class="sort-arrow">⇅</span></th><th class="sortable" data-colid="2" onclick="sortGenericTable('dashBudgetTable', this)">المنصرف <span class="sort-arrow">⇅</span></th><th class="sortable" data-colid="3" onclick="sortGenericTable('dashBudgetTable', this)">المتبقي <span class="sort-arrow">⇅</span></th><th class="sortable" data-colid="4" onclick="sortGenericTable('dashBudgetTable', this)">النسبة <span class="sort-arrow">⇅</span></th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
     </div>
 
     <!-- خريطة حرارية: استخدام النظام عبر الفترات الزمنية (اليوم × الساعة) -->
@@ -3815,6 +3857,8 @@ const I18N = {
     'إلغاء المخصص': 'Clear the package',
     'إجمالي المخصص': 'Total Package',
     'المتبقي': 'Remaining',
+    'مسودات': 'Drafts',
+    'المخصص': 'Package',
     'عدد الأقسام': 'Departments',
     'المنصرف': 'Spent',
     'إجمالي المخصص المالي (ر.ع)': 'Total Package (OMR)',
@@ -6503,7 +6547,7 @@ function loadDashboard() {
     }
 
     drawSuppliersChart();
-    drawServiceTypeChart();
+    renderServiceTypeChart(L, 'dash');
     drawMonthlyChart();
     drawStatusChart();
     drawDashSupplierSpend();
@@ -6526,6 +6570,7 @@ function drawDashDeptChart() {
     });
     const depts = Object.keys(byDept).sort((a, b) => byDept[b] - byDept[a]);
     const palette = ['#0093c4','#7cb342','#f39c12','#e74c3c','#9b59b6','#1abc9c','#34495e','#e67e22','#16a085','#2980b9'];
+    fillSpendTable('dashDeptTable', depts.map((d, i) => ({ label: d, amount: byDept[d] })), palette);
         chartInstances.dashDept = mkChart('dashDept', el.getContext('2d'), {
         type: 'bar',
         data: { labels: depts, datasets: [{ label: en ? 'Amount (OMR)' : 'المبلغ (ر.ع)', data: depts.map(d => +byDept[d].toFixed(3)), backgroundColor: depts.map((_, i) => palette[i % palette.length]), borderRadius: 6, maxBarThickness: 48 }] },
@@ -6555,6 +6600,16 @@ function drawDashBudgetChart() {
     const el = document.getElementById('dashBudgetChart'); if (!el) return;
     const rows = (departments || []).filter(d => d.budget !== null && d.budget !== undefined)
         .map(d => ({ name: d.name, st: deptBudgetStats(d) })).sort((a, b) => b.st.alloc - a.st.alloc).slice(0, 12);
+    (function () {
+        const tb = document.querySelector('#dashBudgetTable tbody'); if (!tb) return;
+        tb.innerHTML = '';
+        rows.forEach(r => {
+            const st = r.st, col = budgetColor(st.pct, st.remaining < 0);
+            tb.insertRow().innerHTML = `<td>${escapeHtml(String(r.name))}</td><td data-sort="${st.alloc}">${fmt(st.alloc)}</td><td data-sort="${st.spent}">${fmt(st.spent)}</td><td style="font-weight:600; color:${st.remaining < 0 ? '#c0392b' : '#2e7d32'};" data-sort="${st.remaining}">${fmt(st.remaining)}</td><td style="color:${col}; font-weight:600;" data-sort="${st.pct}">${st.pct.toFixed(1)}%</td>`;
+        });
+        const ta = rows.reduce((a, r) => a + r.st.alloc, 0), tsp = rows.reduce((a, r) => a + r.st.spent, 0), trm = ta - tsp, tp = ta ? tsp / ta * 100 : 0;
+        setSumRow('dashBudgetTable', [_sumLbl(), fmt(ta), fmt(tsp), `<span style="color:${trm < 0 ? '#c0392b' : '#1b5e20'};">${fmt(trm)}</span>`, tp.toFixed(1) + '%']);
+    })();
         chartInstances.dashBudget = mkChart('dashBudget', el.getContext('2d'), {
         type: 'bar',
         data: { labels: rows.map(r => r.name), datasets: [
@@ -6649,6 +6704,7 @@ function drawDashSupplierSpend() {
     const bySup = {};
     _dashList().forEach(l => { bySup[l.supplierName] = (bySup[l.supplierName] || 0) + l.total; });
     const sups = Object.keys(bySup);
+    fillSpendTable('dashSupplierTable', sups.slice().sort((a, b) => bySup[b] - bySup[a]).map(k => ({ label: k, amount: bySup[k] })), null);
         chartInstances.dashSupplierSpend = mkChart('dashSupplierSpend', el.getContext('2d'), {
         type: 'bar',
         data: { labels: sups, datasets: [{ label: currentLanguage === 'en' ? 'Spending (OMR)' : 'الإنفاق (ر.ع)', data: sups.map(s => +bySup[s].toFixed(3)), backgroundColor: '#7cb342', borderRadius: 6, maxBarThickness: 45 }] },
@@ -6719,7 +6775,14 @@ window.addEventListener('resize', function() {
 function drawSuppliersChart() {
     const ctx = document.getElementById('suppliersChart').getContext('2d');
     const _L = _dashList();
-    const data = suppliers.map(s => ({ name: s.name, count: _L.filter(l => l.supplierId === s.id).length }));
+    const all = suppliers.map(s => ({ name: s.name, count: _L.filter(l => l.supplierId === s.id).length })).filter(d => d.count > 0).sort((a, b) => b.count - a.count);
+    // الرسم: الموردون الذين لديهم أكثر من أمر واحد فقط
+    const data = all.filter(d => d.count > 1);
+    // الجدول: أول 6 موردين + صف "أخرى" يجمع الباقين + الإجمالي
+    const en0 = currentLanguage === 'en', top6 = all.slice(0, 6), rest = all.slice(6);
+    const tItems = top6.map(d => ({ label: d.name, count: d.count }));
+    if (rest.length) tItems.push({ label: (en0 ? 'Other' : 'أخرى') + ' (' + rest.length + ')', count: rest.reduce((a, d) => a + d.count, 0), other: true });
+    fillCountTable('dashSuppliersTable', tItems);
         chartInstances.suppliers = mkChart('suppliers', ctx, {
         type: 'bar',
         data: {
@@ -6730,34 +6793,27 @@ function drawSuppliersChart() {
     });
 }
 
-// رسم بياني عمودي للإنفاق حسب نوع الخدمة
-function drawServiceTypeChart() {
-    const ctx = document.getElementById('serviceTypeChart').getContext('2d');
-    const svc = {};
-    _dashList().forEach(l => {
-        const sup = suppliers.find(s => s.id === l.supplierId);
-        const types = sup ? splitSvc(sup.serviceType) : [];
-        if (!types.length) types.push('غير محدد');
-        const share = l.total / types.length;   // توزيع المبلغ بالتساوي على أنواع خدمة المورد
-        types.forEach(t => { svc[t] = (svc[t] || 0) + share; });
-    });
-        chartInstances.serviceType = mkChart('serviceType', ctx, {
-        type: 'bar',
-        data: {
-            labels: Object.keys(svc),
-            datasets: [{ label: 'الإنفاق (ر.ع)', data: Object.values(svc).map(v => +v.toFixed(3)), backgroundColor: '#7cb342', borderRadius: 6, maxBarThickness: 50 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
-    });
-}
-
 function drawMonthlyChart() {
     const ctx = document.getElementById('monthlyChart').getContext('2d');
     const monthNames = ['يناير','فبراير','مارس','إبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
     const _yf = msGet('msDashYear');
     const year = _yf.length === 1 ? +_yf[0] : new Date().getFullYear();
     const monthly = new Array(12).fill(0);
-    _dashList().forEach(l => { const d = new Date(l.date); if (d.getFullYear() === year) monthly[d.getMonth()] += l.total; });
+    const mCount = new Array(12).fill(0);
+    _dashList().forEach(l => { const d = new Date(l.date); if (d.getFullYear() === year) { monthly[d.getMonth()] += l.total; mCount[d.getMonth()]++; } });
+    (function () {
+        const tb = document.querySelector('#dashMonthlyTable tbody'); if (!tb) return;
+        tb.innerHTML = '';
+        const en = currentLanguage === 'en';
+        const mn = en ? ['January','February','March','April','May','June','July','August','September','October','November','December'] : monthNames;
+        monthly.forEach((v, i) => {
+            if (!mCount[i]) return;
+            tb.insertRow().innerHTML = `<td>${mn[i]} ${year}</td><td data-sort="${mCount[i]}">${mCount[i]}</td><td style="font-weight:600;" data-sort="${v}">${fmt(v)}</td><td data-sort="${v / mCount[i]}">${fmt(v / mCount[i])}</td>`;
+        });
+        if (!tb.rows.length) { tb.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#999;">${en ? 'No data' : 'لا توجد بيانات'}</td></tr>`; setSumRow('dashMonthlyTable', null); return; }
+        const tc = mCount.reduce((a, b) => a + b, 0), ts = monthly.reduce((a, b) => a + b, 0);
+        setSumRow('dashMonthlyTable', [_sumLbl(), tc, fmt(ts), fmt(tc ? ts / tc : 0)]);
+    })();
         chartInstances.monthly = mkChart('monthly', ctx, {
         type: 'line',
         data: {
@@ -6774,6 +6830,7 @@ function drawStatusChart() {
     const signed = _L.filter(l => l.status === 'موقعة' || l.status === LPO_STAGE_PAYMENT || l.status === LPO_STAGE_CLOSED).length;
     const pending = _L.filter(l => l.status === 'معلقة').length;
     const drafts = draftSaves.length;
+    fillCountTable('dashStatusTable', [{ label: 'موقعة', count: signed }, { label: 'معلقة', count: pending }, { label: 'مسودات', count: drafts }], ['#7cb342', '#f39c12', '#0093c4']);
         chartInstances.status = mkChart('status', ctx, {
         type: 'doughnut',
         data: {
@@ -7398,7 +7455,8 @@ function applyGenericSort(tableId) {
     const idx = th.cellIndex;
     const tbody = table.tBodies[0];
     const colCount = headRow.cells.length;
-    const rows = Array.from(tbody.rows).filter(r => r.cells.length === colCount); // تجاهل صف "لا نتائج"
+    const pinned = Array.from(tbody.rows).filter(r => r.classList.contains('row-other')); // صف "أخرى" يبقى آخر الجدول
+    const rows = Array.from(tbody.rows).filter(r => r.cells.length === colCount && !r.classList.contains('row-other')); // تجاهل صف "لا نتائج"
     if (rows.length < 2) return;
     const cellVal = (r) => {
         const c = r.cells[idx]; if (!c) return '';
@@ -7415,6 +7473,7 @@ function applyGenericSort(tableId) {
         return st.asc ? c : -c;
     });
     rows.forEach(r => tbody.appendChild(r));
+    pinned.forEach(r => tbody.appendChild(r));
 }
 
 // تهيئة السحب على رؤوس أعمدة جدول (مرة واحدة لكل جدول)
@@ -10260,6 +10319,33 @@ const doughnutPercentPlugin = {
 };
 
 // تعبئة جدول ملخص إحصائي (البند + المبلغ + النسبة%) أسفل أي رسم بياني
+// صف الإجمالي في تذييل الجدول (لا يدخل في الفرز). cells = null لإزالته
+function setSumRow(tableId, cells) {
+    const table = document.getElementById(tableId);
+    if (!table) return;
+    if (table.tFoot) table.tFoot.remove();
+    if (!cells) return;
+    const tf = table.createTFoot();
+    tf.innerHTML = `<tr class="sum-row" style="background:#e8f5e9; font-weight:700; color:#1b5e20;">${cells.map(c => `<td>${c}</td>`).join('')}</tr>`;
+}
+const _sumLbl = () => currentLanguage === 'en' ? 'Total' : 'الإجمالي';
+// جدول ملخص بسيط (تسمية + عدد + نسبة) أسفل الرسوم التي تعتمد على أعداد
+function fillCountTable(tableId, items, palette) {
+    const tbody = document.querySelector('#' + tableId + ' tbody');
+    if (!tbody) return;
+    const en = currentLanguage === 'en';
+    tbody.innerHTML = '';
+    const grand = items.reduce((s, it) => s + (+it.count || 0), 0);
+    if (!items.length) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999;">${en ? 'No data' : 'لا توجد بيانات'}</td></tr>`; setSumRow(tableId, null); return; }
+    items.forEach((it, i) => {
+        const pct = grand ? ((it.count / grand) * 100).toFixed(1) : '0.0';
+        const sw = palette ? `<span style="display:inline-block; width:10px; height:10px; border-radius:2px; background:${palette[i % palette.length]}; margin-inline-end:6px;"></span>` : '';
+        const r = tbody.insertRow();
+        if (it.other) r.className = 'row-other';
+        r.innerHTML = `<td>${sw}${escapeHtml(String(it.label))}</td><td style="font-weight:600;" data-sort="${it.count}">${it.count}</td><td data-sort="${pct}">${pct}%</td>`;
+    });
+    setSumRow(tableId, [_sumLbl(), grand, grand ? '100.0%' : '0.0%']);
+}
 function fillSpendTable(tableId, items, palette) {
     const tbody = document.querySelector('#' + tableId + ' tbody');
     if (!tbody) return;
@@ -10268,6 +10354,7 @@ function fillSpendTable(tableId, items, palette) {
     const grand = items.reduce((s, it) => s + (+it.amount || 0), 0);
     if (!items.length) {
         tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#999;">${en ? 'No data' : 'لا توجد بيانات'}</td></tr>`;
+        setSumRow(tableId, null);
         return;
     }
     items.forEach((it, i) => {
@@ -10275,6 +10362,7 @@ function fillSpendTable(tableId, items, palette) {
         const swatch = palette ? `<span style="display:inline-block; width:10px; height:10px; border-radius:2px; background:${palette[i % palette.length]}; margin-inline-end:6px;"></span>` : '';
         tbody.insertRow().innerHTML = `<td>${swatch}${escapeHtml(String(it.label))}</td><td style="font-weight:600;" data-sort="${it.amount}">${fmt(it.amount)}</td><td data-sort="${pct}">${pct}%</td>`;
     });
+    setSumRow(tableId, [_sumLbl(), fmt(grand), grand ? '100.0%' : '0.0%']);
 }
 
 function generateReport() {
@@ -10384,7 +10472,8 @@ function renderTopSuppliers(list) {
 }
 
 // رسم الإنفاق حسب نوع الخدمة (يربط المورد بنوع خدمته)
-function renderServiceTypeChart(list) {
+function renderServiceTypeChart(list, px) {
+    px = px || 'report';
     const byService = {};
     list.forEach(l => {
         const sup = suppliers.find(s => s.id === l.supplierId);
@@ -10395,7 +10484,7 @@ function renderServiceTypeChart(list) {
     });
     const labels = Object.keys(byService).sort((a, b) => byService[b] - byService[a]);
     const palette = ['#0093c4','#7cb342','#f39c12','#e74c3c','#9b59b6','#1abc9c','#34495e','#e67e22','#16a085','#2980b9'];
-        chartInstances.reportService = mkChart('reportService', document.getElementById('reportServiceChart').getContext('2d'), {
+        chartInstances[px + 'Service'] = mkChart(px + 'Service', document.getElementById(px + 'ServiceChart').getContext('2d'), {
         type: 'doughnut',
         data: { labels: labels, datasets: [{ data: labels.map(s => +byService[s].toFixed(3)), backgroundColor: labels.map((_, i) => palette[i % palette.length]) }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: chartMoneyTooltip } },
@@ -10403,17 +10492,19 @@ function renderServiceTypeChart(list) {
     });
 
     // جدول البيانات الملخص أسفل الرسم الدائري مباشرةً
-    const svcTbody = document.querySelector('#reportServiceTable tbody');
+    const svcTbody = document.querySelector('#' + px + 'ServiceTable tbody');
     if (svcTbody) {
         svcTbody.innerHTML = '';
         const grand = labels.reduce((s, k) => s + byService[k], 0);
         if (!labels.length) {
+            setSumRow(px + 'ServiceTable', null);
             svcTbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">' + (currentLanguage === 'en' ? 'No data' : 'لا توجد بيانات') + '</td></tr>';
         } else {
             labels.forEach((k, i) => {
                 const pct = grand ? ((byService[k] / grand) * 100).toFixed(1) : '0.0';
                 svcTbody.insertRow().innerHTML = `<td><span style="display:inline-block; width:10px; height:10px; border-radius:2px; background:${palette[i % palette.length]}; margin-inline-end:6px;"></span>${escapeHtml(k)}</td><td style="font-weight:600;" data-sort="${byService[k]}">${fmt(byService[k])}</td><td data-sort="${pct}">${pct}%</td>`;
             });
+            setSumRow(px + 'ServiceTable', [_sumLbl(), fmt(grand), grand ? '100.0%' : '0.0%']);
         }
     }
 }
@@ -10517,10 +10608,12 @@ function renderDepartmentStats(list) {
         tbody.innerHTML = '';
         if (depts.length === 0) {
             tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">لا توجد بيانات</td></tr>';
+            setSumRow('deptStatsTable', null);
         } else {
             depts.forEach(d => {
                 tbody.insertRow().innerHTML = `<td>${d}</td><td style="text-align:center;" data-sort="${byDept[d].count}">${byDept[d].count}</td><td style="font-weight:700; color:#0093c4;" data-sort="${byDept[d].total}">${fmt(byDept[d].total)}</td>`;
             });
+            setSumRow('deptStatsTable', [_sumLbl(), depts.reduce((a, d) => a + byDept[d].count, 0), fmt(depts.reduce((a, d) => a + byDept[d].total, 0))]);
         }
     }
 }
