@@ -299,12 +299,25 @@
         .col-resize-handle { position: absolute; inset-inline-end: 0; top: 0; height: 100%; width: 8px; cursor: col-resize; z-index: 4; }
         .col-resize-handle:hover { background: rgba(0,147,196,0.3); }
         body.col-resizing, body.col-resizing * { cursor: col-resize !important; user-select: none !important; }
-        /* أثناء تصدير تقرير PDF: منع انقسام البطاقات والجداول بين الصفحات */
-        #reportPrintArea.pdf-exporting .card, #reportPrintArea.pdf-exporting .stat-card,
-        #reportPrintArea.pdf-exporting table, #reportPrintArea.pdf-exporting canvas { page-break-inside: avoid; break-inside: avoid; }
-        #reportPrintArea.pdf-exporting .card { box-shadow: none; }
-        #reportPrintArea.pdf-exporting .sort-arrow { display: none; }
-        #reportPrintArea.pdf-exporting .col-resize-handle { display: none; }
+        /* أثناء تصدير تقرير PDF: عرض ثابت مناسب لورقة A4، وكل قسم في بلوك كامل العرض (لا اقتصاص ولا انقسام بين الصفحات) */
+        #reportPrintArea.pdf-exporting { width: 194mm !important; max-width: none !important; margin: 0 !important; padding: 0 !important; background: #fff; box-sizing: border-box; overflow: visible; }
+        #reportPrintArea.pdf-exporting .card { box-shadow: none; border: 1px solid #dde7ee; margin: 0 0 16px !important; padding: 14px 16px; page-break-inside: avoid; break-inside: avoid; overflow: visible; }
+        #reportPrintArea.pdf-exporting .charts-row { display: block; margin: 0 !important; }
+        #reportPrintArea.pdf-exporting .charts-row > .card { margin: 0 0 16px !important; }
+        #reportPrintArea.pdf-exporting .report-stats-row { grid-template-columns: repeat(7, 1fr); margin-bottom: 16px; page-break-inside: avoid; break-inside: avoid; }
+        #reportPrintArea.pdf-exporting .report-stats-row .stat-card { box-shadow: none; border: 1px solid #e3ebf1; border-top-width: 3px; }
+        #reportPrintArea.pdf-exporting #deptStatsCards { grid-template-columns: repeat(4, 1fr); }
+        #reportPrintArea.pdf-exporting .stat-card, #reportPrintArea.pdf-exporting table, #reportPrintArea.pdf-exporting canvas, #reportPrintArea.pdf-exporting img { page-break-inside: avoid; break-inside: avoid; }
+        #reportPrintArea.pdf-exporting .chart-container { height: 215px !important; width: 100%; }
+        #reportPrintArea.pdf-exporting th, #reportPrintArea.pdf-exporting td { padding: 5px 8px !important; font-size: 11.5px; }
+        #reportPrintArea.pdf-exporting .stat-value { font-size: 20px; }
+        #reportPrintArea.pdf-exporting .stat-label { font-size: 11px; }
+        #reportPrintArea.pdf-exporting .card-title { font-size: 15px; display: block !important; }
+        #reportPrintArea.pdf-exporting .card-title i { margin-inline-end: 8px; }
+        #reportPrintArea.pdf-exporting .__pdfKeep { page-break-inside: avoid; break-inside: avoid; }
+        #reportPrintArea.pdf-exporting .table-responsive { overflow: visible !important; border-radius: 6px; }
+        #reportPrintArea.pdf-exporting table { width: 100%; font-size: 12px; }
+        #reportPrintArea.pdf-exporting .sort-arrow, #reportPrintArea.pdf-exporting .col-resize-handle { display: none; }
         /* صف المورد قابل للنقر لاستعراض البيانات */
         #suppliersTable tbody tr { cursor: pointer; }
         /* نافذة استعراض بيانات المورد */
@@ -502,6 +515,8 @@
         .stats-grid-slim .stat-icon { grid-row: 1 / span 2; font-size: 30px; margin: 0; align-self: center; line-height: 1; }
         .stats-grid-slim .stat-label { grid-column: 2; margin: 0 0 1px; }
         .stats-grid-slim .stat-value { grid-column: 2; line-height: 1.1; }
+        .lpo-stage-stats { margin-top: -0.2rem; }
+        .lpo-stage-stats .stg-amt, #lpoBgtAllocCard .stg-amt, #supStatCrCard .stg-amt, #supStatVatCard .stg-amt { display: inline-block; vertical-align: middle; font-size: 13.5px; font-weight: 700; color: #5b6b78; background: #f2f5f8; border: 1px solid #e3e9ef; border-radius: 10px; padding: 1px 9px; margin-inline-start: 10px; white-space: nowrap; unicode-bidi: isolate; }
         /* قسم فلاتر مضغوط: قوائم أنحف ومسافات أقل بين الصفوف */
         .filter-grid-4 { grid-template-columns: repeat(4, 1fr); }
         /* شبكة فلاتر مرنة: تملأ أكبر عدد ممكن من الأعمدة لتبقى الفلاتر في سطرين إلى ثلاثة */
@@ -563,6 +578,91 @@
         @media (max-width: 760px) { .profile-form-grid { grid-template-columns: 1fr; } .profile-hero-inner { justify-content: center; text-align: center; } }
 
         /* ===== سجل العمليات (Operations Log / Timeline) ===== */
+        /* ===== المخصصات المالية (Procurement Package) ===== */
+        .bgt-bar { display: block; height: 6px; border-radius: 4px; background: #eef2f6; overflow: hidden; }
+        .bgt-bar > span { display: block; height: 100%; border-radius: 4px; transition: width .4s; }
+        .bgt-mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+        .bgt-mini .bm-card { background: #fff; border: 1px solid #e8eef5; border-top: 3px solid #0093c4; border-radius: 10px; padding: 7px 10px; min-width: 0; }
+        .bgt-mini .bm-card:nth-child(2) { border-top-color: #2e7d32; }
+        .bgt-mini .bm-card:nth-child(3) { border-top-color: #8e8e8e; }
+        .bgt-mini .bm-lbl { font-size: 11px; color: #93a3b0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .bgt-mini .bm-val { font-size: 17px; font-weight: 800; color: #0093c4; line-height: 1.3; }
+        .bgt-mini .bm-card:nth-child(2) .bm-val { color: #2e7d32; }
+        .bgt-mini .bm-card:nth-child(3) .bm-val { color: #556; }
+        .bgt-mini .bm-sub { font-size: 10.5px; color: #aab6c0; }
+        #departmentsTable tbody tr.dept-row { cursor: pointer; }
+        #departmentsTable tbody tr.dept-row:hover td { background: #f3fafd; }
+        .bgt-amt { font-weight: 700; color: #0093c4; white-space: nowrap; }
+        .bgt-amt.none { color: #c3ccd4; font-weight: 600; }
+        .bgt-rem { font-weight: 700; white-space: nowrap; }
+        .bgt-chip { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 10px; padding: 1px 8px; }
+        /* نافذة بيانات القسم */
+        .dv-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+        .dv-item { background: #f8fafc; border: 1px solid #e8eef5; border-radius: 9px; padding: 8px 11px; }
+        .dv-item .dv-l { font-size: 11px; color: #93a3b0; font-weight: 600; margin-bottom: 2px; }
+        .dv-item .dv-v { font-size: 14px; font-weight: 700; color: #2a3b47; word-break: break-word; }
+        .bgt-box { background: linear-gradient(135deg,#f3fbf5 0%,#eef8f1 100%); border: 1px solid #cfe8d6; border-radius: 11px; padding: 12px 14px; margin-bottom: 14px; }
+        .bgt-box .bb-head { font-size: 12.5px; font-weight: 800; color: #1f7a37; margin-bottom: 9px; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+        .bgt-box .bb-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 9px; }
+        .bgt-box .bb-cell { text-align: center; }
+        .bgt-box .bb-l { font-size: 11px; color: #7e8e99; font-weight: 600; }
+        .bgt-box .bb-v { font-size: 17px; font-weight: 800; }
+        .bgt-box .bb-pct { font-size: 11.5px; color: #6b7c89; font-weight: 700; text-align: center; margin-top: 5px; }
+        .bgt-edit-box { background: #fffdf5; border: 1px solid #f0e2bd; border-radius: 11px; padding: 12px 14px; margin: 14px 0; }
+        .bgt-edit-box .be-head { font-size: 12.5px; font-weight: 800; color: #a8780a; margin-bottom: 9px; display: flex; align-items: center; gap: 7px; }
+        .bgt-edit-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .bgt-edit-row input { flex: 1; min-width: 140px; }
+        .bgt-hint { font-size: 11.5px; color: #8a97a3; margin-top: 7px; line-height: 1.6; }
+        /* المتبقي من مخصّص القسم بجانب حقل القسم في نافذة أمر الشراء */
+        .lpo-bgt { margin-top: 8px; border-radius: 9px; padding: 7px 11px; font-size: 12px; font-weight: 600; display: none; align-items: center; gap: 8px; flex-wrap: wrap; border: 1px solid #d8e6ee; background: #f4fafd; color: #2a3b47; }
+        .lpo-bgt .lb-strong { font-weight: 800; font-size: 13px; }
+        .lpo-bgt.ok { border-color: #cfe8d6; background: #f3fbf5; }
+        .lpo-bgt.warn { border-color: #f3dcc3; background: #fdf6ec; }
+        .lpo-bgt.over { border-color: #f0c9c4; background: #fdf1ef; }
+        .dept-pies { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 14px; }
+        .dept-pie { border: 1px solid #e8eef5; border-radius: 12px; padding: 10px 10px 12px; background: #fcfdfe; text-align: center; min-width: 0; }
+        .dept-pie .dp-name { font-size: 13.5px; font-weight: 800; color: #2a3b47; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+        .dept-pie .dp-canvas { position: relative; height: 150px; }
+        .dept-pie .dp-nums { display: flex; justify-content: center; gap: 10px; font-size: 11.5px; color: #6b7c89; margin-top: 6px; flex-wrap: wrap; }
+        .dept-pie .dp-nums b { font-weight: 800; unicode-bidi: isolate; direction: ltr; display: inline-block; }
+        .dept-pie .dp-pk { font-size: 11px; color: #93a3b0; margin-top: 2px; }
+        .stats-grid.has-bgt { grid-template-columns: repeat(5, 1fr); }
+        .stat-card.stat-click { cursor: pointer; transition: transform .15s, box-shadow .15s; }
+        .stat-card.stat-click:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,147,196,.18); }
+        /* نوافذ كشف المخصصات (معاينة فقط) */
+        #pkgSummaryModal.active, #pkgLedgerModal.active { z-index: 1150; }
+        .pkg-tbl-wrap { border: 1px solid #e8eef5; border-radius: 11px; overflow: auto; max-height: 52vh; }
+        .pkg-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .pkg-tbl th { position: sticky; top: 0; background: #eef6fa; color: #2a5a70; font-size: 12px; font-weight: 800; padding: 8px 10px; text-align: center; white-space: nowrap; z-index: 1; }
+        .pkg-tbl td { padding: 7px 10px; border-top: 1px solid #eef2f6; text-align: center; vertical-align: middle; }
+        .pkg-tbl td.l { text-align: start; font-weight: 700; color: #2a3b47; }
+        .pkg-tbl tbody tr:hover td { background: #f7fbfd; }
+        .dept-name-row { display: flex; gap: 6px; align-items: center; }
+        .dept-name-row input { flex: 1; min-width: 0; }
+        .dept-name-row input:disabled { background: #f3f6f9; color: #2a3b47; cursor: not-allowed; }
+        .dept-name-msg { margin-top: 7px; font-size: 12.5px; font-weight: 700; color: #1f7a37; background: #e9f6ee; border: 1px solid #cfe8d6; border-radius: 8px; padding: 6px 10px; }
+        .pkg-tbl tr.clk-row { cursor: pointer; }
+        .pkg-tbl tr.clk-row:hover td { background: #e8f4fa; }
+        .pkg-tbl td.clk { cursor: pointer; }
+        .pkg-tbl tr:hover td.clk { color: #0093c4; }
+        .pkg-tbl td.clk:hover { background: #e8f4fa !important; text-decoration: underline; }
+        .pkg-tbl tr.hl td { background: #fff7dc !important; }
+        .pkg-tbl tfoot td { background: #f0f7fb; font-weight: 800; border-top: 2px solid #cfe3ee; }
+        .pkg-tbl .num { font-variant-numeric: tabular-nums; direction: ltr; unicode-bidi: isolate; white-space: nowrap; }
+        .pkg-tbl .neg { color: #c0392b; font-weight: 800; }
+        .pkg-tbl .usage { display: flex; align-items: center; gap: 6px; justify-content: center; min-width: 110px; }
+        .pkg-tbl .usage .bgt-bar { flex: 1; }
+        .pkg-tbl .usage b { font-size: 11px; min-width: 40px; }
+        .pkg-section-head { font-size: 13.5px; font-weight: 800; color: #2a5a70; margin: 16px 0 8px; display: flex; align-items: center; gap: 8px; }
+        .pkg-section-head .ops-count { margin-inline-start: auto; background: #e6f1f7; color: #2a5a70; border-radius: 20px; padding: 1px 11px; font-size: 12px; }
+        .pkg-filter { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+        .pkg-filter select { flex: 1; min-width: 180px; padding: 8px 10px; border: 1.5px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 13px; }
+        /* زر "المتبقي من Package" في شريط إجراءات المعاينة */
+        .pab-pkg { background: linear-gradient(135deg, #1b9e5a 0%, #12805f 100%) !important; color: #fff; border-radius: 20px !important; padding: 5px 6px 5px 13px !important; display: inline-flex; align-items: center; gap: 7px; font-weight: 700; margin-inline-start: auto; box-shadow: 0 2px 6px rgba(18,128,95,.28); }
+        .pab-pkg .pab-chip { background: rgba(255,255,255,.95); color: #12805f; border-radius: 14px; padding: 1px 9px; font-size: 12px; font-weight: 800; unicode-bidi: isolate; }
+        .pab-pkg .pab-chip.neg { color: #c0392b; }
+        .pab-pkg:hover { filter: brightness(1.08); }
+        .totals-remain-cell { border-inline-start: 1px dashed rgba(255,255,255,.55); }
         .ops-log-box { margin-top: 1.2rem; border: 1px solid #e8eef5; border-radius: 12px; background: #fcfdfe; overflow: hidden; }
         .ops-log-head { background: linear-gradient(135deg, #0093c4 0%, #00698f 100%); color: #fff; padding: 0.7rem 1rem; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
         .ops-log-head .ops-count { margin-inline-start: auto; background: rgba(255,255,255,0.25); border-radius: 20px; padding: 1px 11px; font-size: 12px; font-weight: 700; }
@@ -714,6 +814,9 @@
         #quickSvcModal.active, #evalModal.active { z-index: 1200; }
         /* نوافذ نافذة أمر الشراء الفرعية: أنواع خدمات المورد / بيانات الطباعة — ونافذة نوع خدمة جديد فوقها */
         #supSvcModal.active, #printSupModal.active { z-index: 1250; }
+        #deptViewModal.active { z-index: 1170; }
+        #previewModal.active { z-index: 1160; }
+        #deptEditModal.active { z-index: 1260; }
         #quickSvcModal.active { z-index: 1300; }
         .lbl-link { font-size: 11px; font-weight: 600; color: #1f7a37; margin-inline-start: 8px; text-decoration: none; white-space: nowrap; }
         .lbl-link:hover { text-decoration: underline; }
@@ -746,6 +849,11 @@
         .sup-view-rating .svr-num { font-size: 13px; color: #555; font-weight: 600; }
         .modal-content { background: white; width: 90%; max-width: 900px; max-height: none; overflow: visible; border-radius: 12px; }
         .modal-header { background: linear-gradient(135deg, #0093c4 0%, #00a8bf 100%); color: white; padding: 0.7rem 1.5rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 2; }
+        /* نافذة معاينة أمر الشراء: العنوان وأزرار الإجراءات يبقيان ثابتين أثناء التمرير */
+        .preview-sticky-top { position: sticky; top: 0; z-index: 6; box-shadow: 0 3px 10px rgba(0,0,0,0.07); }
+        .preview-sticky-top .modal-header { position: static; box-shadow: none; }
+        #previewActionBar { padding: 9px 20px; background: #f8fafc; border-bottom: 1px solid #e3eaf1; gap: 10px; align-items: center; flex-wrap: wrap; }
+        #previewActionBar .pab-lbl { font-size: 12px; color: #7a8b99; font-weight: 600; white-space: nowrap; }
         .modal-header h2 { font-size: 17px; margin: 0; }
         .modal-body { padding: 2rem; }
         .modal-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; line-height: 1; }
@@ -773,6 +881,10 @@
 
         /* التبويبات الداخلية */
         .tabs-bar { display: flex; gap: 8px; margin-bottom: 1.5rem; border-bottom: 2px solid #e8eef5; flex-wrap: wrap; }
+        /* صفحة أوامر الشراء: إزالة الفراغ بين الشريط العلوي وتبويبَي Purchase Orders / Drafts */
+        #page-lpo-management { margin-top: -26px; }
+        #page-lpo-management > .tabs-bar { margin-bottom: 0.9rem; }
+        #page-lpo-management > .tabs-bar .tab-btn { padding-top: 8px; padding-bottom: 8px; }
         .tab-btn { padding: 10px 20px; background: none; border: none; border-bottom: 3px solid transparent; cursor: pointer; font-size: 14px; font-weight: 600; color: #888; font-family: inherit; display: flex; align-items: center; gap: 8px; margin-bottom: -2px; }
         .tab-btn:hover { color: #0093c4; }
         .tab-btn.active { color: #0093c4; border-bottom-color: #0093c4; }
@@ -984,6 +1096,25 @@
         <div class="chart-container"><canvas id="dashDeptChart"></canvas></div>
     </div>
 
+    <!-- رسم دائري لكل قسم: المستهلك والمتبقي من المخصص (كلها في صندوق واحد) -->
+    <div class="card" id="dashBudgetPiesCard" style="display:none;">
+        <div class="card-header"><div class="card-title"><i class="fas fa-chart-pie"></i> <span id="dashPiesTitle">استهلاك مخصص كل قسم (Procurement Package)</span></div></div>
+        <div id="dashBudgetPies" class="dept-pies"></div>
+        <div class="bgt-hint" id="dashPiesHint" style="margin-top:8px;"></div>
+    </div>
+
+    <!-- المخصصات المالية للأقسام (Procurement Package) -->
+    <div class="card" id="dashBudgetCard" style="display:none;">
+        <div class="card-header"><div class="card-title"><i class="fas fa-wallet"></i> المخصصات المالية للأقسام (Procurement Package)</div></div>
+        <div class="bgt-mini" id="dashBgtCards" style="grid-template-columns:repeat(4,1fr);">
+            <div class="bm-card"><div class="bm-lbl"><i class="fas fa-wallet"></i> إجمالي المخصص</div><div class="bm-val" id="dashBgtAlloc">0</div><div class="bm-sub" id="dashBgtAllocSub"></div></div>
+            <div class="bm-card"><div class="bm-lbl"><i class="fas fa-piggy-bank"></i> المتبقي</div><div class="bm-val" id="dashBgtRemain">0</div><div class="bm-sub" id="dashBgtRemainSub"></div></div>
+            <div class="bm-card"><div class="bm-lbl"><i class="fas fa-chart-pie"></i> نسبة الاستهلاك</div><div class="bm-val" id="dashBgtPct">0%</div><div class="bm-sub" id="dashBgtPctSub"></div></div>
+            <div class="bm-card"><div class="bm-lbl"><i class="fas fa-triangle-exclamation"></i> أقسام تجاوزت المخصص</div><div class="bm-val" id="dashBgtOver">0</div><div class="bm-sub" id="dashBgtOverSub"></div></div>
+        </div>
+        <div class="chart-container"><canvas id="dashBudgetChart"></canvas></div>
+    </div>
+
     <!-- خريطة حرارية: استخدام النظام عبر الفترات الزمنية (اليوم × الساعة) -->
     <div class="card">
         <div class="card-header"><div class="card-title"><i class="fas fa-fire"></i> خريطة استخدام النظام (اليوم × الساعة)</div></div>
@@ -1045,12 +1176,13 @@
                     <label><i class="fas fa-sitemap"></i> القسم المعني / غرض الطلب *</label>
                     <div class="combo" id="deptCombo">
                         <input type="text" id="lpoDepartment" class="combo-input" autocomplete="off" required placeholder="اكتب أو اختر القسم / الغرض..."
-                               oninput="renderDeptComboList(this.value)" onfocus="renderDeptComboList('')"
+                               oninput="renderDeptComboList(this.value); updateLpoDeptBudget();" onfocus="renderDeptComboList('')"
                                onblur="setTimeout(closeDeptCombo,180)" onkeydown="deptComboKey(event)">
                         <span class="combo-caret" onmousedown="event.preventDefault(); toggleDeptCombo(event)"><i class="fas fa-chevron-down"></i></span>
                         <div id="deptComboList" class="combo-list" style="display:none;"></div>
                     </div>
                     <button type="button" class="btn btn-small hidden-for-guest" data-perm="control:create" onclick="openQuickDeptModal()" title="القسم غير موجود في القائمة؟ أضِفه الآن وسيظهر مباشرةً للاختيار" style="margin-top:8px; width:100%; background:#eaf7ee; color:#1f7a37; border:1px solid #bfe3c9; font-size:12px; font-weight:600;"><i class="fas fa-plus-circle"></i> إضافة قسم جديد</button>
+                    <div id="lpoDeptBudget" class="lpo-bgt"></div>
                 </div>
                 <div class="form-group-item">
                     <label><i class="fas fa-hashtag"></i> L.P.O Ref</label>
@@ -1136,10 +1268,12 @@
         </div>
 
         <div class="card" style="background: linear-gradient(135deg, #0093c4 0%, #00a8bf 100%); color: white;">
-            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:2rem; text-align:center;">
+            <div id="lpoTotalsGrid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:2rem; text-align:center;">
                 <div><div style="font-size:12px; opacity:0.9;">الإجمالي الجزئي</div><div style="font-size:24px; font-weight:700; margin-top:8px;" id="totalSubtotal">0.000</div></div>
                 <div><div style="font-size:12px; opacity:0.9;">الضريبة</div><div style="font-size:24px; font-weight:700; margin-top:8px;" id="totalTax">0.000</div></div>
                 <div><div style="font-size:12px; opacity:0.9;">الإجمالي النهائي</div><div style="font-size:24px; font-weight:700; margin-top:8px;" id="totalFinal">0.000</div></div>
+                <!-- المتبقي من Package القسم بعد هذا الأمر — يتحدّث تلقائياً مع البنود -->
+                <div id="totalRemainCell" class="totals-remain-cell" style="display:none;"><div style="font-size:12px; opacity:0.9;" id="totalRemainLbl">المتبقي من Package</div><div style="font-size:24px; font-weight:700; margin-top:8px; direction:ltr; unicode-bidi:isolate;" id="totalRemain">0.000</div><div style="font-size:11px; opacity:0.85; margin-top:2px;" id="totalRemainSub"></div></div>
             </div>
         </div>
 
@@ -1205,7 +1339,7 @@
     <!-- تبويب: أوامر الشراء -->
     <div class="tab-content active" id="tab-list">
     <!-- Stats -->
-    <div class="stats-grid stats-grid-slim">
+    <div class="stats-grid stats-grid-slim" id="lpoStatsRow1">
         <div class="stat-card">
             <div class="stat-icon">📋</div>
             <div class="stat-label">عدد الأوامر</div>
@@ -1226,8 +1360,42 @@
             <div class="stat-label">عدد الموردين</div>
             <div class="stat-value" id="lpoStatSuppliers">0</div>
         </div>
+        <!-- إجمالي المخصص المالي (قابلة للنقر: كشف الأقسام والمخصصات) -->
+        <div class="stat-card stat-click" id="lpoBgtAllocCard" style="border-top-color:#0093c4; display:none;" onclick="openPkgSummary()" title="انقر لعرض مخصصات الأقسام">
+            <div class="stat-icon">👛</div>
+            <div class="stat-label">إجمالي المخصص المالي (ر.ع)</div>
+            <div class="stat-value" style="color:#0093c4;"><span id="lpoBgtAlloc">0</span><span class="stg-amt" id="lpoBgtAllocSub"></span></div>
+        </div>
     </div>
-
+    <!-- صف ثانٍ: إحصائيات الأوامر حسب مرحلة سير العمل (حسب الفلاتر المطبّقة) -->
+    <div class="stats-grid stats-grid-slim lpo-stage-stats" id="lpoStatsRow2">
+        <div class="stat-card" style="border-top-color:#f39c12;">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-label">جديدة بانتظار الموافقة</div>
+            <div class="stat-value" style="color:#f39c12;"><span id="lpoStgPending">0</span><span class="stg-amt" id="lpoStgPendingAmt"></span></div>
+        </div>
+        <div class="stat-card" style="border-top-color:#2e7d32;">
+            <div class="stat-icon">✅</div>
+            <div class="stat-label">تمت الموافقة عليها</div>
+            <div class="stat-value" style="color:#2e7d32;"><span id="lpoStgApproved">0</span><span class="stg-amt" id="lpoStgApprovedAmt"></span></div>
+        </div>
+        <div class="stat-card" style="border-top-color:#8e44ad;">
+            <div class="stat-icon">💳</div>
+            <div class="stat-label">المدفوعة</div>
+            <div class="stat-value" style="color:#8e44ad;"><span id="lpoStgPayment">0</span><span class="stg-amt" id="lpoStgPaymentAmt"></span></div>
+        </div>
+        <div class="stat-card" style="border-top-color:#607d8b;">
+            <div class="stat-icon">🔒</div>
+            <div class="stat-label">المغلقة</div>
+            <div class="stat-value" style="color:#607d8b;"><span id="lpoStgClosed">0</span><span class="stg-amt" id="lpoStgClosedAmt"></span></div>
+        </div>
+        <!-- المتبقي من المخصص (قابلة للنقر: آخر العمليات المالية) -->
+        <div class="stat-card stat-click" id="lpoBgtRemainCard" style="border-top-color:#2e7d32; display:none;" onclick="openPkgLedger()" title="انقر لعرض آخر العمليات المالية">
+            <div class="stat-icon">🏦</div>
+            <div class="stat-label">المتبقي من المخصص (ر.ع)</div>
+            <div class="stat-value" style="color:#2e7d32;"><span id="lpoBgtRemain">0</span><span class="stg-amt" id="lpoBgtRemainSub"></span></div>
+        </div>
+    </div>
     <div class="card">
         <div class="card-header"><div class="card-title"><i class="fas fa-list-ul"></i> أوامر الشراء</div></div>
         <div class="filter-section filter-section-compact">
@@ -1359,7 +1527,7 @@
         </div>
 
         <!-- بطاقات إحصائية صغيرة تتحدّث مع الفلتر -->
-        <div class="stats-grid stats-grid-slim" style="grid-template-columns:repeat(2,1fr);">
+        <div class="stats-grid stats-grid-slim" style="grid-template-columns:repeat(4,1fr);">
             <div class="stat-card">
                 <div class="stat-icon">🏢</div>
                 <div class="stat-label">عدد الموردين</div>
@@ -1369,6 +1537,17 @@
                 <div class="stat-icon">🧰</div>
                 <div class="stat-label">أنواع الخدمات</div>
                 <div class="stat-value" id="supStatSvc">0</div>
+            </div>
+            <!-- بطاقات التنبيهات: نفس أرقام بطاقات زر التنبيهات (انقر لتصفية الجدول على هؤلاء الموردين) -->
+            <div class="stat-card stat-click" id="supStatCrCard" style="border-top-color:#0a6c91;" onclick="filterSuppliersByAlertKind('cr')">
+                <div class="stat-icon">📄</div>
+                <div class="stat-label" id="supStatCrLbl">سجلات تجارية تنتهي</div>
+                <div class="stat-value" style="color:#0a6c91;"><span id="supStatCr">0</span><span class="stg-amt" id="supStatCrSub"></span></div>
+            </div>
+            <div class="stat-card stat-click" id="supStatVatCard" style="border-top-color:#6c3fb5;" onclick="filterSuppliersByAlertKind('vat')">
+                <div class="stat-icon">🧾</div>
+                <div class="stat-label" id="supStatVatLbl">شهادات ضريبية تنتهي</div>
+                <div class="stat-value" style="color:#6c3fb5;"><span id="supStatVat">0</span><span class="stg-amt" id="supStatVatSub"></span></div>
             </div>
         </div>
 
@@ -1586,6 +1765,27 @@
         </div>
     </div>
 
+    <!-- المخصصات المالية للأقسام (Procurement Package) -->
+    <div class="card" id="repBudgetCard" style="margin-top:1.5rem;">
+        <div class="card-header"><div class="card-title"><i class="fas fa-wallet"></i> المخصصات المالية للأقسام (Procurement Package)</div></div>
+        <p style="font-size:12px; color:#8a97a3; line-height:1.7; margin-bottom:10px;">المخصص والمنصرف والمتبقي محسوبة من كل أوامر القسم (عدا المرفوضة) ولا تتأثر بالتصفية، أما العمودان الأخيران فيعكسان أوامر التقرير بعد التصفية.</p>
+        <div class="chart-container" style="margin-bottom:1rem;"><canvas id="reportBudgetChart"></canvas></div>
+        <div class="table-responsive">
+            <table id="budgetStatsTable">
+                <thead><tr>
+                    <th class="sortable" data-colid="0" onclick="sortGenericTable('budgetStatsTable', this)">القسم / الغرض <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="1" onclick="sortGenericTable('budgetStatsTable', this)">المخصص (ر.ع) <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="2" onclick="sortGenericTable('budgetStatsTable', this)">المنصرف (ر.ع) <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="3" onclick="sortGenericTable('budgetStatsTable', this)">المتبقي (ر.ع) <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="4" onclick="sortGenericTable('budgetStatsTable', this)">الاستهلاك % <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="5" onclick="sortGenericTable('budgetStatsTable', this)">أوامر التقرير <span class="sort-arrow">⇅</span></th>
+                    <th class="sortable" data-colid="6" onclick="sortGenericTable('budgetStatsTable', this)">مبلغ أوامر التقرير (ر.ع) <span class="sort-arrow">⇅</span></th>
+                </tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- أكبر 10 أوامر شراء -->
     <div class="card" style="margin-top:1.5rem;">
         <div class="card-header"><div class="card-title"><i class="fas fa-trophy"></i> أكبر 10 أوامر شراء (Top 10)</div></div>
@@ -1643,7 +1843,28 @@
 <!-- ============ CONTROL PANEL (الإدارة والتحكم) ============ -->
 <div class="page" id="page-control-panel">
     <div class="charts-row">
-        <!-- جزء 1: أنواع الخدمات -->
+        <!-- جزء 1: الأقسام / الغرض (يمين) -->
+        <div class="card" style="margin:0;">
+            <div class="card-header"><div class="card-title"><i class="fas fa-sitemap"></i> الأقسام / الغرض <span class="ctrl-count" id="deptCount">0</span></div></div>
+            <!-- ملخص المخصصات المالية (Procurement Package) -->
+            <div class="bgt-mini" id="deptBudgetCards" style="display:none;">
+                <div class="bm-card"><div class="bm-lbl"><i class="fas fa-wallet"></i> إجمالي المخصص</div><div class="bm-val" id="bgtTotalAlloc">0</div><div class="bm-sub" id="bgtAllocSub">0 قسم</div></div>
+                <div class="bm-card"><div class="bm-lbl"><i class="fas fa-piggy-bank"></i> المتبقي</div><div class="bm-val" id="bgtTotalRemain">0</div><div class="bm-sub" id="bgtRemainSub">المنصرف 0</div></div>
+                <div class="bm-card"><div class="bm-lbl"><i class="fas fa-sitemap"></i> عدد الأقسام</div><div class="bm-val" id="bgtDeptCount">0</div><div class="bm-sub" id="bgtDeptSub">بمخصص 0</div></div>
+            </div>
+            <div style="display:flex; gap:8px; margin-bottom:10px;">
+                <input type="text" id="newDepartment" placeholder="أدخل قسماً أو غرضاً جديداً..." style="flex:1; padding:10px 12px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-family:inherit;" onkeydown="if(event.key==='Enter'){event.preventDefault();addDepartment();}">
+                <button type="button" class="btn btn-success" data-perm="control:create" onclick="addDepartment()"><i class="fas fa-plus"></i> إضافة</button>
+            </div>
+            <div class="ctrl-search"><input type="text" id="deptSearch" placeholder="بحث في الأقسام..." oninput="loadControlPanel()"><i class="fas fa-search"></i></div>
+            <div class="ctrl-list-scroll">
+                <table id="departmentsTable">
+                    <thead><tr><th style="width:40px;">#</th><th>القسم / الغرض</th><th class="bgt-col" style="width:104px;">Package</th><th class="bgt-col" style="width:104px;">المتبقي</th><th style="width:70px;"></th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <!-- جزء 2: أنواع الخدمات -->
         <div class="card" style="margin:0;">
             <div class="card-header"><div class="card-title"><i class="fas fa-cogs"></i> أنواع الخدمات <span class="ctrl-count" id="svcCount">0</span></div></div>
             <div style="display:flex; gap:8px; margin-bottom:10px;">
@@ -1659,21 +1880,6 @@
             </div>
         </div>
 
-        <!-- جزء 2: الأقسام / الغرض -->
-        <div class="card" style="margin:0;">
-            <div class="card-header"><div class="card-title"><i class="fas fa-sitemap"></i> الأقسام / الغرض <span class="ctrl-count" id="deptCount">0</span></div></div>
-            <div style="display:flex; gap:8px; margin-bottom:10px;">
-                <input type="text" id="newDepartment" placeholder="أدخل قسماً أو غرضاً جديداً..." style="flex:1; padding:10px 12px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-family:inherit;" onkeydown="if(event.key==='Enter'){event.preventDefault();addDepartment();}">
-                <button type="button" class="btn btn-success" data-perm="control:create" onclick="addDepartment()"><i class="fas fa-plus"></i> إضافة</button>
-            </div>
-            <div class="ctrl-search"><input type="text" id="deptSearch" placeholder="بحث في الأقسام..." oninput="loadControlPanel()"><i class="fas fa-search"></i></div>
-            <div class="ctrl-list-scroll">
-                <table id="departmentsTable">
-                    <thead><tr><th style="width:44px;">#</th><th>القسم / الغرض</th><th style="width:70px;"></th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </div>
     </div>
 
     <!-- جزء 3: نصوص بنود أوامر الشراء (Descriptions) -->
@@ -1713,14 +1919,18 @@
     <!-- إعدادات إشعارات انتهاء السجل التجاري -->
     <div class="card" style="margin-top:1.5rem;" data-perm="control:edit">
         <div class="card-header"><div class="card-title"><i class="fas fa-bell"></i> إعدادات الإشعارات</div></div>
-        <div class="form-group-item" style="max-width:420px;">
-            <label>التنبيه قبل انتهاء السجل التجاري أو الضريبة بـ (أيام)</label>
-            <div style="display:flex; gap:10px;">
-                <input type="number" id="crNotifyDaysCtrl" value="30" min="1" max="365" style="flex:1;">
-                <button type="button" class="btn btn-success" onclick="saveNotifDays()"><i class="fas fa-save"></i> حفظ</button>
+        <div style="display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end;">
+            <div class="form-group-item" style="flex:1; min-width:200px; max-width:260px; margin:0;">
+                <label><i class="fas fa-file-contract" style="color:#0a6c91;"></i> <span id="lblCrNotify">التنبيه قبل انتهاء السجل التجاري (أيام)</span></label>
+                <input type="number" id="crNotifyDaysCtrl" value="30" min="1" max="365">
             </div>
-            <small style="color:#999; margin-top:6px;">يظهر تنبيه (جرس في الأعلى) للموردين الذين سينتهي سجلهم التجاري أو تاريخ الضريبة لديهم خلال هذه المدة.</small>
+            <div class="form-group-item" style="flex:1; min-width:200px; max-width:260px; margin:0;">
+                <label><i class="fas fa-file-invoice-dollar" style="color:#6c3fb5;"></i> <span id="lblVatNotify">التنبيه قبل انتهاء الضريبة (أيام)</span></label>
+                <input type="number" id="vatNotifyDaysCtrl" value="30" min="1" max="365">
+            </div>
+            <button type="button" class="btn btn-success" onclick="saveNotifDays('ctrl')"><i class="fas fa-save"></i> <span id="lblNotifSave">حفظ</span></button>
         </div>
+        <small style="color:#999; margin-top:8px; display:block;" id="lblNotifHint">لكل مستند مدة تنبيه مستقلة: يظهر تنبيه (جرس في الأعلى) للموردين الذين سينتهي سجلهم التجاري أو شهادة الضريبة لديهم خلال المدة الخاصة بكل منهما.</small>
     </div>
 
     <!-- سجل نشاط المستخدمين والنظام (منقول من صفحة مدير النظام) -->
@@ -2228,6 +2438,8 @@
 <!-- ============ PREVIEW MODAL ============ -->
 <div id="previewModal" class="modal">
     <div class="modal-content">
+      <!-- الشريط العلوي الثابت: العنوان + أزرار إجراءات الأمر (يبقى ظاهراً أثناء التمرير) -->
+      <div class="preview-sticky-top">
         <div class="modal-header">
             <h2><i class="fas fa-file-pdf"></i> معاينة أمر الشراء</h2>
             <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
@@ -2239,11 +2451,12 @@
                 <button class="modal-close" onclick="closePreview()">×</button>
             </div>
         </div>
-        <!-- أزرار الإجراءات تحت زر التحميل (تظهر فقط للأوامر المحفوظة وبحسب الصلاحيات) -->
-        <div id="previewActionBar" style="display:none; padding:10px 20px; background:#f8fafc; border-bottom:1px solid #e8eef5; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-            <span style="font-size:12px; color:#7a8b99; font-weight:600;"><i class="fas fa-tools"></i> إجراءات الأمر:</span>
-            <div id="previewActionBtns" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+        <!-- أزرار الإجراءات أسفل العنوان مباشرةً داخل الشريط الثابت -->
+        <div id="previewActionBar" style="display:none;">
+            <span class="pab-lbl"><i class="fas fa-tools"></i> إجراءات الأمر:</span>
+            <div id="previewActionBtns" style="display:flex; gap:8px; flex-wrap:wrap; flex:1; align-items:center;"></div>
         </div>
+      </div>
         <div class="modal-body">
             <div id="previewContent"></div>
             <!-- سجل العمليات (كشف كل الإجراءات على أمر الشراء) — يظهر للجميع ولا يدخل في ملف الـ PDF -->
@@ -2474,6 +2687,86 @@
     </div>
 </div>
 
+<!-- ============ DEPARTMENT VIEW (معاينة بيانات القسم / الغرض) ============ -->
+<div id="deptViewModal" class="modal" onclick="if(event.target===this) closeDeptViewModal()">
+    <div class="modal-content" style="max-width:780px;">
+        <div class="modal-header">
+            <h2><i class="fas fa-sitemap"></i> <span>بيانات القسم / الغرض</span></h2>
+            <button class="modal-close" onclick="closeDeptViewModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div id="deptViewBody"></div>
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:1.5rem;">
+                <button type="button" onclick="closeDeptViewModal()" class="btn">إلغاء</button>
+                <button type="button" id="deptViewEditBtn" class="btn" style="background:#f0ad4e; color:#fff;"><i class="fas fa-edit"></i> <span>تعديل</span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ PACKAGE SUMMARY (كشف مخصصات الأقسام — معاينة فقط) ============ -->
+<div id="pkgSummaryModal" class="modal" onclick="if(event.target===this) closePkgSummary()">
+    <div class="modal-content" style="max-width:820px;">
+        <div class="modal-header">
+            <h2><i class="fas fa-wallet"></i> <span id="pkgSummaryTitle">مخصصات الأقسام (Procurement Package)</span></h2>
+            <button class="modal-close" onclick="closePkgSummary()">×</button>
+        </div>
+        <div class="modal-body">
+            <div id="pkgSummaryBody"></div>
+            <div style="display:flex; justify-content:flex-end; margin-top:1.2rem;"><button type="button" onclick="closePkgSummary()" class="btn">إغلاق</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ PACKAGE LEDGER (آخر العمليات المالية — معاينة فقط) ============ -->
+<div id="pkgLedgerModal" class="modal" onclick="if(event.target===this) closePkgLedger()">
+    <div class="modal-content" style="max-width:900px;">
+        <div class="modal-header">
+            <h2><i class="fas fa-receipt"></i> <span id="pkgLedgerTitle">آخر العمليات المالية</span></h2>
+            <button class="modal-close" onclick="closePkgLedger()">×</button>
+        </div>
+        <div class="modal-body">
+            <div id="pkgLedgerBody"></div>
+            <div style="display:flex; justify-content:flex-end; margin-top:1.2rem;"><button type="button" onclick="closePkgLedger()" class="btn">إغلاق</button></div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ DEPARTMENT EDIT (تعديل بيانات القسم + المخصص المالي) ============ -->
+<div id="deptEditModal" class="modal" onclick="if(event.target===this) closeDeptEditModal()">
+    <div class="modal-content" style="max-width:520px;">
+        <div class="modal-header">
+            <h2><i class="fas fa-edit"></i> <span>تعديل بيانات القسم / الغرض</span></h2>
+            <button class="modal-close" onclick="closeDeptEditModal()">×</button>
+        </div>
+        <div class="modal-body" style="padding:1.4rem;">
+            <div class="form-group-item">
+                <label><i class="fas fa-sitemap"></i> اسم القسم / الغرض</label>
+                <div class="dept-name-row">
+                    <input type="text" id="deptEditName" disabled onkeydown="if(event.key==='Enter'){event.preventDefault();saveDeptNameOnly();} else if(event.key==='Escape'){event.stopPropagation();cancelDeptNameEdit();}">
+                    <button type="button" class="btn btn-small" id="deptNameEditBtn" style="color:#f0ad4e;" onclick="startDeptNameEdit()"><i class="fas fa-pen"></i></button>
+                    <button type="button" class="btn btn-small btn-success" id="deptNameSaveBtn" style="display:none;" onclick="saveDeptNameOnly()"><i class="fas fa-check"></i> <span>حفظ</span></button>
+                    <button type="button" class="btn btn-small" id="deptNameCancelBtn" style="display:none; color:#c0392b;" onclick="cancelDeptNameEdit()"><i class="fas fa-times"></i> <span>إلغاء</span></button>
+                </div>
+                <div class="dept-name-msg" id="deptEditMsg" style="display:none;"></div>
+            </div>
+            <div class="bgt-edit-box" id="deptEditBudgetBox">
+                <div class="be-head"><i class="fas fa-wallet"></i> <span>المخصص المالي (Procurement Package)</span></div>
+                <div class="bgt-edit-row">
+                    <input type="number" id="deptEditBudget" step="0.001" min="0" lang="en" dir="ltr" placeholder="مبلغ المخصص (ر.ع)">
+                    <button type="button" class="btn btn-small btn-success" onclick="saveDeptBudgetOnly()"><i class="fas fa-save"></i> <span>حفظ المخصص</span></button>
+                    <button type="button" class="btn btn-small" style="color:#c0392b;" onclick="clearDeptBudget()" title="إلغاء المخصص"><i class="fas fa-eraser"></i></button>
+                </div>
+                <div class="bgt-hint" id="deptEditBudgetHint"></div>
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button type="button" onclick="closeDeptEditModal()" class="btn">إلغاء</button>
+                <button type="button" class="btn btn-success" onclick="saveDeptEdit()"><i class="fas fa-save"></i> <span>حفظ</span></button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- ============ SUPPLIER SERVICE TYPES (من نافذة أمر الشراء) ============ -->
 <div id="supSvcModal" class="modal" onclick="if(event.target===this) closeSupplierSvcModal()">
     <div class="modal-content" style="max-width:480px;">
@@ -2688,6 +2981,7 @@ const PERM_MODULES = [
     { key: 'evaluation',    ar: 'تقييم الموردين',    en: 'Supplier Evaluation', acts: ['view','create','edit'] },
     { key: 'reports',       ar: 'التقارير',          en: 'Reports', acts: ['view'] },
     { key: 'control',       ar: 'الإدارة والتحكم',   en: 'Management & Control', acts: ['view','create','edit','delete'] },
+    { key: 'budget',        ar: 'المخصصات المالية (Procurement Package)', en: 'Budget Allocation (Procurement Package)', acts: ['view','edit'] },
     { key: 'notifications', ar: 'الإشعارات',         en: 'Notifications', acts: ['view'] },
     { key: 'users',         ar: 'إدارة المستخدمين',  en: 'User Management' },
     { key: 'trash',         ar: 'سلة المهملات',      en: 'Recycle Bin', acts: ['view','restore','delete'] },
@@ -2757,6 +3051,8 @@ Object.keys(DEFAULT_PERMISSIONS).forEach(r => {
     DEFAULT_PERMISSIONS[r].profile = { edit_display_name: (r === 'sysadmin') };
     // رؤية لوحة التحكم: متاحة افتراضياً لكل الأدوار (وقابلة للمنع من صفحة الصلاحيات)
     DEFAULT_PERMISSIONS[r].dashboard = { view: true };
+    // المخصصات المالية (Procurement Package): الرؤية للجميع، والتعديل لمدير النظام ومدير الشراء والمحاسب (قابلة للمنح لأي دور)
+    DEFAULT_PERMISSIONS[r].budget = { view: true, edit: (r === 'sysadmin' || r === 'manager' || r === 'finance') };
     // صلاحيات المسودات: تُشتق افتراضياً من صلاحيات أوامر الشراء لنفس الدور (دون تغيير السلوك الحالي)،
     // وتبقى قابلة للضبط المستقل من صفحة الأدوار والصلاحيات (منها حذف المسودات).
     const o = DEFAULT_PERMISSIONS[r].orders || {};
@@ -2858,7 +3154,9 @@ async function loadAllFromCloud() {
         deletedSuppliers= allSuppliers.filter(s =>  s.deletedAt);
         registeredUsers = (usersRes.data || []).map(rowToUser);
         serviceTypes = (svcRes.data || []).map(r => ({ id: r.id, name: r.name }));
-        departments = (deptRes.data || []).map(r => ({ id: r.id, name: r.name }));
+        departments = (deptRes.data || []).map(r => ({ id: r.id, name: r.name,
+            budget: (r.budget === null || r.budget === undefined || r.budget === '') ? null : (parseFloat(r.budget) || 0),
+            budgetAt: r.budget_updated_at || null, budgetBy: r.budget_updated_by || '', createdAt: r.created_at || null }));
         evaluations = (evalRes.data || []).map(rowToEval);
         if (setRes.data && setRes.data.value) defaultTaxRate = parseFloat(setRes.data.value) || 5;
         // تحميل نصوص بنود الوصف (Description) — يفشل بصمت إن لم يُنشأ الجدول بعد
@@ -2870,7 +3168,11 @@ async function loadAllFromCloud() {
         try {
             const { data: nd } = await sb.from('settings').select('value').eq('key', 'cr_notify_days').maybeSingle();
             if (nd && nd.value) crNotifyDays = parseInt(nd.value, 10) || 30;
+            vatNotifyDays = crNotifyDays; // افتراضياً نفس المدة القديمة حتى تُحدَّد مدة مستقلة للضريبة
+            const { data: nv } = await sb.from('settings').select('value').eq('key', 'vat_notify_days').maybeSingle();
+            if (nv && nv.value) vatNotifyDays = parseInt(nv.value, 10) || crNotifyDays;
             const ctrl = document.getElementById('crNotifyDaysCtrl'); if (ctrl) ctrl.value = crNotifyDays;
+            const ctrlV = document.getElementById('vatNotifyDaysCtrl'); if (ctrlV) ctrlV.value = vatNotifyDays;
         } catch (e) {}
         // تحميل سجل نشاط النظام (آخر 3000 عملية) — بعد إرسال أي عمليات معلّقة لم تُحفظ سابقاً
         try {
@@ -3151,6 +3453,12 @@ const I18N = {
     'تاريخ التسجيل': 'Record Date',
     'مرفوض': 'Rejected',
     'بانتظار الاعتماد': 'Pending Approval',
+    'معتمدة': 'Approved',
+    'مرفوضة': 'Rejected',
+    'جديدة بانتظار الموافقة': 'New – Pending Approval',
+    'تمت الموافقة عليها': 'Approved Orders',
+    'المدفوعة': 'Paid Orders',
+    'المغلقة': 'Closed Orders',
     'معتمد': 'Approved',
     'رفض أمر الشراء': 'Reject Purchase Order',
     'سبب الرفض': 'Rejection Reason',
@@ -3358,6 +3666,36 @@ const I18N = {
     // التقييم
     'تقييم المورد': 'Supplier Evaluation',
     'قيّم المورد': 'Rate Supplier',
+    'بيانات القسم / الغرض': 'Department / Purpose Details',
+    'تعديل بيانات القسم / الغرض': 'Edit Department / Purpose',
+    'اسم القسم / الغرض': 'Department / Purpose Name',
+    'المخصص المالي (Procurement Package)': 'Procurement Package (Budget Allocation)',
+    'مبلغ المخصص (ر.ع)': 'Package amount (OMR)',
+    'حفظ المخصص': 'Save package',
+    'إلغاء المخصص': 'Clear the package',
+    'إجمالي المخصص': 'Total Package',
+    'المتبقي': 'Remaining',
+    'عدد الأقسام': 'Departments',
+    'المنصرف': 'Spent',
+    'إجمالي المخصص المالي (ر.ع)': 'Total Package (OMR)',
+    'المخصصات المالية للأقسام (Procurement Package)': 'Departments Budget Allocation (Procurement Package)',
+    'المخصص والمنصرف والمتبقي محسوبة من كل أوامر القسم (عدا المرفوضة) ولا تتأثر بالتصفية، أما العمودان الأخيران فيعكسان أوامر التقرير بعد التصفية.': 'Package, spent and remaining are calculated from every order of the department (except rejected ones) and ignore the filters; the last two columns reflect the filtered report orders.',
+    'المخصص (ر.ع)': 'Package (OMR)',
+    'المنصرف (ر.ع)': 'Spent (OMR)',
+    'المتبقي (ر.ع)': 'Remaining (OMR)',
+    'الاستهلاك %': 'Used %',
+    'أوامر التقرير': 'Report Orders',
+    'مبلغ أوامر التقرير (ر.ع)': 'Report Orders Amount (OMR)',
+    'نسبة الاستهلاك': 'Usage %',
+    'أقسام تجاوزت المخصص': 'Over-budget depts',
+    'Package': 'Package',
+    'المتبقي من المخصص (ر.ع)': 'Remaining Package (OMR)',
+    'انقر لعرض مخصصات الأقسام': 'Click to view departments packages',
+    'انقر لعرض آخر العمليات المالية': 'Click to view the latest financial transactions',
+    'مخصصات الأقسام (Procurement Package)': 'Departments Package (Procurement Package)',
+    'آخر العمليات المالية': 'Latest Financial Transactions',
+    'المتبقي من Package': 'Remaining Package',
+    'إغلاق': 'Close',
     'بيانات الطباعة': 'Print Details',
     'تعديل بيانات المورد في ملف PDF فقط': 'Change supplier details in the PDF only',
     'إضافة نوع خدمة': 'Add service type',
@@ -3522,6 +3860,9 @@ const I18N = {
     'الإشعارات': 'Notifications',
     'إعدادات الإشعارات': 'Notification Settings',
     'التنبيه قبل انتهاء السجل التجاري أو الضريبة بـ (أيام)': 'Notify before C.R / VAT expiry (days)',
+    'التنبيه قبل انتهاء السجل التجاري (أيام)': 'Notify before C.R expiry (days)',
+    'التنبيه قبل انتهاء الضريبة (أيام)': 'Notify before VAT expiry (days)',
+    'لكل مستند مدة تنبيه مستقلة: يظهر تنبيه (جرس في الأعلى) للموردين الذين سينتهي سجلهم التجاري أو شهادة الضريبة لديهم خلال المدة الخاصة بكل منهما.': 'Each document has its own notice period: an alert (bell at the top) appears for suppliers whose C.R or VAT certificate expires within its own period.',
     'يظهر تنبيه (جرس في الأعلى) للموردين الذين سينتهي سجلهم التجاري أو تاريخ الضريبة لديهم خلال هذه المدة.': 'A bell alert appears for suppliers whose C.R or VAT expires within this period.',
 };
 
@@ -4342,6 +4683,14 @@ document.addEventListener('keydown', function(e) {
     // النوافذ الفرعية (التقييم / نوع خدمة جديد) تُغلق أولاً دون إغلاق نافذة المورد التي خلفها
     const evM = document.getElementById('evalModal'), qsM = document.getElementById('quickSvcModal');
     if (qsM && qsM.classList.contains('active')) { e.preventDefault(); closeQuickServiceTypeModal(); return; }
+    const deM = document.getElementById('deptEditModal'), dvM = document.getElementById('deptViewModal');
+    if (deM && deM.classList.contains('active')) { e.preventDefault(); closeDeptEditModal(); return; }
+    if (dvM && dvM.classList.contains('active')) { e.preventDefault(); closeDeptViewModal(); return; }
+    const pvM = document.getElementById('previewModal'), pkL0 = document.getElementById('pkgLedgerModal');
+    if (pvM && pvM.classList.contains('active') && pkL0 && pkL0.classList.contains('active')) { e.preventDefault(); closePreview(); return; }
+    const pkS = document.getElementById('pkgSummaryModal'), pkL = document.getElementById('pkgLedgerModal');
+    if (pkS && pkS.classList.contains('active')) { e.preventDefault(); closePkgSummary(); return; }
+    if (pkL && pkL.classList.contains('active')) { e.preventDefault(); closePkgLedger(); return; }
     const ssM = document.getElementById('supSvcModal'), psM = document.getElementById('printSupModal');
     if (ssM && ssM.classList.contains('active')) { e.preventDefault(); closeSupplierSvcModal(); return; }
     if (psM && psM.classList.contains('active')) { e.preventDefault(); closePrintSupplierModal(); return; }
@@ -4606,6 +4955,61 @@ function selectDept(name) {
     const inp = document.getElementById('lpoDepartment');
     if (inp) inp.value = name;
     closeDeptCombo();
+    updateLpoDeptBudget();
+}
+
+// ===== المتبقي من مخصّص القسم داخل نافذة أمر الشراء =====
+// يُستثنى الأمر/المسودة قيد التعديل من المنصرف حتى لا يُحتسب مرتين
+function _editingOrderAmountFor(deptName) {
+    const n = String(deptName || '').trim().toLowerCase();
+    let cur = null;
+    if (editingOrderId) cur = (lpoDrafts || []).find(l => String(l.id) === String(editingOrderId));
+    if (!cur) return 0;
+    if (String(cur.department || '').trim().toLowerCase() !== n) return 0;
+    if ((cur.approvalStatus || 'approved') === 'rejected') return 0;
+    return +cur.total || 0;
+}
+function updateLpoDeptBudget() {
+    const box = document.getElementById('lpoDeptBudget');
+    if (!box) return;
+    const en = currentLanguage === 'en', cur = en ? ' OMR' : ' ر.ع';
+    const name = ((document.getElementById('lpoDepartment') || {}).value || '').trim();
+    const d = deptByName(name);
+    const setTot = (on, val, sub, over) => {
+        const cell = document.getElementById('totalRemainCell'), grid = document.getElementById('lpoTotalsGrid');
+        if (!cell || !grid) return;
+        cell.style.display = on ? '' : 'none';
+        grid.style.gridTemplateColumns = on ? 'repeat(4,1fr)' : 'repeat(3,1fr)';
+        grid.style.gap = on ? '1.2rem' : '2rem';
+        if (!on) return;
+        document.getElementById('totalRemainLbl').textContent = en ? 'Remaining Package (after this order)' : 'المتبقي من Package (بعد هذا الأمر)';
+        const v = document.getElementById('totalRemain');
+        v.textContent = val; v.style.color = over ? '#ffd1cc' : '#fff';
+        document.getElementById('totalRemainSub').textContent = sub;
+    };
+    if (!canSeeBudget() || !d) { box.style.display = 'none'; box.innerHTML = ''; setTot(false); return; }
+    const st = deptBudgetStats(d);
+    box.style.display = 'flex';
+    if (!st.hasAlloc) {
+        setTot(false);
+        box.className = 'lpo-bgt';
+        box.innerHTML = `<i class="fas fa-wallet" style="color:#9fb0bc;"></i> <span>${en ? 'No procurement package set for this department' : 'لا يوجد مخصص مالي لهذا القسم'}</span>`;
+        return;
+    }
+    const spent = st.spent - _editingOrderAmountFor(name);
+    const remaining = st.alloc - spent;
+    const pct = st.alloc ? (spent / st.alloc) * 100 : 0;
+    const over = remaining < 0;
+    // أثر الأمر الجاري تحريره على المتبقي
+    const cur2 = parseFloat(String((document.getElementById('totalFinal') || {}).textContent || '0').replace(/,/g, '')) || 0;
+    const after = remaining - cur2, afterOver = after < 0;
+    setTot(true, fmt(after), (d.name || '') + ' · ' + (en ? 'Package ' : 'المخصص ') + fmtInt(st.alloc) + (afterOver ? (en ? ' · over budget' : ' · تجاوز') : ''), afterOver);
+    box.className = 'lpo-bgt ' + ((over || afterOver) ? 'over' : pct >= 90 ? 'warn' : 'ok');
+    box.innerHTML = `<i class="fas fa-wallet" style="color:${budgetColor(pct, over)};"></i>
+        <span>${en ? 'Remaining package' : 'المتبقي من المخصص'}: <span class="lb-strong" style="color:${budgetColor(pct, over)};">${fmt(remaining)}${cur}</span></span>
+        <span style="color:#8a97a3;">${en ? 'Package' : 'المخصص'} ${fmtInt(st.alloc)} · ${en ? 'Spent' : 'المنصرف'} ${fmtInt(spent)}</span>
+        ${cur2 > 0 ? `<span style="color:#6b7c89;">${en ? 'After this order' : 'بعد هذا الأمر'}: <b style="color:${afterOver ? '#c0392b' : '#2e7d32'};">${fmt(after)}${cur}</b></span>` : ''}
+        ${(over || afterOver) ? `<span class="bgt-chip" style="background:#fdecea; color:#c0392b;">${en ? 'Over budget' : 'تجاوز المخصص'}</span>` : ''}`;
 }
 function deptComboKey(e) {
     const list = document.getElementById('deptComboList');
@@ -4797,6 +5201,7 @@ function calculateTotals() {
     document.getElementById('totalSubtotal').textContent = fmtDec3(subtotal);
     document.getElementById('totalTax').textContent = fmtDec3(totalTax);
     document.getElementById('totalFinal').textContent = fmtDec3(final);
+    try { updateLpoDeptBudget(); } catch (e) {}
 
     // دعم المجموع السالب (في حال كان الخصم أكبر من قيمة البنود)
     const absFinal = Math.abs(final);
@@ -5026,6 +5431,8 @@ async function saveLPO(event) {
                  || draftSaves.some(d => (d.lpoRef || '').toLowerCase() === fullRef && String(d.id) !== String(editingDraftId));
         if (dup) { alert(msg('رقم L.P.O Ref مسجّل مسبقاً، الرجاء إدخال رقم مرجعي آخر غير مكرر')); return; }
     }
+    // تنبيه (لا يمنع الحفظ) عند تجاوز المخصص المالي للقسم
+    if (!confirmBudgetOverrun()) return;
     const row = {
         number: document.getElementById('lpoNumber').value,
         order_date: document.getElementById('lpoDate').value,
@@ -5222,6 +5629,7 @@ function _warnPrintSupCol() {
 }
 
 function resetForm() {
+    try { setTimeout(updateLpoDeptBudget, 0); } catch (e) {}
     try { setPrintSupplier(null); } catch (e) {}
     try { updateLpoSvcLink(); } catch (e) {}
     try { resetLpoAttachments('', ''); } catch (e) {}
@@ -5293,6 +5701,8 @@ function loadDashboard() {
     drawStatusChart();
     drawDashSupplierSpend();
     drawDashDeptChart();
+    drawDashBudgetChart();
+    try { drawDashBudgetPies(); } catch (e) { console.error(e); }
     drawUsageHeatmap();
     updateNotifBadge();
 }
@@ -5314,6 +5724,81 @@ function drawDashDeptChart() {
         type: 'bar',
         data: { labels: depts, datasets: [{ label: en ? 'Amount (OMR)' : 'المبلغ (ر.ع)', data: depts.map(d => +byDept[d].toFixed(3)), backgroundColor: depts.map((_, i) => palette[i % palette.length]), borderRadius: 6, maxBarThickness: 48 }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
+    });
+}
+
+// المخصصات المالية للأقسام في لوحة التحكم: بطاقات + رسم (المخصص مقابل المنصرف)
+function drawDashBudgetChart() {
+    const card = document.getElementById('dashBudgetCard');
+    if (!card) return;
+    const show = canSeeBudget() && (departments || []).some(d => d.budget !== null && d.budget !== undefined);
+    card.style.display = show ? '' : 'none';
+    if (!show) { destroyChart('dashBudget'); return; }
+    const en = currentLanguage === 'en', cur = en ? ' OMR' : ' ر.ع';
+    const t = budgetTotals();
+    const pct = t.alloc ? t.spent / t.alloc * 100 : 0;
+    const set = (id, v, c) => { const e = document.getElementById(id); if (e) { e.textContent = v; if (c) e.style.color = c; } };
+    set('dashBgtAlloc', fmtInt(t.alloc));
+    set('dashBgtAllocSub', (en ? 'for ' : 'على ') + t.nAlloc + (en ? ' dept.' : ' قسم'));
+    set('dashBgtRemain', fmtInt(t.remaining), t.remaining < 0 ? '#c0392b' : '#2e7d32');
+    set('dashBgtRemainSub', (en ? 'Spent ' : 'المنصرف ') + fmtInt(t.spent) + cur);
+    set('dashBgtPct', pct.toFixed(1) + '%', budgetColor(pct, t.remaining < 0));
+    set('dashBgtPctSub', en ? 'of the total package' : 'من إجمالي المخصص');
+    set('dashBgtOver', t.nOver, t.nOver ? '#c0392b' : '#556');
+    set('dashBgtOverSub', t.unalloc ? ((en ? 'Outside packages ' : 'خارج المخصصات ') + fmtInt(t.unalloc) + cur) : (en ? 'All within package' : 'الكل ضمن المخصص'));
+    const el = document.getElementById('dashBudgetChart'); if (!el) return;
+    const rows = (departments || []).filter(d => d.budget !== null && d.budget !== undefined)
+        .map(d => ({ name: d.name, st: deptBudgetStats(d) })).sort((a, b) => b.st.alloc - a.st.alloc).slice(0, 12);
+    destroyChart('dashBudget');
+    chartInstances.dashBudget = new Chart(el.getContext('2d'), {
+        type: 'bar',
+        data: { labels: rows.map(r => r.name), datasets: [
+            { label: en ? 'Package' : 'المخصص', data: rows.map(r => +r.st.alloc.toFixed(3)), backgroundColor: '#bcdff0', borderRadius: 6, maxBarThickness: 40 },
+            { label: en ? 'Spent' : 'المنصرف', data: rows.map(r => +r.st.spent.toFixed(3)), backgroundColor: rows.map(r => budgetColor(r.st.pct, r.st.remaining < 0)), borderRadius: 6, maxBarThickness: 40 }
+        ] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
+    });
+}
+
+// رسم دائري لكل قسم له مخصص: المستهلك مقابل المتبقي (كلها داخل صندوق واحد)
+let _dashPieKeys = [];
+function drawDashBudgetPies() {
+    _dashPieKeys.forEach(k => destroyChart(k)); _dashPieKeys = [];
+    const card = document.getElementById('dashBudgetPiesCard'), box = document.getElementById('dashBudgetPies');
+    if (!card || !box) return;
+    const rows = (departments || []).filter(d => d.budget !== null && d.budget !== undefined)
+        .map(d => ({ d, st: deptBudgetStats(d) })).sort((a, b) => b.st.alloc - a.st.alloc);
+    const show = canSeeBudget() && rows.length > 0;
+    card.style.display = show ? '' : 'none';
+    box.innerHTML = '';
+    if (!show) return;
+    const en = currentLanguage === 'en', cur = en ? ' OMR' : ' ر.ع';
+    document.getElementById('dashPiesTitle').textContent = en ? 'Package usage per department (Procurement Package)' : 'استهلاك مخصص كل قسم (Procurement Package)';
+    document.getElementById('dashPiesHint').textContent = en ? 'Each circle shows what the department has consumed against what is left of its package. A dark red slice means the department exceeded its package.' : 'كل دائرة تعرض ما استهلكه القسم مقابل المتبقي من مخصصه. الجزء الأحمر الداكن يعني أن القسم تجاوز مخصصه.';
+    rows.forEach(({ d, st }, i) => {
+        const over = st.remaining < 0, pct = st.alloc ? (st.spent / st.alloc) * 100 : (st.spent > 0 ? 100 : 0);
+        const used = Math.min(st.spent, st.alloc), left = Math.max(0, st.remaining), exc = over ? -st.remaining : 0;
+        const col = budgetColor(st.pct, over);
+        const tile = document.createElement('div'); tile.className = 'dept-pie';
+        tile.innerHTML = `<div class="dp-name" title="${escapeHtml(d.name || '')}"><i class="fas fa-sitemap" style="color:#8aa2b0;"></i> ${escapeHtml(d.name || '')}</div>
+            <div class="dp-canvas"><canvas id="dashPie_${i}"></canvas></div>
+            <div class="dp-nums"><span>${en ? 'Spent' : 'المستهلك'}: <b style="color:${col};">${fmt(st.spent)}</b></span><span>${en ? 'Left' : 'المتبقي'}: <b style="color:${over ? '#c0392b' : '#2e7d32'};">${fmt(st.remaining)}</b></span></div>
+            <div class="dp-pk">Package: ${fmt(st.alloc)}${cur}</div>`;
+        box.appendChild(tile);
+        const key = 'dashPie_' + i; _dashPieKeys.push(key);
+        const labels = [en ? 'Spent' : 'المستهلك', en ? 'Remaining' : 'المتبقي'], data = [used, left], colors = [col, '#dbe7ef'];
+        if (over) { labels.push(en ? 'Over package' : 'تجاوز المخصص'); data.push(exc); colors.push('#7b1e14'); }
+        if (!st.alloc && !st.spent) { data[1] = 1; }   // مخصص صفر بلا إنفاق: دائرة رمادية فارغة
+        chartInstances[key] = new Chart(tile.querySelector('canvas').getContext('2d'), {
+            type: 'doughnut',
+            data: { labels, datasets: [{ data: data.map(v => +(+v).toFixed(3)), backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
+            options: { responsive: true, maintainAspectRatio: false, cutout: '64%', plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + c.label + ': ' + fmt(c.parsed) + cur } } } },
+            plugins: [{ id: 'pieCenter', afterDraw(ch) {
+                const a = ch.chartArea; if (!a) return; const x = (a.left + a.right) / 2, y = (a.top + a.bottom) / 2, c = ch.ctx;
+                c.save(); c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = col; c.font = '800 19px Cairo, Tahoma, sans-serif';
+                c.fillText(Math.round(pct) + '%', x, y); c.restore();
+            } }]
+        });
     });
 }
 
@@ -5549,6 +6034,7 @@ async function editDraft(id) {
     editingDraftNumber = d.draftNumber || null;
     resetLpoAttachments(d.quotationUrl, d.otherFileUrl);
     setPrintSupplier(d.printSupplier, document.getElementById('supplierId').value);
+    try { updateLpoDeptBudget(); } catch (e) {}
     updateLpoModalButtons();
 }
 
@@ -5581,6 +6067,7 @@ async function editLPO(id) {
     editingOrderId = id; // عند الحفظ: تحديث هذا الأمر بدل إنشاء جديد
     resetLpoAttachments(l.quotationUrl, l.otherFileUrl);
     setPrintSupplier(l.printSupplier, document.getElementById('supplierId').value);
+    try { updateLpoDeptBudget(); } catch (e) {}
     updateLpoModalButtons();
 }
 
@@ -6572,6 +7059,30 @@ function renderLPOList() {
     document.getElementById('lpoStatTotal').textContent = fmtInt(total);
     document.getElementById('lpoStatAvg').textContent = filtered.length ? fmtInt(total / filtered.length) : '0';
     document.getElementById('lpoStatSuppliers').textContent = uniqueSup;
+    // الصف الثاني: الأوامر حسب مرحلة سير العمل
+    try {
+        const stg = { pending: [0, 0], approved: [0, 0], payment: [0, 0], closed: [0, 0] };
+        filtered.forEach(l => { const k = orderStage(l); if (stg[k]) { stg[k][0]++; stg[k][1] += (+l.total || 0); } });
+        const cur = currentLanguage === 'en' ? ' OMR' : ' ر.ع';
+        [['pending', 'Pending'], ['approved', 'Approved'], ['payment', 'Payment'], ['closed', 'Closed']].forEach(([k, id]) => {
+            const c = document.getElementById('lpoStg' + id), a = document.getElementById('lpoStg' + id + 'Amt');
+            if (c) c.textContent = stg[k][0];
+            if (a) a.textContent = fmtInt(stg[k][1]) + cur;
+        });
+        // بطاقتا المخصص المالي: الإجمالي بعد "عدد الموردين" والمتبقي بعد "المغلقة" (كل الأقسام — لا تتأثر بفلاتر الأوامر)
+        const show = canSeeBudget();
+        ['lpoBgtAllocCard', 'lpoBgtRemainCard'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = show ? '' : 'none'; });
+        ['lpoStatsRow1', 'lpoStatsRow2'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.toggle('has-bgt', show); });
+        if (show) {
+            const t = budgetTotals(), en = currentLanguage === 'en';
+            document.getElementById('lpoBgtAlloc').textContent = fmtInt(t.alloc);
+            document.getElementById('lpoBgtAllocSub').textContent = (en ? t.nAlloc + ' dept.' : t.nAlloc + ' قسم');
+            const rem = document.getElementById('lpoBgtRemain');
+            rem.textContent = fmtInt(t.remaining);
+            rem.style.color = t.remaining < 0 ? '#c0392b' : '#2e7d32';
+            document.getElementById('lpoBgtRemainSub').textContent = (en ? 'Spent ' : 'المنصرف ') + fmtInt(t.spent) + cur;
+        }
+    } catch (e) {}
 
     const tbody = document.querySelector('#lpoListTable tbody');
     tbody.innerHTML = '';
@@ -7449,12 +7960,12 @@ function expiryDaysText(dateStr, en) {
     if (d > 0) return en ? (n === 1 ? 'in 1 day' : `in ${n} days`) : (n === 1 ? 'متبقٍّ يوم واحد' : n === 2 ? 'متبقٍّ يومان' : `متبقٍّ ${n} ${n <= 10 ? 'أيام' : 'يوماً'}`);
     return en ? (n === 1 ? '1 day ago' : `${n} days ago`) : (n === 1 ? 'منتهٍ منذ يوم واحد' : n === 2 ? 'منتهٍ منذ يومين' : `منتهٍ منذ ${n} ${n <= 10 ? 'أيام' : 'يوماً'}`);
 }
-function expiryDaysColor(dateStr) {
+function expiryDaysColor(dateStr, kind) {
     if (!dateStr) return null;
     const d = crDaysLeft(dateStr);
     if (d === null || isNaN(d)) return null;
     if (d < 0) return 'FFC0392B';                 // منتهٍ: أحمر
-    if (d <= (crNotifyDays || 30)) return 'FFD35400'; // ضمن فترة التنبيه: برتقالي
+    if (d <= notifyDaysFor(kind)) return 'FFD35400'; // ضمن فترة التنبيه: برتقالي
     return null;
 }
 
@@ -7511,8 +8022,8 @@ function buildSuppliersExcelSpec(srcList, en, opts) {
             cr: s.crNo || '',
             crExpiry: s.crExpiry ? new Date(s.crExpiry).toLocaleDateString('en-GB') : '',
             vatExpiry: s.vatExpiry ? new Date(s.vatExpiry).toLocaleDateString('en-GB') : '',
-            crDays: expiryDaysText(s.crExpiry, en), _crColor: expiryDaysColor(s.crExpiry),
-            vatDays: expiryDaysText(s.vatExpiry, en), _vatColor: expiryDaysColor(s.vatExpiry),
+            crDays: expiryDaysText(s.crExpiry, en), _crColor: expiryDaysColor(s.crExpiry, 'cr'),
+            vatDays: expiryDaysText(s.vatExpiry, en), _vatColor: expiryDaysColor(s.vatExpiry, 'vat'),
             rating: r.count ? +r.avg.toFixed(1) : '—',
             ratingCount: r.count,
             orders: orderCount,
@@ -7552,6 +8063,8 @@ async function downloadSuppliersExcel(listOverride, titleOverride, filePrefix, o
 
 // ===================== انتهاء السجل التجاري والإشعارات =====================
 let crNotifyDays = 30; // عدد أيام التنبيه المسبق قبل انتهاء السجل التجاري
+let vatNotifyDays = 30; // مدة التنبيه المسبق لانتهاء الشهادة الضريبية (مستقلة عن السجل التجاري)
+function notifyDaysFor(kind) { return (kind === 'vat' ? vatNotifyDays : crNotifyDays) || 30; }
 
 // عدد الأيام المتبقية حتى تاريخ معيّن (سالب = منتهٍ)
 function crDaysLeft(dateStr) {
@@ -7564,7 +8077,7 @@ function crDaysLeft(dateStr) {
 }
 
 // خلية عرض تاريخ انتهاء السجل التجاري مع تلوين حسب القرب/الانتهاء
-function crExpiryCell(dateStr) {
+function crExpiryCell(dateStr, kind) {
     const en = currentLanguage === 'en';
     if (!dateStr) return '<span style="color:#ccc;">-</span>';
     const dl = crDaysLeft(dateStr);
@@ -7572,7 +8085,7 @@ function crExpiryCell(dateStr) {
     const dateFmt = isNaN(d.getTime()) ? escapeHtml(dateStr) : d.toLocaleDateString('en-GB');
     if (dl === null) return escapeHtml(dateStr);
     if (dl < 0) return `<span style="color:#c0392b; font-weight:700;" title="${en ? 'Expired' : 'منتهٍ'}"><i class="fas fa-exclamation-circle"></i> ${dateFmt}</span>`;
-    if (dl <= crNotifyDays) return `<span style="color:#e67e22; font-weight:700;" title="${en ? ('Expires in ' + dl + ' days') : ('ينتهي خلال ' + dl + ' يوماً')}"><i class="fas fa-exclamation-triangle"></i> ${dateFmt}</span>`;
+    if (dl <= notifyDaysFor(kind)) return `<span style="color:#e67e22; font-weight:700;" title="${en ? ('Expires in ' + dl + ' days') : ('ينتهي خلال ' + dl + ' يوماً')}"><i class="fas fa-exclamation-triangle"></i> ${dateFmt}</span>`;
     return `<span style="color:#2e7d32;">${dateFmt}</span>`;
 }
 
@@ -7582,9 +8095,9 @@ function getCrExpiryAlerts() {
     const alerts = [];
     (suppliers || []).forEach(s => {
         const dl = crDaysLeft(s.crExpiry);
-        if (dl !== null && dl <= crNotifyDays) alerts.push({ supplier: s, daysLeft: dl, kind: 'cr', date: s.crExpiry });
+        if (dl !== null && dl <= notifyDaysFor('cr')) alerts.push({ supplier: s, daysLeft: dl, kind: 'cr', date: s.crExpiry });
         const dv = crDaysLeft(s.vatExpiry);
-        if (dv !== null && dv <= crNotifyDays) alerts.push({ supplier: s, daysLeft: dv, kind: 'vat', date: s.vatExpiry });
+        if (dv !== null && dv <= notifyDaysFor('vat')) alerts.push({ supplier: s, daysLeft: dv, kind: 'vat', date: s.vatExpiry });
     });
     alerts.sort((a, b) => a.daysLeft - b.daysLeft);
     return alerts;
@@ -7669,12 +8182,13 @@ function renderNotifPanel() {
     }
     // مدة التنبيه: قابلة للتعديل لمن يملك صلاحية "تعديل" في الإدارة والتحكم فقط، وللعرض للبقية
     const canEditDays = can('control', 'edit');
-    const daysInput = `<div style="padding:10px 12px; border-bottom:1px solid #eef2f5; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+    const daysInput = `<div style="padding:10px 12px; border-bottom:1px solid #eef2f5; display:flex; align-items:center; gap:8px 14px; flex-wrap:wrap;">
         <span style="font-size:12px; color:#555;">${en ? 'Notify before (days):' : 'التنبيه قبل (أيام):'}</span>
-        ${canEditDays
-            ? `<input type="number" id="notifDaysInput" value="${crNotifyDays}" min="1" max="365" style="width:70px; padding:5px 8px; border:1.5px solid #ddd; border-radius:6px; font-size:12px;">
-               <button class="btn btn-small btn-success" onclick="saveNotifDays()"><i class="fas fa-save"></i> ${en ? 'Save' : 'حفظ'}</button>`
-            : `<strong id="notifDaysView" style="font-size:13px; color:#0a6c91;">${crNotifyDays}</strong>`}
+        ${[['cr', 'C.R', 'سجل تجاري', crNotifyDays, '#0a6c91'], ['vat', 'VAT', 'ضريبة', vatNotifyDays, '#6c3fb5']].map(([k, e2, a2, v, c]) => canEditDays
+            ? `<label style="display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; color:${c};">${en ? e2 : a2}
+                <input type="number" id="notifDaysInput_${k}" value="${v}" min="1" max="365" style="width:62px; padding:5px 8px; border:1.5px solid #ddd; border-radius:6px; font-size:12px;"></label>`
+            : `<span style="font-size:12px; color:${c}; font-weight:700;">${en ? e2 : a2}: <strong>${v}</strong></span>`).join('')}
+        ${canEditDays ? `<button class="btn btn-small btn-success" onclick="saveNotifDays('panel')"><i class="fas fa-save"></i> ${en ? 'Save' : 'حفظ'}</button>` : ''}
     </div>`;
     let listHtml = '';
     if (alerts.length === 0) {
@@ -7709,14 +8223,16 @@ function renderNotifPanel() {
 }
 
 // حفظ عدد أيام التنبيه في إعدادات النظام
-async function saveNotifDays() {
+async function saveNotifDays(src) {
     if (!can('control', 'edit')) { alert(msg('غير مصرّح')); return; }
-    const inp = document.getElementById('notifDaysInput') || document.getElementById('crNotifyDaysCtrl');
-    const v = parseInt(inp ? inp.value : crNotifyDays, 10);
-    if (!v || v < 1) { alert(msg('يرجى إدخال عدد أيام صحيح')); return; }
-    crNotifyDays = v;
-    try { await sb.from('settings').upsert({ key: 'cr_notify_days', value: String(v) }); } catch (e) {}
-    const ctrl = document.getElementById('crNotifyDaysCtrl'); if (ctrl) ctrl.value = v;
+    const pick = (k, ctrlId) => { const el = document.getElementById(src === 'panel' ? 'notifDaysInput_' + k : ctrlId); return el ? parseInt(el.value, 10) : (k === 'vat' ? vatNotifyDays : crNotifyDays); };
+    const vc = pick('cr', 'crNotifyDaysCtrl'), vv = pick('vat', 'vatNotifyDaysCtrl');
+    if (!vc || vc < 1 || !vv || vv < 1) { alert(msg('يرجى إدخال عدد أيام صحيح')); return; }
+    crNotifyDays = vc; vatNotifyDays = vv;
+    try { await sb.from('settings').upsert({ key: 'cr_notify_days', value: String(vc) }); } catch (e) {}
+    try { await sb.from('settings').upsert({ key: 'vat_notify_days', value: String(vv) }); } catch (e) {}
+    const c1 = document.getElementById('crNotifyDaysCtrl'); if (c1) c1.value = vc;
+    const c2 = document.getElementById('vatNotifyDaysCtrl'); if (c2) c2.value = vv;
     updateNotifBadge();
     if (document.getElementById('notifPanel') && document.getElementById('notifPanel').style.display === 'block') renderNotifPanel();
     try { filterSuppliers(); } catch (e) {}
@@ -7862,6 +8378,30 @@ function filterSuppliers() {
     renderSuppliersTable();
 }
 
+// بطاقتا تنبيه السجل التجاري / الضريبة أعلى صفحة الموردين (نفس أرقام لوحة التنبيهات — لا تتأثر بالفلاتر)
+function updateSupAlertCards() {
+    const en = currentLanguage === 'en';
+    const alerts = getCrExpiryAlerts();
+    [['cr', 'Cr', en ? 'C.R expiring' : 'سجلات تجارية تنتهي'], ['vat', 'Vat', en ? 'VAT expiring' : 'شهادات ضريبية تنتهي']].forEach(([k, id, lbl]) => {
+        const a = alerts.filter(x => x.kind === k), exp = a.filter(x => x.daysLeft < 0).length;
+        const set = (i, v) => { const e = document.getElementById(i); if (e) e.textContent = v; };
+        set('supStat' + id, a.length); set('supStat' + id + 'Lbl', lbl);
+        set('supStat' + id + 'Sub', exp ? (en ? 'Expired: ' : 'منتهية: ') + exp : '');
+        const c = document.getElementById('supStat' + id + 'Card');
+        if (c) c.title = en ? 'Click to filter the table on these suppliers' : 'انقر لتصفية الجدول على هؤلاء الموردين';
+    });
+}
+// النقر على بطاقة التنبيه: تصفية الجدول على الموردين المشمولين بهذا النوع
+function filterSuppliersByAlertKind(kind) {
+    const seen = new Set(), list = [];
+    getCrExpiryAlerts().filter(a => a.kind === kind).forEach(a => { const id = String(a.supplier.id); if (!seen.has(id)) { seen.add(id); list.push(a.supplier); } });
+    if (!list.length) { alert(currentLanguage === 'en' ? 'There are no suppliers in this alert.' : 'لا يوجد موردون في هذا التنبيه.'); return; }
+    try { clearSupplierFilters(); } catch (e) {}
+    const m = MS['msSupName'];
+    if (m) { m.selected.clear(); list.forEach(s => m.selected.add(s.id)); msRenderTags('msSupName'); }
+    filterSuppliers();
+}
+
 // رسم جدول الموردين لصفحة واحدة (شريحة) مع تحديث أدوات التنقّل
 function renderSuppliersTable() {
     const tbody = document.querySelector('#suppliersTable tbody');
@@ -7873,6 +8413,8 @@ function renderSuppliersTable() {
     const scEl = document.getElementById('supStatCount'); if (scEl) scEl.textContent = full.length;
     const svcCountEl = document.getElementById('supStatSvc');
     if (svcCountEl) { const set = new Set(); full.forEach(s => splitSvc(s.serviceType).forEach(t => { if (t) set.add(t); })); svcCountEl.textContent = set.size; }
+
+    try { updateSupAlertCards(); } catch (e) {}
 
     // حساب التقسيم إلى صفحات
     const total = full.length;
@@ -7903,7 +8445,7 @@ function renderSuppliersTable() {
             if (String(s.id) === String(_selRowId.suppliersTable)) row.classList.add('row-selected');
             row.innerHTML = `<td>${fmtRecordDate(s.createdAt)}</td>`
                 + `<td class="col-actions" style="text-align:center; white-space:nowrap;" onclick="event.stopPropagation();">${kebab}</td>`
-                + `<td>${escapeHtml(s.name||'')}</td><td>${supplierRatingLabel(s.id)}</td><td>${escapeHtml(s.serviceType||'')||'-'}</td><td>${escapeHtml(s.supplierType||'')||'-'}</td><td class="col-phone" dir="ltr">${escapeHtml(s.phone||'')||'-'}</td><td>${escapeHtml(s.vatNo||'')||'-'}</td><td>${escapeHtml(s.crNo||'')||'-'}</td><td>${crExpiryCell(s.crExpiry)}</td><td>${crExpiryCell(s.vatExpiry)}</td><td style="font-size:11.5px; color:#667; word-break:break-all;" dir="ltr">${escapeHtml(s.createdBy||'')||'-'}</td>`
+                + `<td>${escapeHtml(s.name||'')}</td><td>${supplierRatingLabel(s.id)}</td><td>${escapeHtml(s.serviceType||'')||'-'}</td><td>${escapeHtml(s.supplierType||'')||'-'}</td><td class="col-phone" dir="ltr">${escapeHtml(s.phone||'')||'-'}</td><td>${escapeHtml(s.vatNo||'')||'-'}</td><td>${escapeHtml(s.crNo||'')||'-'}</td><td>${crExpiryCell(s.crExpiry, 'cr')}</td><td>${crExpiryCell(s.vatExpiry, 'vat')}</td><td style="font-size:11.5px; color:#667; word-break:break-all;" dir="ltr">${escapeHtml(s.createdBy||'')||'-'}</td>`
                 + `<td>${supplierLastModCell(s)}</td>`
                 + `<td style="white-space:nowrap; text-align:center;">${(() => { const a = supplierOrdersTotal(s); return a.count ? (+a.total).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '<span style="color:#bbb;">—</span>'; })()}</td>`
                 + `<td style="font-size:16px;" onclick="event.stopPropagation();">${filesHtml}</td>`;
@@ -8153,11 +8695,11 @@ function viewSupplierDetails(id) {
     const esc = (t) => escapeHtml(t == null ? '' : String(t));
     const item = (k, v) => `<div class="sup-view-item"><div class="k">${k}</div><div class="v">${v || '<span style="color:#bbb;">—</span>'}</div></div>`;
     // تاريخ انتهاء (سجل/ضريبة): إن كان ضمن مدة التنبيه يُبرز بالأحمر مع جرس متحرك لتنبيه المستخدم بضرورة تحديثه
-    const alertItem = (k, dateStr) => {
+    const alertItem = (k, dateStr, kind) => {
         if (!dateStr) return item(k, '');
         const dl = crDaysLeft(dateStr);
         const dateFmt = new Date(dateStr).toLocaleDateString('en-GB');
-        if (dl === null || dl > crNotifyDays) return item(k, crExpiryCell(dateStr));
+        if (dl === null || dl > notifyDaysFor(kind)) return item(k, crExpiryCell(dateStr, kind));
         const note = dl < 0 ? (en ? `Expired ${Math.abs(dl)} day(s) ago — needs updating` : `منتهٍ منذ ${Math.abs(dl)} يوماً — يحتاج إلى تحديث`)
                             : (en ? `Expires in ${dl} day(s) — needs updating` : `ينتهي خلال ${dl} يوماً — يحتاج إلى تحديث`);
         return `<div class="sup-view-item sup-alert-item"><div class="k">${k}</div><div class="v"><i class="fas fa-bell bell-ring"></i> ${dateFmt}</div><div class="sup-alert-note">${note}</div></div>`;
@@ -8182,9 +8724,9 @@ function viewSupplierDetails(id) {
             ${item(en?'Email':'البريد الإلكتروني', esc(s.email))}
             ${item(en?'City':'المدينة', esc(s.city))}
             ${item('VAT No', esc(s.vatNo))}
-            ${alertItem(en?'VAT Expiry Date':'تاريخ انتهاء الضريبة', s.vatExpiry)}
+            ${alertItem(en?'VAT Expiry Date':'تاريخ انتهاء الضريبة', s.vatExpiry, 'vat')}
             ${item('C.R No', esc(s.crNo))}
-            ${alertItem(en?'C.R Expiry Date':'تاريخ انتهاء السجل التجاري', s.crExpiry)}
+            ${alertItem(en?'C.R Expiry Date':'تاريخ انتهاء السجل التجاري', s.crExpiry, 'cr')}
         </div>
         ${s.notes ? `<div style="font-size:12px; font-weight:700; color:#0093c4; margin:16px 0 6px;"><i class="fas fa-sticky-note"></i> ${en?'Other Notes':'ملاحظات أخرى'}</div><div style="background:#f8fafc; border:1px solid #e8eef5; border-radius:8px; padding:10px 12px; font-size:13px; color:#333; white-space:pre-wrap; line-height:1.6;">${esc(s.notes)}</div>` : ''}
         <div style="font-size:12px; font-weight:700; color:#0093c4; margin:16px 0 6px;"><i class="fas fa-paperclip"></i> ${en?'Attachments':'المرفقات'}</div>
@@ -8948,9 +9490,10 @@ function generateReport() {
     renderTop5(list);
     renderTopSuppliers(list);
     renderDepartmentStats(list);
+    renderBudgetStats(list);
 
     // تفعيل الفرز/السحب/التمديد لأعمدة جداول التقارير (مرة واحدة) ثم تطبيق الترتيب والفرز المحفوظ
-    ['reportServiceTable', 'reportMonthlyTable', 'reportDateTable', 'reportSupplierTable', 'top5Table', 'topSuppliersTable', 'deptStatsTable', 'vpiTable'].forEach(tid => {
+    ['reportServiceTable', 'reportMonthlyTable', 'reportDateTable', 'reportSupplierTable', 'budgetStatsTable', 'top5Table', 'topSuppliersTable', 'deptStatsTable', 'vpiTable'].forEach(tid => {
         initColumnDrag(tid, function () { applyColumnOrder(tid); applyGenericSort(tid); });
         applyColumnOrder(tid);
         applyGenericSort(tid);
@@ -9125,6 +9668,69 @@ function renderDepartmentStats(list) {
     }
 }
 
+// جدول ورسم المخصصات المالية للأقسام في صفحة التقارير
+function renderBudgetStats(list) {
+    const card = document.getElementById('repBudgetCard');
+    if (!card) return;
+    const en = currentLanguage === 'en';
+    const show = canSeeBudget();
+    card.style.display = show ? '' : 'none';
+    if (!show) { destroyChart('reportBudget'); return; }
+    // أوامر التقرير (بعد التصفية) لكل قسم
+    const fCount = {}, fAmt = {};
+    (list || []).forEach(l => {
+        const k = String(l.department || '').trim().toLowerCase();
+        fCount[k] = (fCount[k] || 0) + 1; fAmt[k] = (fAmt[k] || 0) + (+l.total || 0);
+    });
+    const rows = (departments || []).map(d => {
+        const st = deptBudgetStats(d), k = String(d.name || '').trim().toLowerCase();
+        return { name: d.name || '', st, fc: fCount[k] || 0, fa: fAmt[k] || 0 };
+    }).sort((a, b) => (b.st.hasAlloc - a.st.hasAlloc) || (b.st.alloc - a.st.alloc) || (b.st.spent - a.st.spent));
+    const tbody = document.querySelector('#budgetStatsTable tbody');
+    if (tbody) {
+        tbody.innerHTML = '';
+        if (!rows.length) {
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#999;">${en ? 'No data' : 'لا توجد بيانات'}</td></tr>`;
+        } else {
+            rows.forEach(r => {
+                const over = r.st.hasAlloc && r.st.remaining < 0, c = budgetColor(r.st.pct, over);
+                const dash = '<span style="color:#c3ccd4;">—</span>';
+                tbody.insertRow().innerHTML =
+                    `<td>${escapeHtml(r.name)}</td>` +
+                    `<td style="text-align:center; font-weight:600;" data-sort="${r.st.hasAlloc ? r.st.alloc : -1}">${r.st.hasAlloc ? fmt(r.st.alloc) : dash}</td>` +
+                    `<td style="text-align:center;" data-sort="${r.st.spent}">${fmt(r.st.spent)}</td>` +
+                    `<td style="text-align:center; font-weight:700; color:${c};" data-sort="${r.st.hasAlloc ? r.st.remaining : -1e15}">${r.st.hasAlloc ? fmt(r.st.remaining) : dash}</td>` +
+                    `<td style="text-align:center;" data-sort="${r.st.hasAlloc ? r.st.pct : -1}">${r.st.hasAlloc ? `<span style="color:${c}; font-weight:700;">${r.st.pct.toFixed(1)}%</span>` + budgetBarHtml(r.st) : dash}</td>` +
+                    `<td style="text-align:center;" data-sort="${r.fc}">${r.fc}</td>` +
+                    `<td style="text-align:center; font-weight:700; color:#0093c4;" data-sort="${r.fa}">${fmt(r.fa)}</td>`;
+            });
+        }
+        // صف الإجمالي
+        const table = document.getElementById('budgetStatsTable');
+        let tf = table.tFoot; if (tf) tf.remove();
+        if (rows.length) {
+            const t = budgetTotals(), fa = rows.reduce((a, r) => a + r.fa, 0), fc = rows.reduce((a, r) => a + r.fc, 0);
+            const spentAlloc = rows.reduce((a, r) => a + r.st.spent, 0);
+            tf = table.createTFoot();
+            tf.innerHTML = `<tr style="background:#e8f5e9; font-weight:700; color:#1b5e20;"><td>${en ? 'Total' : 'الإجمالي'}</td><td style="text-align:center;">${fmt(t.alloc)}</td><td style="text-align:center;">${fmt(spentAlloc)}</td><td style="text-align:center; color:${t.remaining < 0 ? '#c0392b' : '#1b5e20'};">${fmt(t.remaining)}</td><td style="text-align:center;">${t.alloc ? (spentAlloc / t.alloc * 100).toFixed(1) + '%' : '—'}</td><td style="text-align:center;">${fc}</td><td style="text-align:center;">${fmt(fa)}</td></tr>`;
+        }
+    }
+    // الرسم: المخصص مقابل المنصرف لأعلى 12 قسماً
+    const el = document.getElementById('reportBudgetChart');
+    if (el) {
+        const top = rows.filter(r => r.st.hasAlloc || r.st.spent).slice(0, 12);
+        destroyChart('reportBudget');
+        chartInstances.reportBudget = new Chart(el.getContext('2d'), {
+            type: 'bar',
+            data: { labels: top.map(r => r.name), datasets: [
+                { label: en ? 'Package' : 'المخصص', data: top.map(r => +r.st.alloc.toFixed(3)), backgroundColor: '#bcdff0', borderRadius: 6, maxBarThickness: 40 },
+                { label: en ? 'Spent' : 'المنصرف', data: top.map(r => +r.st.spent.toFixed(3)), backgroundColor: top.map(r => budgetColor(r.st.pct, r.st.remaining < 0)), borderRadius: 6, maxBarThickness: 40 }
+            ] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
+        });
+    }
+}
+
 // تصدير التقرير بالكامل (جداول ورسوم) إلى PDF
 async function exportReportPDF() {
     const el = document.getElementById('reportPrintArea');
@@ -9174,8 +9780,36 @@ async function exportReportPDF() {
     el.insertBefore(header, el.firstChild);
 
     // ===== استبدال الرسوم البيانية بصور ثابتة لمنع التشوّه عند التقاط html2canvas =====
-    const chartKeys = ['report', 'reportSupplier', 'reportService', 'reportMonthly', 'reportDept'];
+    const chartKeys = ['report', 'reportSupplier', 'reportService', 'reportMonthly', 'reportDept', 'reportBudget'];
     const chartSnaps = [];
+    // نصوص عربية تحوي كلمات إنجليزية: نعزل كل مقطع لاتيني في صندوق مستقل كي لا تتداخل الأحرف عند الالتقاط (html2canvas لا يرتّب النصوص ثنائية الاتجاه جيداً)
+    const bidiSwaps = [];
+    if (!en) {
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+        const nodes = []; let nd;
+        while ((nd = walker.nextNode())) { if (/[\u0600-\u06FF]/.test(nd.nodeValue) && /[A-Za-z]/.test(nd.nodeValue) && nd.parentNode && !/^(SCRIPT|STYLE|CANVAS)$/.test(nd.parentNode.nodeName)) nodes.push(nd); }
+        nodes.forEach(n => {
+            const holder = document.createElement('span'); holder.className = '__pdfBidi';
+            n.nodeValue.split(/(\(?[A-Za-z][A-Za-z0-9 .\-&\/]*[A-Za-z0-9]\)?)/).forEach(part => {
+                if (!part) return;
+                if (/^\(?[A-Za-z]/.test(part)) { const sp = document.createElement('span'); sp.style.cssText = 'display:inline-block; direction:ltr; unicode-bidi:isolate;'; sp.textContent = part; holder.appendChild(sp); }
+                else holder.appendChild(document.createTextNode(part));
+            });
+            n.parentNode.replaceChild(holder, n); bidiSwaps.push({ holder, n });
+        });
+    }
+    // ربط عنوان كل بطاقة بالرسم الذي تحته في وحدة واحدة كي لا يفصل بينهما فاصل صفحات
+    const keepWraps = [];
+    el.querySelectorAll('.card').forEach(card => {
+        const hd = card.querySelector(':scope > .card-header'), cc = card.querySelector(':scope > .chart-container');
+        if (!hd || !cc) return;
+        const w = document.createElement('div'); w.className = '__pdfKeep';
+        card.insertBefore(w, hd); w.appendChild(hd); w.appendChild(cc);
+        keepWraps.push(w);
+    });
+    // إعادة رسم الرسوم بمقاسات تخطيط الطباعة (العرض الثابت) قبل التقاطها كصور
+    chartKeys.forEach(k => { try { if (chartInstances[k]) chartInstances[k].resize(); } catch (e) {} });
+    await new Promise(r => setTimeout(r, 350));
     chartKeys.forEach(k => {
         const ch = chartInstances[k];
         if (!ch || !ch.canvas) return;
@@ -9193,16 +9827,20 @@ async function exportReportPDF() {
     });
 
     const opt = {
-        margin: [8, 8, 10, 8],
+        margin: [8, 8, 12, 8],
         filename: (en ? 'LPO-Report-' : 'تقرير-أوامر-الشراء-') + now.toISOString().split('T')[0] + '.pdf',
         image: { type: 'jpeg', quality: 0.96 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'], avoid: ['.card', 'table', '.stat-card', '.chart-container', 'img'] }
+        pagebreak: { mode: ['css', 'legacy'], avoid: ['.card', '.report-stats-row', 'table', '.__pdfKeep', '.chart-container', 'img'] }
     };
     // مهلة لضمان اكتمال تحميل صور الرسوم قبل الالتقاط
     setTimeout(() => {
-        html2pdf().set(opt).from(el).save().then(cleanup).catch(cleanup);
+        html2pdf().set(opt).from(el).toPdf().get('pdf').then(pdf => {
+            // ترقيم الصفحات أسفل كل صفحة
+            const n = pdf.internal.getNumberOfPages(), pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
+            for (let i = 1; i <= n; i++) { pdf.setPage(i); pdf.setFontSize(8); pdf.setTextColor(120); pdf.text('Takaful Oman Insurance  |  LPO Report  |  ' + i + ' / ' + n, pw / 2, ph - 5, { align: 'center' }); }
+        }).save().then(cleanup).catch(cleanup);
     }, 450);
 
     function cleanup() {
@@ -9210,6 +9848,9 @@ async function exportReportPDF() {
         if (h && h.parentNode) h.parentNode.removeChild(h);
         chartSnaps.forEach(s => { if (s.img.parentNode) s.img.parentNode.removeChild(s.img); s.canvas.style.display = ''; });
         el.classList.remove('pdf-exporting');
+        bidiSwaps.forEach(x => { if (x.holder.parentNode) x.holder.parentNode.replaceChild(x.n, x.holder); });
+        keepWraps.forEach(w => { const p = w.parentNode; if (!p) return; while (w.firstChild) p.insertBefore(w.firstChild, w); p.removeChild(w); });
+        chartKeys.forEach(k => { try { if (chartInstances[k]) chartInstances[k].resize(); } catch (e) {} });
     }
 }
 
@@ -9380,6 +10021,7 @@ async function downloadReportsExcel() {
             { tid: 'reportDateTable', chart: 'reportChart', ar: 'الإنفاق حسب التاريخ', en: 'Spending by Date', sum: true },
             { tid: 'reportSupplierTable', chart: 'reportSupplierChart', ar: 'الإنفاق حسب المورد', en: 'Spending by Supplier', sum: true },
             { tid: 'deptStatsTable', chart: 'reportDeptChart', ar: 'إحصائيات حسب القسم', en: 'Statistics by Department', sum: true },
+            { tid: 'budgetStatsTable', chart: 'reportBudgetChart', ar: 'المخصصات المالية', en: 'Budget Allocation', sum: true, note: T('المخصص والمنصرف والمتبقي من كل أوامر القسم؛ آخر عمودين حسب التصفية', 'Package, spent and remaining use all department orders; the last two columns follow the filters') },
             { tid: 'top5Table', ar: 'أكبر 10 أوامر شراء', en: 'Top 10 Purchase Orders' },
             { tid: 'topSuppliersTable', ar: 'أفضل 10 موردين', en: 'Top 10 Suppliers' },
             { tid: 'vpiTable', ar: 'مؤشر أداء الموردين', en: 'Vendor Performance Index', note: T('يعتمد التقييم على كل تقييمات المورد؛ عدد الأوامر والمبلغ حسب التصفية', 'Ratings use all supplier evaluations; orders and amount follow the filters') }
@@ -9654,8 +10296,26 @@ async function downloadAllData() {
             if (extraCol) cols.push(extraCol.col);
             return { cols, rows: items.map((x, i) => Object.assign({ sl: i + 1, name: x.name || '' }, extraCol ? { [extraCol.col.key]: extraCol.val(x) } : {})) };
         };
-        const dl = listSheet('القسم / الغرض', 'Department / Purpose', departments, { col: { header: 'عدد الأوامر', headerEn: 'Orders', key: 'n', width: 12, align: 'center' }, val: x => lpoDrafts.filter(l => l.department === x.name).length });
-        sheets.push({ sheetName: T('الأقسام', 'Departments'), reportTitle: T('قائمة الأقسام / أغراض الطلب', 'Departments / Purposes List'), columns: dl.cols, rows: dl.rows, count: dl.rows.length, desc: T('قائمة الأقسام مع عدد الأوامر لكل قسم', 'Departments with order count') });
+        const deptRows = (departments || []).map((x, i) => { const st = deptBudgetStats(x); return {
+            sl: i + 1, name: x.name || '', alloc: st.hasAlloc ? r3(st.alloc) : '', spent: r3(st.spent),
+            remaining: st.hasAlloc ? r3(st.remaining) : '', pct: st.hasAlloc ? +st.pct.toFixed(1) : '',
+            n: st.orders, bat: x.budgetAt ? fmtDT(x.budgetAt) : '', bby: x.budgetBy || '',
+            _over: st.hasAlloc && st.remaining < 0 }; });
+        const bt = budgetTotals();
+        sheets.push({ sheetName: T('الأقسام والمخصصات', 'Departments & Packages'), reportTitle: T('الأقسام / أغراض الطلب والمخصصات المالية (Procurement Package)', 'Departments / Purposes and Budget Allocation (Procurement Package)'),
+            columns: [
+                { header: '#', headerEn: '#', key: 'sl', width: 6, align: 'center' },
+                { header: 'القسم / الغرض', headerEn: 'Department / Purpose', key: 'name', width: 34, align: 'right' },
+                { header: 'المخصص (ر.ع)', headerEn: 'Package (OMR)', key: 'alloc', width: 16, align: 'center', numFmt: '#,##0.000' },
+                { header: 'المنصرف (ر.ع)', headerEn: 'Spent (OMR)', key: 'spent', width: 16, align: 'center', numFmt: '#,##0.000' },
+                { header: 'المتبقي (ر.ع)', headerEn: 'Remaining (OMR)', key: 'remaining', width: 16, align: 'center', numFmt: '#,##0.000', fontColor: r => r._over ? 'FFC0392B' : null },
+                { header: 'الاستهلاك %', headerEn: 'Used %', key: 'pct', width: 12, align: 'center', numFmt: '0.0"%"' },
+                { header: 'عدد الأوامر', headerEn: 'Orders', key: 'n', width: 11, align: 'center' },
+                { header: 'آخر تعديل للمخصص', headerEn: 'Package Updated', key: 'bat', width: 18, align: 'center' },
+                { header: 'بواسطة', headerEn: 'By', key: 'bby', width: 16, align: 'center' }],
+            rows: deptRows, count: deptRows.length,
+            totalsRow: deptRows.length ? { name: T('الإجمالي', 'TOTAL'), alloc: r3(bt.alloc), spent: r3(bt.spent), remaining: r3(bt.remaining), n: deptRows.reduce((a, r) => a + r.n, 0) } : null,
+            desc: T('الأقسام مع المخصص المالي والمنصرف والمتبقي ونسبة الاستهلاك وعدد الأوامر', 'Departments with their package, spent, remaining, usage % and order count') });
         const sl2 = listSheet('نوع الخدمة', 'Service Type', serviceTypes, { col: { header: 'عدد الموردين', headerEn: 'Suppliers', key: 'n', width: 12, align: 'center' }, val: x => suppliers.filter(sp => splitSvc(sp.serviceType).indexOf(x.name) !== -1).length });
         sheets.push({ sheetName: T('أنواع الخدمات', 'Service Types'), reportTitle: T('قائمة أنواع الخدمات', 'Service Types List'), columns: sl2.cols, rows: sl2.rows, count: sl2.rows.length, desc: T('أنواع الخدمات مع عدد الموردين لكل نوع', 'Service types with supplier count') });
         const ds = listSheet('نص البند (Description)', 'Item Description', descriptions || []);
@@ -9694,7 +10354,8 @@ async function downloadAllData() {
         if (admin) {
             const setRows = [
                 { k: T('نسبة الضريبة الافتراضية %', 'Default tax rate %'), v: String(defaultTaxRate), src: T('النظام', 'System') },
-                { k: T('أيام التنبيه قبل الانتهاء', 'Notify-before days'), v: String(crNotifyDays), src: T('النظام', 'System') },
+                { k: T('أيام التنبيه قبل انتهاء السجل التجاري', 'C.R notify-before days'), v: String(crNotifyDays), src: T('النظام', 'System') },
+                { k: T('أيام التنبيه قبل انتهاء الضريبة', 'VAT notify-before days'), v: String(vatNotifyDays), src: T('النظام', 'System') },
                 { k: T('مدة الخمول قبل تسجيل الخروج (دقائق)', 'Idle auto-logout (minutes)'), v: String(typeof idleTimeoutMin !== 'undefined' ? idleTimeoutMin : ''), src: T('النظام', 'System') },
                 { k: T('المستخدمون المعطّلون', 'Disabled users'), v: (disabledUsers || []).join(', '), src: T('النظام', 'System') }
             ];
@@ -11694,7 +12355,7 @@ function renderCtrlList(tbodySel, items, searchId, delFn, editFn) {
 
 function loadControlPanel() {
     renderCtrlList('#serviceTypesTable tbody', serviceTypes, 'svcSearch', 'deleteServiceType', 'editServiceTypePrompt');
-    renderCtrlList('#departmentsTable tbody', departments, 'deptSearch', 'deleteDepartment', 'editDepartmentPrompt');
+    renderDeptCtrlList();
     try { renderQuickDeptList(); } catch (e) {}
     renderCtrlList('#descriptionsTable tbody', descriptions, 'descSearch', 'deleteDescription', 'editDescriptionPrompt');
     // عدّادات
@@ -11787,21 +12448,284 @@ async function editServiceTypePrompt(id) {
     populateAllFilters();
 }
 
-async function editDepartmentPrompt(id) {
-    if (!can('control', 'edit')) { alert(msg('غير مصرّح')); return; }
+// ===================== جدول الأقسام + المخصصات المالية (Procurement Package) =====================
+function renderDeptCtrlList() {
+    const tbody = document.querySelector('#departmentsTable tbody');
+    if (!tbody) return;
+    const en = currentLanguage === 'en';
+    const showB = canSeeBudget();
+    // إظهار/إخفاء عمودَي المخصص والمتبقي حسب الصلاحية
+    document.querySelectorAll('#departmentsTable .bgt-col').forEach(th => th.style.display = showB ? '' : 'none');
+    const cards = document.getElementById('deptBudgetCards'); if (cards) cards.style.display = showB ? 'grid' : 'none';
+    const nCols = showB ? 5 : 3;
+    const q = ((document.getElementById('deptSearch') || {}).value || '').trim().toLowerCase();
+    const filtered = q ? departments.filter(x => (x.name || '').toLowerCase().includes(q)) : departments;
+    tbody.innerHTML = '';
+    if (!filtered.length) {
+        tbody.innerHTML = `<tr><td colspan="${nCols}" style="text-align:center; color:#999; padding:14px;">${departments.length ? (en ? 'No matches' : 'لا توجد نتائج مطابقة') : (en ? 'No data yet' : 'لا توجد بيانات بعد')}</td></tr>`;
+    } else {
+        filtered.forEach((x, i) => {
+            const st = deptBudgetStats(x);
+            const over = st.hasAlloc && st.remaining < 0;
+            const editBtn = can('control', 'edit') ? `<button class="btn btn-small" onclick="event.stopPropagation(); editDepartmentPrompt('${x.id}')" title="${en ? 'Edit' : 'تعديل'}" style="color:#f0ad4e;"><i class="fas fa-edit"></i></button> ` : '';
+            const delBtn = can('control', 'delete') ? `<button class="btn btn-small" onclick="event.stopPropagation(); deleteDepartment('${x.id}')" title="${en ? 'Delete' : 'حذف'}" style="color:#e74c3c;"><i class="fas fa-trash"></i></button>` : '';
+            const bCells = showB
+                ? `<td style="text-align:center;">${st.hasAlloc ? `<span class="bgt-amt">${fmtInt(st.alloc)}</span>${budgetBarHtml(st)}` : `<span class="bgt-amt none">—</span>`}</td>`
+                + `<td style="text-align:center;">${st.hasAlloc ? `<span class="bgt-rem" style="color:${budgetColor(st.pct, over)};">${fmtInt(st.remaining)}</span>` : `<span class="bgt-amt none">—</span>`}</td>`
+                : '';
+            const tr = tbody.insertRow();
+            tr.className = 'dept-row';
+            tr.title = en ? 'Click to view the department details' : 'انقر لعرض بيانات القسم';
+            tr.setAttribute('onclick', `viewDepartment('${x.id}')`);
+            tr.innerHTML = `<td style="text-align:center; color:#8aa2b0;">${i + 1}</td><td>${escapeHtml(x.name || '')}</td>${bCells}<td style="white-space:nowrap;">${editBtn}${delBtn}</td>`;
+        });
+    }
+    // بطاقات الملخص
+    if (showB && cards) {
+        const t = budgetTotals(), cur = en ? ' OMR' : ' ر.ع';
+        const set = (id, v) => { const e2 = document.getElementById(id); if (e2) e2.innerHTML = v; };
+        set('bgtTotalAlloc', fmtInt(t.alloc));
+        set('bgtAllocSub', (en ? 'for ' : 'على ') + t.nAlloc + (en ? ' dept.' : ' قسم'));
+        set('bgtTotalRemain', `<span style="color:${t.remaining < 0 ? '#c0392b' : '#2e7d32'};">${fmtInt(t.remaining)}</span>`);
+        set('bgtRemainSub', (en ? 'Spent ' : 'المنصرف ') + fmtInt(t.spent) + cur);
+        set('bgtDeptCount', t.nDepts);
+        set('bgtDeptSub', (en ? 'with package ' : 'بمخصص ') + t.nAlloc + (t.nOver ? (en ? ` · ${t.nOver} over` : ` · ${t.nOver} تجاوز`) : ''));
+    }
+}
+
+// وصف تغييرات القسم لسجل العمليات
+function describeDeptChanges(old, upd) {
+    if (!old) return '';
+    const en = currentLanguage === 'en';
+    const parts = [];
+    if ('name' in upd && String(old.name || '').trim() !== String(upd.name || '').trim())
+        parts.push((en ? 'Name: ' : 'الاسم: ') + (old.name || '—') + ' ← ' + (upd.name || '—'));
+    if ('budget' in upd) {
+        const a = (old.budget === null || old.budget === undefined) ? null : +old.budget;
+        const b = (upd.budget === null || upd.budget === undefined) ? null : +upd.budget;
+        if (a !== b) parts.push((en ? 'Package: ' : 'المخصص: ') + (a === null ? '—' : fmt(a)) + ' ← ' + (b === null ? '—' : fmt(b)) + (en ? ' OMR' : ' ر.ع'));
+    }
+    let txt = parts.length ? (' — ' + parts.join(en ? ', ' : '، ')) : (en ? ' — no changes' : ' — بدون تغييرات');
+    if ('name' in upd && old.name && String(old.name).trim() !== String(upd.name).trim()) txt += (en ? ' (previous name: ' : ' (الاسم السابق: ') + String(old.name).trim() + ')';
+    return txt;
+}
+
+// كشف عمليات القسم: من سجل النشاط (بالاسم الحالي والأسماء السابقة) + أوامر الشراء على هذا القسم
+function getDepartmentHistory(d) {
+    if (!d) return [];
+    const en = currentLanguage === 'en';
+    const all = getActivityEntries();
+    const names = new Set([String(d.name || '').trim()].filter(Boolean));
+    for (let pass = 0; pass < 3; pass++) {
+        all.forEach(e => {
+            const m = String(e.details || '').match(/^تعديل قسم \/ غرض (.+?) — .*\((?:الاسم السابق|previous name): (.+?)\)\s*$/);
+            if (m && names.has(m[1].trim())) names.add(m[2].trim());
+        });
+    }
+    const events = [];
+    all.forEach(e => {
+        const t = String(e.details || '');
+        const m = t.match(/قسم \/ غرض (?:إلى )?(.+?)(?: — | \(|$)/);
+        if (m && names.has(m[1].trim())) events.push({ id: e.id, createdAt: e.createdAt, actionType: e.actionType, username: e.username, details: t });
+    });
+    if (d.createdAt && !events.some(e => /^(إضافة قسم|Department added)/.test(e.details))) {
+        events.push({ createdAt: d.createdAt, actionType: 'create', username: '—', details: (en ? 'Department registered: ' : 'تم تسجيل القسم: ') + (d.name || '') });
+    }
+    // أوامر الشراء المسجّلة على هذا القسم (تستهلك من المخصص)
+    const low = [...names].map(x => x.toLowerCase());
+    (lpoDrafts || []).filter(l => low.includes(String(l.department || '').trim().toLowerCase())).forEach(l => {
+        const rej = (l.approvalStatus === 'rejected');
+        events.push({ createdAt: l.createdAt || l.date, actionType: 'other', username: l.staff || '—',
+            details: (en ? 'Purchase order: ' : 'أمر شراء: ') + (l.number || '') + ' — ' + fmt(l.total) + (en ? ' OMR' : ' ر.ع') + (rej ? (en ? ' (rejected — not deducted)' : ' (مرفوض — لا يُخصم)') : '') });
+    });
+    return events.filter(e => e.createdAt).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+}
+
+// ===== نافذة معاينة بيانات القسم =====
+let _deptViewId = null;
+let _deptViewHl = '';
+function viewDepartment(id, hlNumber) {
     const d = departments.find(x => String(x.id) === String(id));
     if (!d) return;
-    const nv = prompt(msg('تعديل القسم / الغرض:'), d.name);
-    if (nv === null) return;
-    const name = nv.trim();
-    if (!name) { alert(msg('لا يمكن ترك النص فارغاً')); return; }
-    if (departments.some(x => String(x.id) !== String(id) && (x.name || '').toLowerCase() === name.toLowerCase())) { alert(msg('هذا القسم موجود مسبقاً')); return; }
-    const { error } = await sb.from('departments').update({ name }).eq('id', id);
-    if (error) { alert(msg('تعذّر التعديل: ') + error.message); return; }
+    _deptViewId = d.id;
+    if (hlNumber !== undefined) _deptViewHl = hlNumber || '';
+    const en = currentLanguage === 'en', cur = en ? ' OMR' : ' ر.ع';
+    const st = deptBudgetStats(d), over = st.hasAlloc && st.remaining < 0;
+    const fmtDT = (x) => x ? new Date(x).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+    const item = (l, v) => `<div class="dv-item"><div class="dv-l">${l}</div><div class="dv-v">${v}</div></div>`;
+    const showB = canSeeBudget();
+    const budgetBox = !showB ? '' : `<div class="bgt-box">
+        <div class="bb-head"><i class="fas fa-wallet"></i> ${en ? 'Procurement Package (Budget Allocation)' : 'المخصص المالي (Procurement Package)'}
+            ${st.hasAlloc ? '' : `<span class="bgt-chip" style="background:#eef2f6; color:#8a97a3;">${en ? 'Not allocated' : 'بدون مخصص'}</span>`}
+            ${over ? `<span class="bgt-chip" style="background:#fdecea; color:#c0392b;">${en ? 'Over budget' : 'تجاوز المخصص'}</span>` : ''}</div>
+        <div class="bb-row">
+            <div class="bb-cell"><div class="bb-l">${en ? 'Allocated' : 'المخصص'}</div><div class="bb-v" style="color:#0093c4;">${st.hasAlloc ? fmt(st.alloc) : '—'}</div></div>
+            <div class="bb-cell"><div class="bb-l">${en ? 'Spent' : 'المنصرف'}</div><div class="bb-v" style="color:#8e44ad;">${fmt(st.spent)}</div></div>
+            <div class="bb-cell"><div class="bb-l">${en ? 'Remaining' : 'المتبقي'}</div><div class="bb-v" style="color:${budgetColor(st.pct, over)};">${st.hasAlloc ? fmt(st.remaining) : '—'}</div></div>
+        </div>
+        ${st.hasAlloc ? budgetBarHtml(st) + `<div class="bb-pct">${st.pct.toFixed(1)}% ${en ? 'of the package used' : 'من المخصص مستهلك'}</div>` : ''}
+        ${(d.budgetAt || d.budgetBy) ? `<div class="bgt-hint"><i class="far fa-clock"></i> ${en ? 'Last package update: ' : 'آخر تعديل للمخصص: '}${fmtDT(d.budgetAt)}${d.budgetBy ? ' — ' + escapeHtml(d.budgetBy) : ''}</div>` : ''}
+    </div>`;
+    document.getElementById('deptViewBody').innerHTML =
+        `<div style="font-size:18px; font-weight:800; color:#0093c4; margin-bottom:12px;"><i class="fas fa-sitemap"></i> ${escapeHtml(d.name || '')}</div>
+        ${budgetBox}
+        <div class="dv-grid">
+            ${item(en ? 'Orders' : 'عدد الأوامر', st.orders)}
+            ${item(en ? 'Orders value' : 'قيمة الأوامر', fmt(st.spent) + cur)}
+            ${item(en ? 'Created' : 'تاريخ الإنشاء', fmtDT(d.createdAt))}
+        </div>
+        ${showB ? deptLedgerSectionHtml(d, _deptViewHl) : ''}
+        ${(() => { const h = visibleOps(getDepartmentHistory(d)); return `<div class="ops-log-box" style="margin-top:16px;">
+            <div class="ops-log-head"><i class="fas fa-stream"></i> ${en ? 'Operations Log' : 'سجل العمليات'} <span class="ops-count">${h.length}</span></div>
+            ${buildOpsLogHtml(h, 'department', () => viewDepartment(d.id))}
+        </div>`; })()}`;
+    const eb = document.getElementById('deptViewEditBtn');
+    if (eb) {
+        if (can('control', 'edit') || canEditBudget()) { eb.style.display = ''; eb.onclick = function () { editDepartmentPrompt(d.id); }; }
+        else eb.style.display = 'none';
+    }
+    document.getElementById('deptViewModal').classList.add('active');
+}
+function closeDeptViewModal() { document.getElementById('deptViewModal').classList.remove('active'); _deptViewId = null; _deptViewHl = ''; }
+function refreshDeptViewIfOpen() {
+    const m = document.getElementById('deptViewModal');
+    if (m && m.classList.contains('active') && _deptViewId != null) {
+        if (departments.some(x => String(x.id) === String(_deptViewId))) viewDepartment(_deptViewId); else closeDeptViewModal();
+    }
+}
+
+// ===== نافذة تعديل بيانات القسم + المخصص =====
+let _deptEditId = null;
+function editDepartmentPrompt(id) {
+    const d = departments.find(x => String(x.id) === String(id));
+    if (!d) return;
+    const canName = can('control', 'edit'), canB = canEditBudget();
+    if (!canName && !canB) { alert(msg('غير مصرّح')); return; }
+    _deptEditId = d.id;
+    const nameEl = document.getElementById('deptEditName');
+    nameEl.value = d.name || '';
+    _deptNameMode(false, canName);
+    const msgEl = document.getElementById('deptEditMsg'); if (msgEl) msgEl.style.display = 'none';
+    const bEl = document.getElementById('deptEditBudget');
+    bEl.value = (d.budget === null || d.budget === undefined) ? '' : d.budget;
+    bEl.readOnly = !canB;
+    const box = document.getElementById('deptEditBudgetBox');
+    if (box) box.style.display = canSeeBudget() ? '' : 'none';
+    box.querySelectorAll('button').forEach(b => b.style.display = canB ? '' : 'none');
+    renderDeptEditHint(d);
+    document.getElementById('deptEditModal').classList.add('active');
+    setTimeout(() => { if (canB) bEl.focus(); }, 50);
+}
+// وضع حقل الاسم: معطّل مع زر قلم (للمخوَّل) ← تحرير مع حفظ/إلغاء
+let _deptNameEditing = false;
+function _deptNameMode(editing, canName) {
+    if (canName === undefined) canName = can('control', 'edit');
+    _deptNameEditing = !!editing && canName;
+    const en = currentLanguage === 'en';
+    const nameEl = document.getElementById('deptEditName');
+    nameEl.disabled = !_deptNameEditing;
+    const eb = document.getElementById('deptNameEditBtn'), sb2 = document.getElementById('deptNameSaveBtn'), cb = document.getElementById('deptNameCancelBtn');
+    eb.style.display = (!_deptNameEditing && canName) ? '' : 'none';
+    sb2.style.display = cb.style.display = _deptNameEditing ? '' : 'none';
+    eb.title = en ? 'Edit the name' : 'تعديل الاسم';
+    sb2.querySelector('span').textContent = en ? 'Save' : 'حفظ';
+    cb.querySelector('span').textContent = en ? 'Cancel' : 'إلغاء';
+}
+function startDeptNameEdit() {
+    if (!can('control', 'edit')) { alert(msg('غير مصرّح')); return; }
+    const msgEl = document.getElementById('deptEditMsg'); if (msgEl) msgEl.style.display = 'none';
+    _deptNameMode(true);
+    const el = document.getElementById('deptEditName'); el.focus(); el.select();
+}
+function cancelDeptNameEdit() {
+    const d = departments.find(x => String(x.id) === String(_deptEditId));
+    if (d) document.getElementById('deptEditName').value = d.name || '';
+    _deptNameMode(false);
+}
+async function saveDeptNameOnly() { if (!_deptNameEditing) return; return _saveDept({ nameOnly: true }); }
+function renderDeptEditHint(d) {
+    const el = document.getElementById('deptEditBudgetHint'); if (!el) return;
+    const en = currentLanguage === 'en', cur = en ? ' OMR' : ' ر.ع';
+    const st = deptBudgetStats(d);
+    el.innerHTML = `<i class="fas fa-info-circle"></i> ${en ? 'Spent' : 'المنصرف'}: <b>${fmt(st.spent)}${cur}</b> · ${en ? 'Remaining' : 'المتبقي'}: <b style="color:${budgetColor(st.pct, st.hasAlloc && st.remaining < 0)};">${st.hasAlloc ? fmt(st.remaining) + cur : '—'}</b><br>${en ? 'Spending counts every order of this department except the rejected ones. Leave the field empty to remove the package.' : 'يُحتسب المنصرف من كل أوامر هذا القسم عدا المرفوضة. اترك الحقل فارغاً لإلغاء المخصص.'}`;
+}
+function closeDeptEditModal() { document.getElementById('deptEditModal').classList.remove('active'); _deptEditId = null; }
+function clearDeptBudget() { const b = document.getElementById('deptEditBudget'); if (b) { b.value = ''; b.focus(); } }
+function _deptBudgetInput() {
+    const v = (document.getElementById('deptEditBudget').value || '').trim();
+    if (v === '') return null;
+    const n = parseFloat(v);
+    if (isNaN(n) || n < 0) return undefined;   // قيمة غير صالحة
+    return +n.toFixed(3);
+}
+// حفظ المخصص فقط (دون إغلاق النافذة)
+async function saveDeptBudgetOnly() { return _saveDept({ budgetOnly: true }); }
+// حفظ الاسم + المخصص ثم الإغلاق
+async function saveDeptEdit() { return _saveDept({ budgetOnly: false }); }
+async function _saveDept(opts) {
+    const en = currentLanguage === 'en';
+    const d = departments.find(x => String(x.id) === String(_deptEditId));
+    if (!d) { closeDeptEditModal(); return; }
+    const canName = can('control', 'edit'), canB = canEditBudget();
+    const upd = {}; const _old = Object.assign({}, d);
+    if (!opts.budgetOnly && canName) {
+        const name = (document.getElementById('deptEditName').value || '').trim();
+        if (!name) { alert(msg('لا يمكن ترك النص فارغاً')); return; }
+        if (departments.some(x => String(x.id) !== String(d.id) && (x.name || '').toLowerCase() === name.toLowerCase())) { alert(msg('هذا القسم موجود مسبقاً')); return; }
+        if (name !== (d.name || '')) upd.name = name;
+    }
+    if (canB && !opts.nameOnly) {
+        const b = _deptBudgetInput();
+        if (b === undefined) { alert(en ? 'Please enter a valid package amount.' : 'يرجى إدخال مبلغ مخصص صحيح.'); return; }
+        const cur = (d.budget === null || d.budget === undefined) ? null : +d.budget;
+        if (b !== cur) { upd.budget = b; upd.budget_updated_at = new Date().toISOString(); upd.budget_updated_by = (currentUser && currentUser.username) || ''; }
+    }
+    if (!Object.keys(upd).length) { if (opts.nameOnly) _deptNameMode(false); else if (!opts.budgetOnly) closeDeptEditModal(); return; }
+    let res = await sb.from('departments').update(upd).eq('id', d.id);
+    // أعمدة المخصص غير موجودة بعد في قاعدة البيانات
+    if (res.error && /budget_updated_at|budget_updated_by/i.test(res.error.message || '')) {
+        delete upd.budget_updated_at; delete upd.budget_updated_by;
+        res = await sb.from('departments').update(upd).eq('id', d.id);
+    }
+    if (res.error) {
+        if (/budget/i.test(res.error.message || '')) {
+            alert(en ? 'The package could not be saved because its column does not exist in the database yet.\nRun the SQL file "تحديث_قاعدة_البيانات_22_مخصصات_الأقسام.sql" in Supabase (SQL Editor), then reload the page.'
+                     : 'تعذّر حفظ المخصص لأن عموده غير موجود بعد في قاعدة البيانات.\nشغّل ملف SQL: "تحديث_قاعدة_البيانات_22_مخصصات_الأقسام.sql" في Supabase (SQL Editor) ثم أعد تحميل الصفحة.');
+        } else alert(msg('تعذّر التعديل: ') + res.error.message);
+        return;
+    }
+    const renamed = !!upd.name;
     await loadAllFromCloud();
-    recordAction('تعديل قسم / غرض إلى ' + name, 'update');
-    loadControlPanel();
-    populateAllFilters();
+    // نقل أوامر الشراء القديمة إلى الاسم الجديد حتى يبقى احتساب المخصص صحيحاً
+    if (renamed) await renameDepartmentInOrders(_old.name, upd.name);
+    recordAction('تعديل قسم / غرض ' + (upd.name || _old.name) + describeDeptChanges(_old, upd), 'update');
+    try { loadControlPanel(); } catch (e) {}
+    try { populateAllFilters(); } catch (e) {}
+    try { if (typeof renderLPOList === 'function' && document.getElementById('lpoStatCount')) renderLPOList(); } catch (e) {}
+    try { updateLpoDeptBudget(); } catch (e) {}
+    const fresh = departments.find(x => String(x.id) === String(d.id));
+    if (opts.budgetOnly) {
+        if (fresh) renderDeptEditHint(fresh);
+        const btn = document.querySelector('#deptEditModal .bgt-edit-row .btn-success span');
+        if (btn) { const t0 = btn.textContent; btn.textContent = en ? 'Saved ✓' : 'تم الحفظ ✓'; setTimeout(() => { btn.textContent = t0; }, 1800); }
+    } else if (opts.nameOnly) {
+        const nm = document.getElementById('deptEditName'); if (fresh) nm.value = fresh.name || '';
+        _deptNameMode(false);
+        const m = document.getElementById('deptEditMsg');
+        if (m) { m.innerHTML = '<i class="fas fa-check-circle"></i> ' + (en ? 'The department name was saved successfully.' : 'تم حفظ اسم القسم بنجاح.'); m.style.display = ''; }
+        if (fresh) renderDeptEditHint(fresh);
+    } else closeDeptEditModal();
+    refreshDeptViewIfOpen();
+}
+// عند تغيير اسم القسم: تحديث الأوامر والمسودات المسجّلة بالاسم القديم
+async function renameDepartmentInOrders(oldName, newName) {
+    oldName = String(oldName || '').trim(); newName = String(newName || '').trim();
+    if (!oldName || !newName || oldName === newName) return;
+    try {
+        await sb.from('purchase_orders').update({ department: newName }).eq('department', oldName);
+        await sb.from('drafts').update({ department: newName }).eq('department', oldName);
+        await loadAllFromCloud();
+    } catch (e) {}
 }
 
 async function addServiceType() {
@@ -11888,6 +12812,7 @@ async function addDepartmentQuick() {
     // اختيار القسم الجديد مباشرةً في حقل القسم / الغرض بنافذة أمر الشراء
     const f = document.getElementById('lpoDepartment');
     if (f) { f.value = name; f.dispatchEvent(new Event('change', { bubbles: true })); }
+    try { updateLpoDeptBudget(); } catch (e) {}
     closeQuickDeptModal();
 }
 
@@ -11899,10 +12824,188 @@ async function deleteDepartment(id) {
         if (error) { alert(msg('تعذّر الحذف: ') + error.message); return; }
         await loadAllFromCloud();
         recordAction('حذف قسم / غرض ' + ((_dp && _dp.name) || id), 'delete');
+        try { closeDeptViewModal(); } catch (e) {}
         loadControlPanel();
         populateAllFilters();
     }
 }
+// ===================== المخصصات المالية للأقسام (Procurement Package) =====================
+// لكل قسم مبلغ مخصّص (budget)؛ المنصرف = مجموع أوامر الشراء غير المرفوضة لذلك القسم.
+function deptByName(name) {
+    const n = String(name || '').trim().toLowerCase();
+    if (!n) return null;
+    return (departments || []).find(d => String(d.name || '').trim().toLowerCase() === n) || null;
+}
+// المبلغ المنصرف من مخصّص قسم (يشمل الأوامر بانتظار الاعتماد لأنها محجوزة، ويستثني المرفوضة)
+function deptSpent(name) {
+    const n = String(name || '').trim().toLowerCase();
+    if (!n) return 0;
+    return (lpoDrafts || []).reduce((sum, l) =>
+        (String(l.department || '').trim().toLowerCase() === n && (l.approvalStatus || 'approved') !== 'rejected')
+            ? sum + (+l.total || 0) : sum, 0);
+}
+function deptOrdersCount(name) {
+    const n = String(name || '').trim().toLowerCase();
+    if (!n) return 0;
+    return (lpoDrafts || []).filter(l => String(l.department || '').trim().toLowerCase() === n && (l.approvalStatus || 'approved') !== 'rejected').length;
+}
+// إحصاءات مخصّص قسم واحد: { alloc, hasAlloc, spent, remaining, pct, orders }
+function deptBudgetStats(d) {
+    const name = (d && d.name) || '';
+    const alloc = (d && d.budget !== null && d.budget !== undefined) ? (+d.budget || 0) : null;
+    const spent = deptSpent(name);
+    return { alloc: alloc || 0, hasAlloc: alloc !== null, spent, remaining: (alloc || 0) - spent,
+             pct: alloc ? Math.min(999, (spent / alloc) * 100) : 0, orders: deptOrdersCount(name) };
+}
+// إجماليات كل الأقسام: { alloc, spent, remaining, nDepts, nAlloc, nOver, unalloc }
+function budgetTotals() {
+    let alloc = 0, spent = 0, nAlloc = 0, nOver = 0;
+    (departments || []).forEach(d => {
+        const st = deptBudgetStats(d);
+        if (st.hasAlloc) { alloc += st.alloc; nAlloc++; if (st.remaining < 0) nOver++; }
+        spent += st.spent;
+    });
+    // إنفاق على أقسام غير موجودة في القائمة (أو بلا مخصّص)
+    const known = new Set((departments || []).map(d => String(d.name || '').trim().toLowerCase()));
+    const other = (lpoDrafts || []).reduce((sm, l) => {
+        const k = String(l.department || '').trim().toLowerCase();
+        return (!known.has(k) && (l.approvalStatus || 'approved') !== 'rejected') ? sm + (+l.total || 0) : sm;
+    }, 0);
+    return { alloc, spent, spentAll: spent + other, remaining: alloc - spent, nDepts: (departments || []).length, nAlloc, nOver, unalloc: other };
+}
+// لون حالة الاستهلاك: أخضر (<70%)، برتقالي (<100%)، أحمر (تجاوز)
+function budgetColor(pct, over) { return over ? '#c0392b' : (pct >= 90 ? '#e67e22' : pct >= 70 ? '#f0ad4e' : '#2e7d32'); }
+function budgetBarHtml(st, width) {
+    const over = st.remaining < 0, c = budgetColor(st.pct, over);
+    return `<div class="bgt-bar" style="width:${width || '100%'};" title="${st.pct.toFixed(1)}%"><span style="width:${Math.min(100, st.pct)}%; background:${c};"></span></div>`;
+}
+function canSeeBudget() { return can('budget', 'view'); }
+// تنبيه عند تجاوز المخصص المالي للقسم عند حفظ أمر الشراء (تنبيه فقط — لا يمنع الحفظ)
+function confirmBudgetOverrun() {
+    try {
+        if (!canSeeBudget()) return true;
+        const name = ((document.getElementById('lpoDepartment') || {}).value || '').trim();
+        const d = deptByName(name); if (!d) return true;
+        const st = deptBudgetStats(d); if (!st.hasAlloc) return true;
+        const spent = st.spent - _editingOrderAmountFor(name);
+        const cur = parseFloat(String((document.getElementById('totalFinal') || {}).textContent || '0').replace(/,/g, '')) || 0;
+        const after = st.alloc - spent - cur;
+        if (after >= 0) return true;
+        const en = currentLanguage === 'en', c = en ? ' OMR' : ' ر.ع';
+        return confirm(en
+            ? `This order exceeds the procurement package of "${d.name}" by ${fmt(Math.abs(after))}${c}.\nPackage: ${fmt(st.alloc)}${c} · Already spent: ${fmt(spent)}${c} · This order: ${fmt(cur)}${c}\n\nSave it anyway?`
+            : `هذا الأمر يتجاوز المخصص المالي للقسم «${d.name}» بمقدار ${fmt(Math.abs(after))}${c}.\nالمخصص: ${fmt(st.alloc)}${c} · المنصرف: ${fmt(spent)}${c} · هذا الأمر: ${fmt(cur)}${c}\n\nهل تريد الحفظ على أي حال؟`);
+    } catch (e) { return true; }
+}
+function canEditBudget() { return !isGuest && can('budget', 'edit'); }
+
+// ===== الكشف المالي: أوامر القسم بالترتيب الزمني مع المتبقي من المخصص بعد كل عملية =====
+function _ordTime(l) { const t = new Date(l.createdAt || l.date).getTime(); return isNaN(t) ? 0 : t; }
+function _ordDateTxt(l) {
+    const t = new Date(l.date || l.createdAt);
+    return isNaN(t.getTime()) ? '—' : t.toLocaleDateString('en-GB');
+}
+// صفوف قسم واحد (تصاعدياً): { l, amount, remaining } — remaining = null إذا لا يوجد مخصص
+function deptLedger(name) {
+    const n = String(name || '').trim().toLowerCase();
+    if (!n) return [];
+    const d = deptByName(name);
+    let run = (d && d.budget !== null && d.budget !== undefined) ? (+d.budget || 0) : null;
+    return (lpoDrafts || [])
+        .filter(l => String(l.department || '').trim().toLowerCase() === n && (l.approvalStatus || 'approved') !== 'rejected')
+        .sort((a, b) => (_ordTime(a) - _ordTime(b)) || String(a.number || '').localeCompare(String(b.number || '')))
+        .map(l => { const amount = +l.total || 0; if (run !== null) run -= amount; return { l, amount, remaining: run }; });
+}
+// كل العمليات لكل الأقسام (تنازلياً — الأحدث أولاً)
+function allLedgerRows(deptFilter) {
+    const names = new Map();
+    (lpoDrafts || []).forEach(l => { const k = String(l.department || '').trim(); if (k && !names.has(k.toLowerCase())) names.set(k.toLowerCase(), k); });
+    let rows = [];
+    names.forEach((label, key) => {
+        if (deptFilter && deptFilter.toLowerCase() !== key) return;
+        deptLedger(label).forEach(r => rows.push(Object.assign({ dept: label }, r)));
+    });
+    return rows.sort((a, b) => (_ordTime(b.l) - _ordTime(a.l)) || String(b.l.number || '').localeCompare(String(a.l.number || '')));
+}
+function ledgerTableHtml(rows, opt) {
+    opt = opt || {};
+    const en = currentLanguage === 'en';
+    if (!rows.length) return `<div style="text-align:center; color:#999; padding:18px; font-size:13px;">${en ? 'No financial transactions yet' : 'لا توجد عمليات مالية بعد'}</div>`;
+    const rc = (r) => r === null ? '<span style="color:#bbb;">—</span>' : `<span class="num ${r < 0 ? 'neg' : ''}" style="${r < 0 ? '' : 'color:#2e7d32; font-weight:800;'}">${fmt(r)}</span>`;
+    return `<div class="pkg-tbl-wrap"><table class="pkg-tbl"><thead><tr>
+        <th>${en ? 'Date' : 'التاريخ'}</th><th>${en ? 'Order No.' : 'رقم الأمر'}</th>${opt.showDept ? `<th>${en ? 'Department' : 'القسم'}</th>` : ''}
+        <th>${en ? 'Amount (OMR)' : 'المبلغ (ر.ع)'}</th><th>${en ? 'Remaining Package after' : 'المتبقي من Package بعدها'}</th></tr></thead><tbody>`
+        + rows.map(r => {
+            // opt.click: الأعمدة (القسم / المبلغ / المتبقي) تفتح بيانات القسم، ورقم الأمر يفتح معاينته
+            const dd = opt.click ? deptByName(r.dept) : null;
+            const dc = dd ? ` class="clk" title="${en ? 'Open department details' : 'عرض بيانات القسم'}" onclick="viewDepartment('${dd.id}')"` : '';
+            const oc = opt.click ? ` class="clk" title="${en ? 'Preview the order' : 'معاينة أمر الشراء'}" onclick="viewLPO('${r.l.id}')"` : '';
+            return `<tr class="${opt.hl && String(r.l.number) === String(opt.hl) ? 'hl' : ''}"><td class="num">${_ordDateTxt(r.l)}</td><td${oc} style="font-weight:700;"><span class="num">${escapeHtml(r.l.number || '')}</span></td>${opt.showDept ? `<td${dc || ' class="l"'}${dd ? ' style="text-align:start; font-weight:700;"' : ''}>${escapeHtml(r.dept)}</td>` : ''}<td${dc}><span class="num">${fmt(r.amount)}</span></td><td${dc}>${rc(r.remaining)}</td></tr>`;
+        }).join('')
+        + '</tbody></table></div>';
+}
+// قسم الكشف المالي داخل نافذة بيانات القسم (قبل سجل العمليات)
+function deptLedgerSectionHtml(d, hl) {
+    const en = currentLanguage === 'en';
+    const rows = deptLedger(d.name).reverse();
+    return `<div class="pkg-section-head"><i class="fas fa-receipt"></i> ${en ? 'Financial Statement (orders & remaining package)' : 'الكشف المالي (أوامر الشراء والمتبقي من Package)'} <span class="ops-count">${rows.length}</span></div>${ledgerTableHtml(rows, { hl })}`;
+}
+
+// ===== بطاقة إجمالي المخصص: كشف الأقسام والمخصصات (معاينة فقط) =====
+function openPkgSummary() {
+    if (!canSeeBudget()) return;
+    const en = currentLanguage === 'en', cur = en ? ' OMR' : ' ر.ع';
+    const t = budgetTotals();
+    document.getElementById('pkgSummaryTitle').textContent = en ? 'Departments Package Summary (Procurement Package)' : 'كشف مخصصات الأقسام (Procurement Package)';
+    const sorted = (departments || []).slice().sort((a, b) => ((b.budget === null || b.budget === undefined) ? -1 : +b.budget) - ((a.budget === null || a.budget === undefined) ? -1 : +a.budget));
+    const rows = sorted.map((d, i) => {
+        const st = deptBudgetStats(d), over = st.hasAlloc && st.remaining < 0;
+        return `<tr class="clk-row" onclick="viewDepartment('${d.id}')" title="${en ? 'Open department details' : 'عرض بيانات القسم'}"><td style="color:#8aa2b0;">${i + 1}</td><td class="l">${escapeHtml(d.name || '')}</td>`
+            + `<td class="num" style="font-weight:800; color:#0093c4;">${st.hasAlloc ? fmt(st.alloc) : '<span style="color:#bbb;">—</span>'}</td>`
+            + `<td class="num">${fmt(st.spent)}</td>`
+            + `<td class="num ${over ? 'neg' : ''}" style="${over ? '' : 'color:#2e7d32; font-weight:800;'}">${st.hasAlloc ? fmt(st.remaining) : '<span style="color:#bbb;">—</span>'}</td>`
+            + `<td>${st.hasAlloc ? `<div class="usage">${budgetBarHtml(st)}<b style="color:${budgetColor(st.pct, over)};">${st.pct.toFixed(0)}%</b></div>` : '<span style="color:#bbb;">—</span>'}</td></tr>`;
+    }).join('');
+    const usedPct = t.alloc ? Math.min(999, (t.spent / t.alloc) * 100) : 0;
+    document.getElementById('pkgSummaryBody').innerHTML = `
+        <div class="bgt-mini">
+            <div class="bm-card"><div class="bm-lbl"><i class="fas fa-wallet"></i> ${en ? 'Total Package' : 'إجمالي المخصص'}</div><div class="bm-val">${fmt(t.alloc)}</div><div class="bm-sub">${en ? 'for ' + t.nAlloc + ' dept.' : 'على ' + t.nAlloc + ' قسم'}</div></div>
+            <div class="bm-card"><div class="bm-lbl"><i class="fas fa-piggy-bank"></i> ${en ? 'Remaining' : 'المتبقي'}</div><div class="bm-val" style="color:${t.remaining < 0 ? '#c0392b' : '#2e7d32'};">${fmt(t.remaining)}</div><div class="bm-sub">${en ? 'Spent ' : 'المنصرف '}${fmt(t.spent)}${cur} · ${usedPct.toFixed(0)}%</div></div>
+            <div class="bm-card"><div class="bm-lbl"><i class="fas fa-sitemap"></i> ${en ? 'Departments' : 'عدد الأقسام'}</div><div class="bm-val">${t.nDepts}</div><div class="bm-sub">${en ? 'with package ' : 'بمخصص '}${t.nAlloc}${t.nOver ? (en ? ` · ${t.nOver} over` : ` · ${t.nOver} تجاوز`) : ''}</div></div>
+        </div>
+        ${rows ? `<div class="pkg-tbl-wrap"><table class="pkg-tbl"><thead><tr><th style="width:40px;">#</th><th>${en ? 'Department / Purpose' : 'القسم / الغرض'}</th><th>Package</th><th>${en ? 'Spent' : 'المنصرف'}</th><th>${en ? 'Remaining' : 'المتبقي'}</th><th>${en ? 'Usage' : 'الاستهلاك'}</th></tr></thead><tbody>${rows}</tbody>
+        <tfoot><tr><td></td><td class="l">${en ? 'Total' : 'الإجمالي'}</td><td class="num" style="color:#0093c4;">${fmt(t.alloc)}</td><td class="num">${fmt(t.spent)}</td><td class="num ${t.remaining < 0 ? 'neg' : ''}" style="${t.remaining < 0 ? '' : 'color:#2e7d32;'}">${fmt(t.remaining)}</td><td class="num">${usedPct.toFixed(0)}%</td></tr></tfoot></table></div>`
+            : `<div style="text-align:center; color:#999; padding:18px;">${en ? 'No departments yet' : 'لا توجد أقسام بعد'}</div>`}
+        ${t.unalloc > 0 ? `<div class="bgt-hint" style="margin-top:8px;"><i class="fas fa-info-circle"></i> ${en ? 'Orders on departments not in the list (not counted above): ' : 'أوامر على أقسام غير مسجّلة في القائمة (غير محسوبة أعلاه): '}<b>${fmt(t.unalloc)}${cur}</b></div>` : ''}`;
+    document.getElementById('pkgSummaryModal').classList.add('active');
+}
+function closePkgSummary() { document.getElementById('pkgSummaryModal').classList.remove('active'); }
+
+// ===== بطاقة المتبقي من المخصص: آخر العمليات المالية (معاينة فقط) =====
+let _pkgLedgerDept = '';
+function openPkgLedger() {
+    if (!canSeeBudget()) return;
+    _pkgLedgerDept = '';
+    renderPkgLedger();
+    document.getElementById('pkgLedgerModal').classList.add('active');
+}
+function setPkgLedgerDept(v) { _pkgLedgerDept = v || ''; renderPkgLedger(); }
+function renderPkgLedger() {
+    const en = currentLanguage === 'en', cur = en ? ' OMR' : ' ر.ع';
+    document.getElementById('pkgLedgerTitle').textContent = en ? 'Latest Financial Transactions' : 'آخر العمليات المالية';
+    const LIMIT = 50;
+    const all = allLedgerRows(_pkgLedgerDept), rows = all.slice(0, LIMIT);
+    const names = [...new Set((lpoDrafts || []).map(l => String(l.department || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    const t = budgetTotals();
+    document.getElementById('pkgLedgerBody').innerHTML = `
+        <div class="pkg-filter"><i class="fas fa-filter" style="color:#8aa2b0;"></i>
+            <select onchange="setPkgLedgerDept(this.value)"><option value="">${en ? '-- All departments --' : '-- كل الأقسام --'}</option>${names.map(n => `<option value="${escapeHtml(n)}" ${n.toLowerCase() === _pkgLedgerDept.toLowerCase() && _pkgLedgerDept ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}</select>
+            <span class="bgt-chip" style="background:#e9f6ee; color:#1f7a37; font-size:12px; padding:4px 11px;">${en ? 'Total remaining' : 'إجمالي المتبقي'}: <b style="color:${t.remaining < 0 ? '#c0392b' : '#1f7a37'}; unicode-bidi:isolate;">${fmt(t.remaining)}${cur}</b></span></div>
+        ${ledgerTableHtml(rows, { showDept: true, click: true })}
+        <div class="bgt-hint">${en ? `Showing the latest ${rows.length} of ${all.length} transactions (newest first). "Remaining" is the department's package balance right after each order; rejected orders are not deducted.` : `يعرض آخر ${rows.length} من ${all.length} عملية (الأحدث أولاً). «المتبقي» هو رصيد مخصص القسم بعد كل أمر مباشرةً، والأوامر المرفوضة لا تُخصم.`}</div>`;
+}
+function closePkgLedger() { document.getElementById('pkgLedgerModal').classList.remove('active'); }
+
 // ===================== PREVIEW / PDF =====================
 let previewLPOData = null;
 let previewIsDraft = false;  // هل المعاينة الحالية لمسودة؟ (لإظهار العلامة المائية)
@@ -12465,7 +13568,19 @@ function buildPreviewActionBar(l, isDraft) {
     const html = items.map(it => `<button class="btn btn-small" style="background:${bg[it.icon] || it.color}; color:#fff;" onclick="${keepOpen(it) ? '' : 'closePreview(); '}${it.fn}" title="${it.label}"><i class="fas ${it.icon}"></i> ${it.label}</button>`).join('');
     const lbl = bar.querySelector('span');
     if (lbl) lbl.innerHTML = '<i class="fas fa-tools"></i> ' + (isDraft ? (en ? 'Draft actions:' : 'إجراءات المسودة:') : (en ? 'Order actions:' : 'إجراءات الأمر:'));
-    if (html) { btns.innerHTML = html; bar.style.display = 'flex'; }
+    // زر "المتبقي من Package": يفتح نافذة بيانات القسم (الكشف المالي) مع تمييز هذا الأمر
+    let pkgBtn = '';
+    try {
+        const dd = canSeeBudget() ? deptByName(l.department) : null;
+        if (dd) {
+            const st = deptBudgetStats(dd);
+            if (st.hasAlloc) {
+                const num = String(isDraft ? '' : (l.number || '')).replace(/[^\w\-\/ ]/g, '');
+                pkgBtn = `<button class="btn btn-small pab-pkg" onclick="viewDepartment('${dd.id}', '${num}')" title="${en ? 'Open department details & financial statement' : 'عرض بيانات القسم والكشف المالي'}"><i class="fas fa-wallet"></i> ${en ? 'Remaining Package' : 'المتبقي من Package'} <span class="pab-chip ${st.remaining < 0 ? 'neg' : ''}">${fmt(st.remaining)}</span></button>`;
+            }
+        }
+    } catch (e) {}
+    if (html || pkgBtn) { btns.innerHTML = html + pkgBtn; bar.style.display = 'flex'; }
     else { btns.innerHTML = ''; bar.style.display = 'none'; }
 }
 
