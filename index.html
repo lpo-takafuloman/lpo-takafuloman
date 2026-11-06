@@ -307,7 +307,7 @@
         #reportPrintArea.pdf-exporting .card { box-shadow: none; border: 1px solid #dde7ee; margin: 0 0 16px !important; padding: 14px 16px; page-break-inside: avoid; break-inside: avoid; overflow: visible; }
         #reportPrintArea.pdf-exporting .charts-row { display: block; margin: 0 !important; }
         #reportPrintArea.pdf-exporting .charts-row > .card { margin: 0 0 16px !important; }
-        #reportPrintArea.pdf-exporting .report-stats-row { grid-template-columns: repeat(7, 1fr); margin-bottom: 16px; page-break-inside: avoid; break-inside: avoid; }
+        #reportPrintArea.pdf-exporting .report-stats-row, #reportPrintArea.pdf-exporting .report-stats-row.has-bgt { grid-template-columns: repeat(4, 1fr); margin-bottom: 16px; page-break-inside: avoid; break-inside: avoid; }
         #reportPrintArea.pdf-exporting .report-stats-row .stat-card { box-shadow: none; border: 1px solid #e3ebf1; border-top-width: 3px; }
         #reportPrintArea.pdf-exporting #deptStatsCards { grid-template-columns: repeat(4, 1fr); }
         #reportPrintArea.pdf-exporting .stat-card, #reportPrintArea.pdf-exporting table, #reportPrintArea.pdf-exporting canvas, #reportPrintArea.pdf-exporting img { page-break-inside: avoid; break-inside: avoid; }
@@ -507,14 +507,20 @@
         .stat-label { font-size: 12px; color: #999; margin-bottom: 6px; }
         .stat-value { font-size: 26px; font-weight: 700; color: #0093c4; }
         /* صف بطاقات إحصائيات التقارير: كل البطاقات في سطر واحد مضغوط (دون تصغير النصوص) */
-        .report-stats-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.65rem; margin-bottom: 1.5rem; }
-        .report-stats-row .stat-card { padding: 0.8rem 0.45rem; min-width: 0; }
+        .report-stats-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.65rem; margin-bottom: 1.2rem; }
+        .report-stats-row.has-bgt { grid-template-columns: repeat(8, 1fr); }
+        .report-stats-row .stat-card { padding: 0.5rem 0.45rem; min-width: 0; }
         .report-stats-row .stat-card:nth-child(2) { border-top-color: #7cb342; }
         .report-stats-row .stat-card:nth-child(3) { border-top-color: #f39c12; }
         .report-stats-row .stat-card:nth-child(4) { border-top-color: #9b59b6; }
-        .report-stats-row .stat-icon { font-size: 22px; margin-bottom: 4px; }
-        @media (max-width: 1150px) { .report-stats-row { grid-template-columns: repeat(4, 1fr); } }
-        @media (max-width: 680px)  { .report-stats-row { grid-template-columns: repeat(2, 1fr); } }
+        .report-stats-row .stat-icon { font-size: 22px; margin-bottom: 1px; line-height: 1.15; }
+        .report-stats-row .stat-label { margin-bottom: 3px; }
+        /* المبلغ الفرعي بجانب القيمة في نفس السطر لتقليل الارتفاع */
+        .report-stats-row .stat-card .stat-value { display: inline-block; vertical-align: middle; line-height: 1.2; }
+        .report-stats-row .stat-card > div[id$="Amt"], .report-stats-row .stat-card > div[id$="Sub"] { display: inline-block; vertical-align: middle; margin-inline-start: 6px; white-space: nowrap; }
+        .report-stats-row .stat-card .stat-icon { font-size: 20px; }
+        @media (max-width: 1150px) { .report-stats-row, .report-stats-row.has-bgt { grid-template-columns: repeat(4, 1fr); } }
+        @media (max-width: 680px)  { .report-stats-row, .report-stats-row.has-bgt { grid-template-columns: repeat(2, 1fr); } }
         /* بطاقات إحصائيات مضغوطة أفقياً (الأيقونة بجانب النص) دون تغيير حجم الخط */
         .stats-grid-slim { gap: 0.8rem; margin-bottom: 1rem; }
         .stats-grid-slim .stat-card { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0 12px; text-align: start; padding: 0.65rem 1rem; }
@@ -522,7 +528,7 @@
         .stats-grid-slim .stat-label { grid-column: 2; margin: 0 0 1px; }
         .stats-grid-slim .stat-value { grid-column: 2; line-height: 1.1; }
         .lpo-stage-stats { margin-top: -0.2rem; }
-        .lpo-stage-stats .stg-amt, #lpoBgtAllocCard .stg-amt, #supStatCrCard .stg-amt, #supStatVatCard .stg-amt { display: inline-block; vertical-align: middle; font-size: 13.5px; font-weight: 700; color: #5b6b78; background: #f2f5f8; border: 1px solid #e3e9ef; border-radius: 10px; padding: 1px 9px; margin-inline-start: 10px; white-space: nowrap; unicode-bidi: isolate; }
+        .lpo-stage-stats .stg-amt, #lpoBgtAllocCard .stg-amt, #dsbBgtAllocCard .stg-amt, #lpoBgtRemainCard .stg-amt, #dsbBgtRemainCard .stg-amt, #supStatCrCard .stg-amt, #supStatVatCard .stg-amt { display: inline-block; vertical-align: middle; font-size: 13.5px; font-weight: 700; color: #5b6b78; background: #f2f5f8; border: 1px solid #e3e9ef; border-radius: 10px; padding: 1px 9px; margin-inline-start: 10px; white-space: nowrap; unicode-bidi: isolate; }
         /* قسم فلاتر مضغوط: قوائم أنحف ومسافات أقل بين الصفوف */
         .filter-grid-4 { grid-template-columns: repeat(4, 1fr); }
         /* شبكة فلاتر مرنة: تملأ أكبر عدد ممكن من الأعمدة لتبقى الفلاتر في سطرين إلى ثلاثة */
@@ -535,6 +541,17 @@
         .filter-section-compact .filter-grid input, .filter-section-compact .filter-grid select { padding: 7px 10px; }
         .filter-section-compact .filter-actions { margin-top: 0.7rem; }
         @media (max-width: 900px) { .filter-grid-4 { grid-template-columns: repeat(2, 1fr); } }
+        /* رأس بطاقات المعايير: الأزرار بجانب العنوان مباشرة + إزالة الفراغ أسفل حقول التصفية */
+        #reportPrintArea-exclude .card-header, #dashFilterCard .card-header { justify-content: flex-start; gap: 18px; flex-wrap: wrap; margin-bottom: .7rem; padding-bottom: .6rem; }
+        .hdr-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        #reportPrintArea-exclude, #dashFilterCard { padding-bottom: 1rem; margin-bottom: 1rem; }
+        #reportPrintArea-exclude .filter-section, #dashFilterCard .filter-section { margin-bottom: 0; padding: .8rem 1rem; }
+        /* بطاقات لوحة التحكم: أنحف سمكاً وبصفّين فقط */
+        #page-dashboard .stats-grid-slim { gap: .6rem; margin-bottom: .6rem; }
+        #page-dashboard .stats-grid-slim .stat-card { padding: .35rem .85rem; }
+        #page-dashboard .stats-grid-slim .stat-icon { font-size: 24px; }
+        #page-dashboard .lpo-stage-stats { margin-top: 0; margin-bottom: 1rem; }
+        #page-dashboard .stg-amt { font-size: 11.5px !important; padding: 0 6px !important; margin-inline-start: 6px !important; }
 
         /* ===== الملف الشخصي (Profile) ===== */
         .profile-hero { background: linear-gradient(135deg, #0093c4 0%, #00698f 100%); color: #fff; border: none; }
@@ -666,6 +683,9 @@
         @keyframes spGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
         @media (prefers-reduced-motion: reduce) { svg.spark, svg.spark * { animation: none !important; transition: none !important; } .stat-card { transition: none; } .stat-card:hover { transform: none; } }
         .stats-grid.has-bgt { grid-template-columns: repeat(5, 1fr); }
+        #lpoStatsRow1:not(.has-bgt), #dsbStatsRow1:not(.has-bgt) { grid-template-columns: repeat(3, 1fr); }
+        #lpoStatsRow2, #dsbStatsRow2 { grid-template-columns: repeat(5, 1fr); }
+        #lpoStatsRow1 .stat-card:nth-child(3), #dsbStatsRow1 .stat-card:nth-child(3) { border-top-color: #e74c3c; }
         .stat-card.stat-click { cursor: pointer; transition: transform .15s, box-shadow .15s; }
         .stat-card.stat-click:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,147,196,.18); }
         /* نوافذ كشف المخصصات (معاينة فقط) */
@@ -1073,32 +1093,101 @@
 <div id="impersonationBanner" class="impr-banner" style="display:none;"></div>
 <!-- ============ DASHBOARD ============ -->
 <div class="page active" id="page-dashboard">
-    <div class="stats-grid stats-grid-5">
+    <!-- معايير لوحة التحكم والتصفية (بنفس أسلوب صفحة التقارير) -->
+    <div class="card dash-filter-card" id="dashFilterCard">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-sliders-h"></i> معايير لوحة التحكم والتصفية</div>
+            <div class="hdr-actions">
+                <button type="button" class="btn btn-danger btn-small" onclick="clearDashFilters()"><i class="fas fa-eraser"></i> مسح التصفية</button>
+            </div>
+        </div>
+        <div class="filter-section filter-section-compact">
+            <div class="filter-title"><i class="fas fa-filter"></i> فلاتر البحث</div>
+            <div class="filter-grid filter-grid-auto">
+                <div class="ms-wrap" data-ms="msDashMonth">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الأشهر --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msDashYear">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل السنوات --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msDashSupplier">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الموردين --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msDashStatus">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الحالات --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msDashService">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل أنواع الخدمات --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msDashStaff">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الموظفين --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-grid stats-grid-slim" id="dsbStatsRow1">
         <div class="stat-card">
-            <div class="stat-icon">📄</div>
-            <div class="stat-label">أوامر هذا الشهر</div>
-            <div class="stat-value" id="dashOrderCount">0</div>
+            <div class="stat-icon">📋</div>
+            <div class="stat-label">عدد الأوامر</div>
+            <div class="stat-value" id="dsbStatCount">0</div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon">💰</div>
-            <div class="stat-label">الإنفاق الشهري (ر.ع)</div>
-            <div class="stat-value" id="dashTotalAmount">0</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon">📈</div>
-            <div class="stat-label">متوسط الأمر (ر.ع)</div>
-            <div class="stat-value" id="dashAvgOrder">0</div>
+            <div class="stat-icon">💵</div>
+            <div class="stat-label">مجموع المبالغ (ر.ع)</div>
+            <div class="stat-value" id="dsbStatTotal">0</div>
         </div>
         <div class="stat-card">
             <div class="stat-icon">🏢</div>
             <div class="stat-label">عدد الموردين</div>
-            <div class="stat-value" id="dashSuppliers">0</div>
+            <div class="stat-value" id="dsbStatSuppliers">0</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon">📊</div>
-            <div class="stat-label">إجمالي الأوامر</div>
-            <div class="stat-value" id="dashAllOrders">0</div>
+        
+        <div class="stat-card stat-click" id="dsbBgtAllocCard" style="border-top-color:#0093c4; display:none;" onclick="openPkgSummary()" title="انقر لعرض مخصصات الأقسام">
+            <div class="stat-icon">👛</div>
+            <div class="stat-label">إجمالي المخصص المالي (ر.ع)</div>
+            <div class="stat-value" style="color:#0093c4;"><span id="dsbBgtAlloc">0</span><span class="stg-amt" id="dsbBgtAllocSub"></span></div>
         </div>
+        <div class="stat-card stat-click" id="dsbBgtRemainCard" style="border-top-color:#2e7d32; display:none;" onclick="openPkgLedger()" title="انقر لعرض آخر العمليات المالية">
+            <div class="stat-icon">🏦</div>
+            <div class="stat-label">المتبقي من المخصص (ر.ع)</div>
+            <div class="stat-value" style="color:#2e7d32;"><span id="dsbBgtRemain">0</span><span class="stg-amt" id="dsbBgtRemainSub"></span></div>
+        </div>
+    </div>
+    
+    <div class="stats-grid stats-grid-slim lpo-stage-stats" id="dsbStatsRow2">
+        <div class="stat-card" style="border-top-color:#f39c12;">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-label">جديدة بانتظار الموافقة</div>
+            <div class="stat-value" style="color:#f39c12;"><span id="dsbStgPending">0</span><span class="stg-amt" id="dsbStgPendingAmt"></span></div>
+        </div>
+        <div class="stat-card" style="border-top-color:#2e7d32;">
+            <div class="stat-icon">✅</div>
+            <div class="stat-label">تمت الموافقة عليها</div>
+            <div class="stat-value" style="color:#2e7d32;"><span id="dsbStgApproved">0</span><span class="stg-amt" id="dsbStgApprovedAmt"></span></div>
+        </div>
+        <div class="stat-card" style="border-top-color:#8e44ad;">
+            <div class="stat-icon">💳</div>
+            <div class="stat-label">المدفوعة</div>
+            <div class="stat-value" style="color:#8e44ad;"><span id="dsbStgPayment">0</span><span class="stg-amt" id="dsbStgPaymentAmt"></span></div>
+        </div>
+        <div class="stat-card" style="border-top-color:#607d8b;">
+            <div class="stat-icon">🔒</div>
+            <div class="stat-label">المغلقة</div>
+            <div class="stat-value" style="color:#607d8b;"><span id="dsbStgClosed">0</span><span class="stg-amt" id="dsbStgClosedAmt"></span></div>
+        </div>
+        <div class="stat-card" style="border-top-color:#c0392b;">
+            <div class="stat-icon">❌</div>
+            <div class="stat-label">المرفوضة</div>
+            <div class="stat-value" style="color:#c0392b;"><span id="dsbStgRejected">0</span><span class="stg-amt" id="dsbStgRejectedAmt"></span></div>
+        </div>
+        
     </div>
 
     <div class="charts-row">
@@ -1390,11 +1479,6 @@
             <div class="stat-value" id="lpoStatTotal">0</div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon">📈</div>
-            <div class="stat-label">متوسط الأمر (ر.ع)</div>
-            <div class="stat-value" id="lpoStatAvg">0</div>
-        </div>
-        <div class="stat-card">
             <div class="stat-icon">🏢</div>
             <div class="stat-label">عدد الموردين</div>
             <div class="stat-value" id="lpoStatSuppliers">0</div>
@@ -1404,6 +1488,12 @@
             <div class="stat-icon">👛</div>
             <div class="stat-label">إجمالي المخصص المالي (ر.ع)</div>
             <div class="stat-value" style="color:#0093c4;"><span id="lpoBgtAlloc">0</span><span class="stg-amt" id="lpoBgtAllocSub"></span></div>
+        </div>
+        <!-- المتبقي من المخصص (قابلة للنقر: آخر العمليات المالية) -->
+        <div class="stat-card stat-click" id="lpoBgtRemainCard" style="border-top-color:#2e7d32; display:none;" onclick="openPkgLedger()" title="انقر لعرض آخر العمليات المالية">
+            <div class="stat-icon">🏦</div>
+            <div class="stat-label">المتبقي من المخصص (ر.ع)</div>
+            <div class="stat-value" style="color:#2e7d32;"><span id="lpoBgtRemain">0</span><span class="stg-amt" id="lpoBgtRemainSub"></span></div>
         </div>
     </div>
     <!-- صف ثانٍ: إحصائيات الأوامر حسب مرحلة سير العمل (حسب الفلاتر المطبّقة) -->
@@ -1428,11 +1518,10 @@
             <div class="stat-label">المغلقة</div>
             <div class="stat-value" style="color:#607d8b;"><span id="lpoStgClosed">0</span><span class="stg-amt" id="lpoStgClosedAmt"></span></div>
         </div>
-        <!-- المتبقي من المخصص (قابلة للنقر: آخر العمليات المالية) -->
-        <div class="stat-card stat-click" id="lpoBgtRemainCard" style="border-top-color:#2e7d32; display:none;" onclick="openPkgLedger()" title="انقر لعرض آخر العمليات المالية">
-            <div class="stat-icon">🏦</div>
-            <div class="stat-label">المتبقي من المخصص (ر.ع)</div>
-            <div class="stat-value" style="color:#2e7d32;"><span id="lpoBgtRemain">0</span><span class="stg-amt" id="lpoBgtRemainSub"></span></div>
+        <div class="stat-card" style="border-top-color:#c0392b;">
+            <div class="stat-icon">❌</div>
+            <div class="stat-label">المرفوضة</div>
+            <div class="stat-value" style="color:#c0392b;"><span id="lpoStgRejected">0</span><span class="stg-amt" id="lpoStgRejectedAmt"></span></div>
         </div>
     </div>
     <div class="card">
@@ -1640,7 +1729,7 @@
     <div class="card" id="reportPrintArea-exclude">
         <div class="card-header">
             <div class="card-title"><i class="fas fa-sliders-h"></i> معايير التقرير والتصفية</div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <div class="hdr-actions">
                 <button type="button" class="btn btn-danger btn-small" onclick="clearReportFilters()"><i class="fas fa-eraser"></i> مسح التصفية</button>
                 <button type="button" class="btn btn-success btn-small" onclick="downloadReportsExcel()" title="كل تقارير الصفحة برسومها وجداولها + بيانات المصدر، حسب التصفية الحالية"><i class="fas fa-file-excel"></i> تنزيل جميع البيانات وتصدير Excel</button>
                 <button type="button" class="btn btn-small" style="background:#c0392b; color:white;" onclick="exportReportPDF()"><i class="fas fa-file-pdf"></i> طباعة التقرير PDF</button>
@@ -1714,11 +1803,18 @@
             <div class="stat-value" id="repStatApproved" style="color:#2e7d32;">0</div>
             <div style="font-size:11px; color:#999;" id="repStatApprovedAmt">0 ر.ع</div>
         </div>
-        <div class="stat-card" style="border-top-color:#c0392b;">
-            <div class="stat-icon">❌</div>
-            <div class="stat-label">مرفوضة</div>
-            <div class="stat-value" id="repStatRejected" style="color:#c0392b;">0</div>
-            <div style="font-size:11px; color:#999;" id="repStatRejectedAmt">0 ر.ع</div>
+        <!-- المخصص المالي: الإجمالي والمتبقي (قابلتان للنقر كما في صفحة أوامر الشراء) -->
+        <div class="stat-card stat-click" id="repBgtAllocCard" style="border-top-color:#0093c4; display:none;" onclick="openPkgSummary()" title="انقر لعرض مخصصات الأقسام">
+            <div class="stat-icon">👛</div>
+            <div class="stat-label">إجمالي المخصص المالي (ر.ع)</div>
+            <div class="stat-value" id="repBgtAlloc" style="color:#0093c4;">0</div>
+            <div style="font-size:11px; color:#999;" id="repBgtAllocSub"></div>
+        </div>
+        <div class="stat-card stat-click" id="repBgtRemainCard" style="border-top-color:#2e7d32; display:none;" onclick="openPkgLedger()" title="انقر لعرض آخر العمليات المالية">
+            <div class="stat-icon">🏦</div>
+            <div class="stat-label">المتبقي من المخصص (ر.ع)</div>
+            <div class="stat-value" id="repBgtRemain" style="color:#2e7d32;">0</div>
+            <div style="font-size:11px; color:#999;" id="repBgtRemainSub"></div>
         </div>
     </div>
 
@@ -3498,6 +3594,7 @@ const I18N = {
     'بانتظار الاعتماد': 'Pending Approval',
     'معتمدة': 'Approved',
     'مرفوضة': 'Rejected',
+    'المرفوضة': 'Rejected Orders',
     'جديدة بانتظار الموافقة': 'New – Pending Approval',
     'تمت الموافقة عليها': 'Approved Orders',
     'المدفوعة': 'Paid Orders',
@@ -3787,6 +3884,7 @@ const I18N = {
     'حفظ التقييم': 'Save Evaluation',
     'طباعة التقرير PDF': 'Print Report PDF',
     'معايير التقرير والتصفية': 'Report Criteria & Filters',
+    'معايير لوحة التحكم والتصفية': 'Dashboard Criteria & Filters',
     'أكبر 5 أوامر شراء (Top 5)': 'Top 5 Purchase Orders',
     'إحصائيات حسب القسم المعني': 'Statistics by Department',
     'مبالغ أوامر الشراء حسب القسم المعني (ر.ع)': 'Purchase Order Amounts by Department (OMR)',
@@ -4612,7 +4710,7 @@ function showPage(pageId, navItem) {
         else iconEl.style.display = 'none';
     }
 
-    if (pageId === 'dashboard') loadDashboard();
+    if (pageId === 'dashboard') { populateAllFilters(); loadDashboard(); }
     if (pageId === 'lpo-management') {
         populateAllFilters(); loadDrafts(); loadLPOList();
         // التبويب الافتراضي دائماً: أوامر الشراء (ثم المسودات)
@@ -5946,6 +6044,7 @@ const TIP_MAP = {
     clearLPOFilters: ['إزالة كل المرشّحات وعرض كل الأوامر', 'Remove all filters and show all orders'],
     clearDraftFilters: ['إزالة كل المرشّحات وعرض كل المسودات', 'Remove all filters and show all drafts'],
     clearSupplierFilters: ['إزالة كل المرشّحات وعرض كل الموردين', 'Remove all filters and show all suppliers'],
+    clearDashFilters: ['إزالة معايير لوحة التحكم وعرض كل البيانات', 'Remove dashboard filters and show all data'],
     clearReportFilters: ['إزالة مرشّحات التقرير والعودة للكل', 'Reset the report filters'],
     resetActivityFilters: ['إعادة ضبط مرشّحات سجل النشاط', 'Reset the activity log filters'],
     resetLpoTableFromProfile: ['إعادة ترتيب وأحجام أعمدة جدول الأوامر للوضع الافتراضي', 'Restore default order and widths of the orders table columns'],
@@ -6343,25 +6442,17 @@ function _spDeptBars(kind) {
     const rows = (departments || []).filter(d => d.budget !== null && d.budget !== undefined).map(d => deptBudgetStats(d));
     return rows.map(st => kind === 'alloc' ? st.alloc : Math.max(0, st.remaining)).sort((a, b) => b - a).slice(0, 12);
 }
-function sparkDashboard() {
-    const L = lpoDrafts || [];
-    sparkOn('dashOrderCount', _spSeries(L, () => 1), 'bar');
-    sparkOn('dashTotalAmount', _spSeries(L, l => +l.total || 0), 'area');
-    sparkOn('dashAvgOrder', _spAvg(L), 'line');
-    sparkOn('dashSuppliers', _spSuppliersCum(), 'area');
-    sparkOn('dashAllOrders', _spCumulative(_spSeries(L, () => 1)), 'bar');
-}
-function sparkOrdersPage(filtered) {
+function sparkOrdersPage(filtered, p) {
+    p = p || 'lpo';
     const L = filtered || [];
-    sparkOn('lpoStatCount', _spSeries(L, () => 1), 'bar');
-    sparkOn('lpoStatTotal', _spSeries(L, l => +l.total || 0), 'area');
-    sparkOn('lpoStatAvg', _spAvg(L), 'line');
-    sparkOn('lpoStatSuppliers', _spDistinctSuppliers(L), 'bar');
-    [['lpoStgPending', 'pending'], ['lpoStgApproved', 'approved'], ['lpoStgPayment', 'payment'], ['lpoStgClosed', 'closed']].forEach(([id, k]) =>
-        sparkOn(id, _spSeries(L, l => orderStage(l) === k ? 1 : 0), 'bar'));
+    sparkOn(p + 'StatCount', _spSeries(L, () => 1), 'bar');
+    sparkOn(p + 'StatTotal', _spSeries(L, l => +l.total || 0), 'area');
+    sparkOn(p + 'StatSuppliers', _spDistinctSuppliers(L), 'bar');
+    [['Pending', 'pending'], ['Approved', 'approved'], ['Payment', 'payment'], ['Closed', 'closed'], ['Rejected', 'rejected']].forEach(([id, k]) =>
+        sparkOn(p + 'Stg' + id, _spSeries(L, l => orderStage(l) === k ? 1 : 0), 'bar'));
     if (canSeeBudget()) {
-        sparkOn('lpoBgtAlloc', _spDeptBars('alloc'), 'bar');
-        sparkOn('lpoBgtRemain', _spDeptBars('remain'), 'area');
+        sparkOn(p + 'BgtAlloc', _spDeptBars('alloc'), 'bar');
+        sparkOn(p + 'BgtRemain', _spDeptBars('remain'), 'area');
     }
 }
 function sparkSuppliersPage(full) {
@@ -6386,29 +6477,23 @@ function sparkReport(list) {
     sparkOn('repStatAvg', _spAvg(L), 'line');
     sparkOn('repStatPending', _spSeries(L, l => l.approvalStatus === 'pending' ? 1 : 0), 'bar');
     sparkOn('repStatApproved', _spSeries(L, l => (l.approvalStatus || 'approved') === 'approved' ? 1 : 0), 'bar');
-    sparkOn('repStatRejected', _spSeries(L, l => l.approvalStatus === 'rejected' ? 1 : 0), 'bar');
+    if (canSeeBudget()) {
+        sparkOn('repBgtAlloc', _spDeptBars('alloc'), 'bar');
+        sparkOn('repBgtRemain', _spDeptBars('remain'), 'area');
+    }
 }
 
 // ===================== DASHBOARD =====================
 function loadDashboard() {
-    const today = new Date();
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-    const monthOrders = lpoDrafts.filter(l => new Date(l.date) >= monthStart);
-    const monthTotal = monthOrders.reduce((s, l) => s + l.total, 0);
-    const allTotal = lpoDrafts.reduce((s, l) => s + l.total, 0);
-
-    document.getElementById('dashOrderCount').textContent = monthOrders.length;
-    document.getElementById('dashTotalAmount').textContent = fmtInt(monthTotal);
-    document.getElementById('dashAvgOrder').textContent = lpoDrafts.length ? fmtInt(allTotal / lpoDrafts.length) : '0';
-    document.getElementById('dashSuppliers').textContent = (typeof suppliers !== 'undefined' && suppliers) ? suppliers.length : 0;
-    document.getElementById('dashAllOrders').textContent = lpoDrafts.length;
+    const L = _dashList();
+    fillOrderStatCards(L, 'dsb');
 
     const tbody = document.querySelector('#recentOrdersTable tbody');
     tbody.innerHTML = '';
-    if (lpoDrafts.length === 0) {
+    if (L.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#999;">لا توجد أوامر بعد</td></tr>';
     } else {
-        const recent = lpoDrafts.slice().sort((a, b) => {
+        const recent = L.slice().sort((a, b) => {
             const ca = a.createdAt || a.date || '', cb = b.createdAt || b.date || '';
             return cb < ca ? -1 : cb > ca ? 1 : 0;
         }).slice(0, 10);
@@ -6424,7 +6509,6 @@ function loadDashboard() {
     drawDashSupplierSpend();
     drawDashDeptChart();
     drawDashBudgetChart();
-    try { sparkDashboard(); } catch (e) { console.error(e); }
     try { drawDashBudgetPies(); } catch (e) { console.error(e); }
     drawUsageHeatmap();
     updateNotifBadge();
@@ -6436,7 +6520,7 @@ function drawDashDeptChart() {
     if (!el) return;
     const en = currentLanguage === 'en';
     const byDept = {};
-    lpoDrafts.forEach(l => {
+    _dashList().forEach(l => {
         const d = l.department || (en ? 'Unspecified' : 'غير محدد');
         byDept[d] = (byDept[d] || 0) + l.total;
     });
@@ -6563,7 +6647,7 @@ function drawDashSupplierSpend() {
     const el = document.getElementById('dashSupplierSpendChart');
     if (!el) return;
     const bySup = {};
-    lpoDrafts.forEach(l => { bySup[l.supplierName] = (bySup[l.supplierName] || 0) + l.total; });
+    _dashList().forEach(l => { bySup[l.supplierName] = (bySup[l.supplierName] || 0) + l.total; });
     const sups = Object.keys(bySup);
         chartInstances.dashSupplierSpend = mkChart('dashSupplierSpend', el.getContext('2d'), {
         type: 'bar',
@@ -6634,7 +6718,8 @@ window.addEventListener('resize', function() {
 // رسم بياني عمودي لتوزيع الموردين
 function drawSuppliersChart() {
     const ctx = document.getElementById('suppliersChart').getContext('2d');
-    const data = suppliers.map(s => ({ name: s.name, count: lpoDrafts.filter(l => l.supplierId === s.id).length }));
+    const _L = _dashList();
+    const data = suppliers.map(s => ({ name: s.name, count: _L.filter(l => l.supplierId === s.id).length }));
         chartInstances.suppliers = mkChart('suppliers', ctx, {
         type: 'bar',
         data: {
@@ -6649,7 +6734,7 @@ function drawSuppliersChart() {
 function drawServiceTypeChart() {
     const ctx = document.getElementById('serviceTypeChart').getContext('2d');
     const svc = {};
-    lpoDrafts.forEach(l => {
+    _dashList().forEach(l => {
         const sup = suppliers.find(s => s.id === l.supplierId);
         const types = sup ? splitSvc(sup.serviceType) : [];
         if (!types.length) types.push('غير محدد');
@@ -6669,9 +6754,10 @@ function drawServiceTypeChart() {
 function drawMonthlyChart() {
     const ctx = document.getElementById('monthlyChart').getContext('2d');
     const monthNames = ['يناير','فبراير','مارس','إبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-    const year = new Date().getFullYear();
+    const _yf = msGet('msDashYear');
+    const year = _yf.length === 1 ? +_yf[0] : new Date().getFullYear();
     const monthly = new Array(12).fill(0);
-    lpoDrafts.forEach(l => { const d = new Date(l.date); if (d.getFullYear() === year) monthly[d.getMonth()] += l.total; });
+    _dashList().forEach(l => { const d = new Date(l.date); if (d.getFullYear() === year) monthly[d.getMonth()] += l.total; });
         chartInstances.monthly = mkChart('monthly', ctx, {
         type: 'line',
         data: {
@@ -6684,8 +6770,9 @@ function drawMonthlyChart() {
 
 function drawStatusChart() {
     const ctx = document.getElementById('statusChart').getContext('2d');
-    const signed = lpoDrafts.filter(l => l.status === 'موقعة' || l.status === LPO_STAGE_PAYMENT || l.status === LPO_STAGE_CLOSED).length;
-    const pending = lpoDrafts.filter(l => l.status === 'معلقة').length;
+    const _L = _dashList();
+    const signed = _L.filter(l => l.status === 'موقعة' || l.status === LPO_STAGE_PAYMENT || l.status === LPO_STAGE_CLOSED).length;
+    const pending = _L.filter(l => l.status === 'معلقة').length;
     const drafts = draftSaves.length;
         chartInstances.status = mkChart('status', ctx, {
         type: 'doughnut',
@@ -7798,41 +7885,44 @@ function openDraftRowMenu(ev, id) {
     document.addEventListener('keydown', _rowMenuKey, true);
 }
 
+// تعبئة بطاقات الإحصاء (الصفان العلويان) — مشتركة بين صفحة أوامر الشراء (p='lpo') ولوحة التحكم (p='dsb')
+function fillOrderStatCards(filtered, p) {
+    const setT = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+    const total = filtered.reduce((s, l) => s + l.total, 0);
+    const uniqueSup = new Set(filtered.map(l => l.supplierId)).size;
+    setT(p + 'StatCount', filtered.length);
+    setT(p + 'StatTotal', fmtInt(total));
+    setT(p + 'StatSuppliers', uniqueSup);
+    // الصف الثاني: الأوامر حسب مرحلة سير العمل
+    try {
+        const stg = { pending: [0, 0], approved: [0, 0], payment: [0, 0], closed: [0, 0], rejected: [0, 0] };
+        filtered.forEach(l => { const k = orderStage(l); if (stg[k]) { stg[k][0]++; stg[k][1] += (+l.total || 0); } });
+        const cur = currentLanguage === 'en' ? ' OMR' : ' ر.ع';
+        [['pending', 'Pending'], ['approved', 'Approved'], ['payment', 'Payment'], ['closed', 'Closed'], ['rejected', 'Rejected']].forEach(([k, id]) => {
+            setT(p + 'Stg' + id, stg[k][0]);
+            setT(p + 'Stg' + id + 'Amt', fmtInt(stg[k][1]) + cur);
+        });
+        // بطاقتا المخصص المالي (كل الأقسام — لا تتأثر بالفلاتر)
+        const show = canSeeBudget();
+        [p + 'BgtAllocCard', p + 'BgtRemainCard'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = show ? '' : 'none'; });
+        [p + 'StatsRow1', p + 'StatsRow2'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.toggle('has-bgt', show); });
+        if (show) {
+            const t = budgetTotals(), en = currentLanguage === 'en';
+            setT(p + 'BgtAlloc', fmtInt(t.alloc));
+            setT(p + 'BgtAllocSub', (en ? t.nAlloc + ' dept.' : t.nAlloc + ' قسم'));
+            const rem = document.getElementById(p + 'BgtRemain');
+            if (rem) { rem.textContent = fmtInt(t.remaining); rem.style.color = t.remaining < 0 ? '#c0392b' : '#2e7d32'; }
+            setT(p + 'BgtRemainSub', (en ? 'Spent ' : 'المنصرف ') + fmtInt(t.spent) + cur);
+        }
+        try { sparkOrdersPage(filtered, p); } catch (e) { console.error(e); }
+    } catch (e) { }
+}
+
 function renderLPOList() {
     const list = getSortedLPOs();
     // الإحصائيات (تعتمد على المصفّاة وليس المرتّبة، والنتيجة نفسها)
     const filtered = getFilteredLPOs();
-    const total = filtered.reduce((s, l) => s + l.total, 0);
-    const uniqueSup = new Set(filtered.map(l => l.supplierId)).size;
-    document.getElementById('lpoStatCount').textContent = filtered.length;
-    document.getElementById('lpoStatTotal').textContent = fmtInt(total);
-    document.getElementById('lpoStatAvg').textContent = filtered.length ? fmtInt(total / filtered.length) : '0';
-    document.getElementById('lpoStatSuppliers').textContent = uniqueSup;
-    // الصف الثاني: الأوامر حسب مرحلة سير العمل
-    try {
-        const stg = { pending: [0, 0], approved: [0, 0], payment: [0, 0], closed: [0, 0] };
-        filtered.forEach(l => { const k = orderStage(l); if (stg[k]) { stg[k][0]++; stg[k][1] += (+l.total || 0); } });
-        const cur = currentLanguage === 'en' ? ' OMR' : ' ر.ع';
-        [['pending', 'Pending'], ['approved', 'Approved'], ['payment', 'Payment'], ['closed', 'Closed']].forEach(([k, id]) => {
-            const c = document.getElementById('lpoStg' + id), a = document.getElementById('lpoStg' + id + 'Amt');
-            if (c) c.textContent = stg[k][0];
-            if (a) a.textContent = fmtInt(stg[k][1]) + cur;
-        });
-        // بطاقتا المخصص المالي: الإجمالي بعد "عدد الموردين" والمتبقي بعد "المغلقة" (كل الأقسام — لا تتأثر بفلاتر الأوامر)
-        const show = canSeeBudget();
-        ['lpoBgtAllocCard', 'lpoBgtRemainCard'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = show ? '' : 'none'; });
-        ['lpoStatsRow1', 'lpoStatsRow2'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.toggle('has-bgt', show); });
-        if (show) {
-            const t = budgetTotals(), en = currentLanguage === 'en';
-            document.getElementById('lpoBgtAlloc').textContent = fmtInt(t.alloc);
-            document.getElementById('lpoBgtAllocSub').textContent = (en ? t.nAlloc + ' dept.' : t.nAlloc + ' قسم');
-            const rem = document.getElementById('lpoBgtRemain');
-            rem.textContent = fmtInt(t.remaining);
-            rem.style.color = t.remaining < 0 ? '#c0392b' : '#2e7d32';
-            document.getElementById('lpoBgtRemainSub').textContent = (en ? 'Spent ' : 'المنصرف ') + fmtInt(t.spent) + cur;
-        }
-        try { sparkOrdersPage(filtered); } catch (e) { console.error(e); }
-    } catch (e) {}
+    fillOrderStatCards(filtered, 'lpo');
 
     const tbody = document.querySelector('#lpoListTable tbody');
     tbody.innerHTML = '';
@@ -10041,12 +10131,14 @@ function populateAllFilters() {
     msSetOptions('msSupplier', supMsOpts);
     msSetOptions('msDraftSupplier', supMsOpts);
     msSetOptions('msRepSupplier', supMsOpts);
+    msSetOptions('msDashSupplier', supMsOpts);
 
     const staffSet = [...new Set(lpoDrafts.map(l => l.staff))].filter(Boolean);
     // فلتر المستخدم/الموظف (قوائم متعددة الاختيارات): أوامر الشراء + التقارير
     const staffMsOpts = staffSet.map(s => ({ value: s, label: s }));
     msSetOptions('msUser', staffMsOpts);
     msSetOptions('msRepStaff', staffMsOpts);
+    msSetOptions('msDashStaff', staffMsOpts);
 
     // أنواع الخدمات للفلاتر: من جدول أنواع الخدمات + ما هو موجود فعلاً لدى الموردين (مع تقسيم المتعدد)
     const svcSet = allServiceTypesSet();
@@ -10056,17 +10148,19 @@ function populateAllFilters() {
     msSetOptions('msSupSvc', svcMsOpts);
     msSetOptions('msDraftService', svcMsOpts);
     msSetOptions('msRepService', svcMsOpts);
+    msSetOptions('msDashService', svcMsOpts);
 
     // فلاتر التقارير الثابتة: الأشهر والحالة
     const monthNamesAr = ['يناير','فبراير','مارس','إبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
     const monthNamesEn = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     const mNames = currentLanguage === 'en' ? monthNamesEn : monthNamesAr;
     msSetOptions('msRepMonth', mNames.map((nm, i) => ({ value: String(i + 1), label: nm })));
-    msSetOptions('msRepStatus', [
+    msSetOptions('msDashMonth', mNames.map((nm, i) => ({ value: String(i + 1), label: nm })));
+    ['msRepStatus', 'msDashStatus'].forEach(k => msSetOptions(k, [
         { value: 'pending', label: currentLanguage === 'en' ? 'Pending Approval' : 'بانتظار الاعتماد' },
         { value: 'approved', label: currentLanguage === 'en' ? 'Approved' : 'معتمد' },
         { value: 'rejected', label: currentLanguage === 'en' ? 'Rejected' : 'مرفوض' }
-    ]);
+    ]));
 
     // فلتر القسم / الغرض (قوائم متعددة الاختيار): أوامر الشراء + المسودات
     const deptSet = [...new Set([...departments.map(d => d.name), ...lpoDrafts.map(l => l.department), ...draftSaves.map(d => d.department)].filter(Boolean))];
@@ -10093,6 +10187,7 @@ function populateAllFilters() {
     const yearSet = [...new Set(lpoDrafts.map(l => new Date(l.date).getFullYear()))];
     if (yearSet.length === 0) yearSet.push(new Date().getFullYear());
     msSetOptions('msRepYear', yearSet.sort((a, b) => b - a).map(y => ({ value: String(y), label: String(y) })));
+    msSetOptions('msDashYear', yearSet.map(y => ({ value: String(y), label: String(y) })));
 
     // قائمة المورد المنسدلة المقيدة في نافذة أمر الشراء
     populateSupplierSelect();
@@ -10112,13 +10207,16 @@ function populateAllFilters() {
 }
 
 // ===================== REPORTS =====================
-function getReportFiltered() {
-    const monthF = msGet('msRepMonth');     // قيم 1..12 كنصوص
-    const yearF = msGet('msRepYear');
-    const supF = msGet('msRepSupplier');
-    const statusF = msGet('msRepStatus');    // pending | approved | rejected
-    const svcF = msGet('msRepService');
-    const staffF = msGet('msRepStaff');
+function getReportFiltered() { return _msFilterOrders('msRep'); }
+// أوامر لوحة التحكم بعد تطبيق معايير التصفية (نفس منطق التقارير)
+function _dashList() { return _msFilterOrders('msDash'); }
+function _msFilterOrders(px) {
+    const monthF = msGet(px + 'Month');     // قيم 1..12 كنصوص
+    const yearF = msGet(px + 'Year');
+    const supF = msGet(px + 'Supplier');
+    const statusF = msGet(px + 'Status');    // pending | approved | rejected
+    const svcF = msGet(px + 'Service');
+    const staffF = msGet(px + 'Staff');
 
     return lpoDrafts.filter(l => {
         const d = new Date(l.date);
@@ -10202,7 +10300,20 @@ function generateReport() {
     };
     setStat('repStatPending', 'repStatPendingAmt', 'pending');
     setStat('repStatApproved', 'repStatApprovedAmt', 'approved');
-    setStat('repStatRejected', 'repStatRejectedAmt', 'rejected');
+    // بطاقتا المخصص المالي (كل الأقسام — لا تتأثران بالتصفية، كما في صفحة أوامر الشراء)
+    try {
+        const show = canSeeBudget(), en = currentLanguage === 'en', cur = en ? ' OMR' : ' ر.ع';
+        ['repBgtAllocCard', 'repBgtRemainCard'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = show ? '' : 'none'; });
+        const row = document.querySelector('#reportPrintArea .report-stats-row'); if (row) row.classList.toggle('has-bgt', show);
+        if (show) {
+            const t = budgetTotals();
+            document.getElementById('repBgtAlloc').textContent = fmtInt(t.alloc);
+            document.getElementById('repBgtAllocSub').textContent = en ? t.nAlloc + ' dept.' : t.nAlloc + ' قسم';
+            const rem = document.getElementById('repBgtRemain');
+            rem.textContent = fmtInt(t.remaining); rem.style.color = t.remaining < 0 ? '#c0392b' : '#2e7d32';
+            document.getElementById('repBgtRemainSub').textContent = '';
+        }
+    } catch (e) { console.error(e); }
 
     // chart by date
     const byDate = {};
@@ -10654,6 +10765,10 @@ function renderVPITable(filteredOrders) {
     });
 }
 
+function clearDashFilters() {
+    ['msDashMonth','msDashYear','msDashSupplier','msDashStatus','msDashService','msDashStaff'].forEach(k => msClear(k));
+    loadDashboard();
+}
 function clearReportFilters() {
     ['msRepMonth','msRepYear','msRepSupplier','msRepStatus','msRepService','msRepStaff'].forEach(k => msClear(k));
     generateReport();
@@ -15288,6 +15403,12 @@ window.addEventListener('load', async function() {
     msSetup('msRepStatus', '-- كل الحالات --', generateReport);
     msSetup('msRepService', '-- كل أنواع الخدمات --', generateReport);
     msSetup('msRepStaff', '-- كل الموظفين --', generateReport);
+    msSetup('msDashMonth', '-- كل الأشهر --', loadDashboard);
+    msSetup('msDashYear', '-- كل السنوات --', loadDashboard);
+    msSetup('msDashSupplier', '-- كل الموردين --', loadDashboard);
+    msSetup('msDashStatus', '-- كل الحالات --', loadDashboard);
+    msSetup('msDashService', '-- كل أنواع الخدمات --', loadDashboard);
+    msSetup('msDashStaff', '-- كل الموظفين --', loadDashboard);
     // فرض اللغة الإنجليزية على كل حقول إدخال التاريخ (منتقي التاريخ والتنسيق) حتى في الواجهة العربية
     forceEnglishDateInputs();
     // نقل النوافذ المنبثقة إلى body أولاً (إصلاح الفراغ/القص أسفل النافذة) ثم تفعيل حركاتها
