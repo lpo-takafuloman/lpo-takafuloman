@@ -242,6 +242,16 @@
         .notif-bell:hover { background: #e3f0f6; }
         .notif-bell.has-alerts { color: #e67e22; animation: notifShake 2.4s ease-in-out infinite; }
         @keyframes notifShake { 0%,92%,100%{transform:rotate(0);} 94%{transform:rotate(-12deg);} 96%{transform:rotate(10deg);} 98%{transform:rotate(-6deg);} }
+        /* توهج ناعم دائم عند وجود تنبيهات: ظل إشعاعي طبقي ينبض + حلقتا انتشار ضبابيتان تتّسعان وتتلاشيان */
+        .notif-bell.has-alerts { border-color: rgba(230,126,34,.55); background: #fff6ec; animation: notifShake 2.4s ease-in-out infinite, notifGlow 2.2s ease-in-out infinite; }
+        .notif-bell.has-alerts::before, .notif-bell.has-alerts::after { content: ''; position: absolute; inset: -1px; border-radius: 50%; border: 2px solid rgba(230,126,34,.55); pointer-events: none; opacity: 0; filter: blur(1.5px); animation: notifRing 2.2s ease-out infinite; }
+        .notif-bell.has-alerts::after { animation-delay: 1.1s; }
+        @keyframes notifGlow {
+            0%, 100% { box-shadow: 0 0 4px 1px rgba(230,126,34,.35), 0 0 10px 2px rgba(230,126,34,.22), 0 0 18px 4px rgba(231,76,60,.10); }
+            50%      { box-shadow: 0 0 7px 2px rgba(230,126,34,.55), 0 0 16px 5px rgba(230,126,34,.34), 0 0 28px 9px rgba(231,76,60,.18); }
+        }
+        @keyframes notifRing { 0% { transform: scale(1); opacity: .65; } 100% { transform: scale(1.85); opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) { .notif-bell.has-alerts { animation: none; box-shadow: 0 0 8px 2px rgba(230,126,34,.4), 0 0 18px 5px rgba(230,126,34,.2); } .notif-bell.has-alerts::before, .notif-bell.has-alerts::after { display: none; } }
         .notif-badge { position: absolute; top: -3px; inset-inline-end: -3px; background: #e74c3c; color: #fff; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
         .notif-panel { position: absolute; top: calc(100% + 8px); inset-inline-end: 0; width: 330px; max-width: 86vw; max-height: 420px; overflow-y: auto; background: #fff; border: 1px solid #e0e6ed; border-radius: 12px; box-shadow: 0 12px 34px rgba(0,0,0,0.18); z-index: 1300; }
         .notif-panel-header { background: linear-gradient(135deg, #0093c4 0%, #007ba3 100%); color: #fff; padding: 11px 14px; font-size: 13px; font-weight: 700; border-radius: 12px 12px 0 0; position: sticky; top: 0; }
@@ -381,6 +391,20 @@
         .ctrl-search i { position: absolute; top: 50%; inset-inline-end: 11px; transform: translateY(-50%); color: #aab6c0; font-size: 12px; pointer-events: none; }
         .ctrl-list-scroll { max-height: 300px; overflow-y: auto; border: 1px solid #eef2f5; border-radius: 8px; }
         .ctrl-list-scroll table { margin: 0; }
+        /* قوائم الأقسام وأنواع الخدمات: بطاقتان متساويتا الارتفاع، والقائمة تمتد حتى أسفل البطاقة، ومقبض تمديد بالسحب */
+        .ctrl-card { margin: 0; display: flex; flex-direction: column; }
+        .ctrl-resizable { display: flex; flex-direction: column; position: relative; }
+        .ctrl-resizable > .ctrl-list-scroll { flex: 1 1 auto; min-height: 0; }
+        .ctrl-resizable.ctrl-fill { flex: 1 1 0; min-height: 300px; }
+        .ctrl-resizable.ctrl-fill > .ctrl-list-scroll { max-height: none; }
+        .ctrl-synced .ctrl-resizable { flex: 1 1 0; min-height: 150px; }
+        .ctrl-synced .ctrl-resizable > .ctrl-list-scroll { max-height: none; }
+        .ctrl-synced .ctrl-resizable.ctrl-dragged { flex: none; }
+        .ctrl-grip { flex: none; height: 14px; margin-top: 3px; cursor: ns-resize; position: relative; touch-action: none; user-select: none; border-radius: 0 0 8px 8px; }
+        .ctrl-grip::after { content: ''; position: absolute; inset-inline-end: 3px; bottom: 2px; width: 9px; height: 9px;
+            background: linear-gradient(135deg, transparent 0 42%, #8fa3b0 42% 52%, transparent 52% 64%, #8fa3b0 64% 74%, transparent 74% 100%); }
+        [dir="rtl"] .ctrl-grip::after, html[dir="rtl"] .ctrl-grip::after { transform: scaleX(-1); }
+        .ctrl-grip:hover { background: #f0f8fc; }
         .ctrl-list-scroll thead th { position: sticky; top: 0; background: #f8fafc; z-index: 1; }
         .ctrl-count { font-size: 11px; font-weight: 700; color: #0093c4; background: #eaf4f9; border-radius: 20px; padding: 1px 9px; margin-inline-start: 6px; }
         /* أقسام قابلة للطي */
@@ -493,42 +517,42 @@
         .excel-link i { margin-inline-end: 4px; }
 
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.2rem; margin-bottom: 1.5rem; }
-        .stat-card { background: white; border: 1px solid #e8eef5; border-radius: 12px; padding: 1.3rem; text-align: center; border-top: 3px solid #0093c4; }
+        .stat-card { background: white; border: 1px solid #e8eef5; border-radius: 12px; padding: 1.1rem; text-align: center; border-top: 3px solid #0093c4; }
         .stat-card:nth-child(2) { border-top-color: #7cb342; }
         .stat-card:nth-child(3) { border-top-color: #f39c12; }
         .stat-card:nth-child(4) { border-top-color: #e74c3c; }
         /* لوحة التحكم: خمس بطاقات في صف واحد دائماً بعرض مضغوط */
         .stats-grid-5 { grid-template-columns: repeat(5, 1fr); gap: 0.9rem; }
-        .stats-grid-5 .stat-card { padding: 1.05rem 0.6rem; min-width: 0; }
+        .stats-grid-5 .stat-card { padding: .9rem 0.6rem; min-width: 0; }
         .stats-grid-5 .stat-label { font-size: 14px; }
-        .stats-grid-5 .stat-value { font-size: 28px; }
+        .stats-grid-5 .stat-value { font-size: 25px; }
         .stats-grid-5 .stat-card:nth-child(5) { border-top-color: #9b59b6; }
-        .stat-icon { font-size: 28px; margin-bottom: 6px; }
+        .stat-icon { font-size: 25px; margin-bottom: 5px; }
         .stat-label { font-size: 12px; color: #999; margin-bottom: 6px; }
-        .stat-value { font-size: 26px; font-weight: 700; color: #0093c4; }
+        .stat-value { font-size: 23px; font-weight: 700; color: #0093c4; }
         /* صف بطاقات إحصائيات التقارير: كل البطاقات في سطر واحد مضغوط (دون تصغير النصوص) */
         .report-stats-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.65rem; margin-bottom: 1.2rem; }
         .report-stats-row.has-bgt { grid-template-columns: repeat(8, 1fr); }
-        .report-stats-row .stat-card { padding: 0.5rem 0.45rem; min-width: 0; }
+        .report-stats-row .stat-card { padding: 0.4rem 0.4rem; min-width: 0; }
         .report-stats-row .stat-card:nth-child(2) { border-top-color: #7cb342; }
         .report-stats-row .stat-card:nth-child(3) { border-top-color: #f39c12; }
         .report-stats-row .stat-card:nth-child(4) { border-top-color: #9b59b6; }
-        .report-stats-row .stat-icon { font-size: 22px; margin-bottom: 1px; line-height: 1.15; }
+        .report-stats-row .stat-icon { font-size: 19px; margin-bottom: 1px; line-height: 1.15; }
         .report-stats-row .stat-label { margin-bottom: 3px; }
         /* المبلغ الفرعي بجانب القيمة في نفس السطر لتقليل الارتفاع */
         .report-stats-row .stat-card .stat-value { display: inline-block; vertical-align: middle; line-height: 1.2; }
         .report-stats-row .stat-card > div[id$="Amt"], .report-stats-row .stat-card > div[id$="Sub"] { display: inline-block; vertical-align: middle; margin-inline-start: 6px; white-space: nowrap; }
-        .report-stats-row .stat-card .stat-icon { font-size: 20px; }
+        .report-stats-row .stat-card .stat-icon { font-size: 18px; }
         @media (max-width: 1150px) { .report-stats-row, .report-stats-row.has-bgt { grid-template-columns: repeat(4, 1fr); } }
         @media (max-width: 680px)  { .report-stats-row, .report-stats-row.has-bgt { grid-template-columns: repeat(2, 1fr); } }
         /* بطاقات إحصائيات مضغوطة أفقياً (الأيقونة بجانب النص) دون تغيير حجم الخط */
         .stats-grid-slim { gap: 0.8rem; margin-bottom: 1rem; }
-        .stats-grid-slim .stat-card { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0 12px; text-align: start; padding: 0.65rem 1rem; }
-        .stats-grid-slim .stat-icon { grid-row: 1 / span 2; font-size: 30px; margin: 0; align-self: center; line-height: 1; }
+        .stats-grid-slim .stat-card { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0 12px; text-align: start; padding: 0.5rem 0.9rem; }
+        .stats-grid-slim .stat-icon { grid-row: 1 / span 2; font-size: 26px; margin: 0; align-self: center; line-height: 1; }
         .stats-grid-slim .stat-label { grid-column: 2; margin: 0 0 1px; }
         .stats-grid-slim .stat-value { grid-column: 2; line-height: 1.1; }
         .lpo-stage-stats { margin-top: -0.2rem; }
-        .lpo-stage-stats .stg-amt, #lpoBgtAllocCard .stg-amt, #dsbBgtAllocCard .stg-amt, #lpoBgtRemainCard .stg-amt, #dsbBgtRemainCard .stg-amt, #supStatCrCard .stg-amt, #supStatVatCard .stg-amt { display: inline-block; vertical-align: middle; font-size: 13.5px; font-weight: 700; color: #5b6b78; background: #f2f5f8; border: 1px solid #e3e9ef; border-radius: 10px; padding: 1px 9px; margin-inline-start: 10px; white-space: nowrap; unicode-bidi: isolate; }
+        .lpo-stage-stats .stg-amt, #lpoBgtAllocCard .stg-amt, #dsbBgtAllocCard .stg-amt, #lpoBgtRemainCard .stg-amt, #dsbBgtRemainCard .stg-amt, #supStatCrCard .stg-amt, #supStatVatCard .stg-amt { display: inline-block; vertical-align: middle; font-size: 12.5px; font-weight: 700; color: #5b6b78; background: #f2f5f8; border: 1px solid #e3e9ef; border-radius: 10px; padding: 1px 9px; margin-inline-start: 10px; white-space: nowrap; unicode-bidi: isolate; }
         /* قسم فلاتر مضغوط: قوائم أنحف ومسافات أقل بين الصفوف */
         .filter-grid-4 { grid-template-columns: repeat(4, 1fr); }
         /* شبكة فلاتر مرنة: تملأ أكبر عدد ممكن من الأعمدة لتبقى الفلاتر في سطرين إلى ثلاثة */
@@ -547,11 +571,29 @@
         #reportPrintArea-exclude, #dashFilterCard { padding-bottom: 1rem; margin-bottom: 1rem; }
         #reportPrintArea-exclude .filter-section, #dashFilterCard .filter-section { margin-bottom: 0; padding: .8rem 1rem; }
         /* بطاقات لوحة التحكم: أنحف سمكاً وبصفّين فقط */
+        /* صناديق الفلاتر المضغوطة (أوامر الشراء، المسودات، الموردون، التقارير، سجل العمليات) */
+        .filter-section.fs-tight { padding: .4rem .6rem; margin-bottom: .5rem !important; }
+        .filter-section.fs-tight .filter-title { display: none; }
+        .filter-section.fs-tight .filter-grid { gap: .4rem .5rem; margin-bottom: .4rem; }
+        .filter-section.fs-tight .filter-grid:last-child { margin-bottom: 0; }
+        .filter-section.fs-tight .filter-actions { margin-top: .1rem; gap: 6px; }
+        .filter-section.fs-tight .ms-control { min-height: 30px; padding: 2px 8px; }
+        .filter-section.fs-tight .filter-grid input, .filter-section.fs-tight .filter-grid select { padding: 5px 9px; }
+        .filter-section.fs-tight .btn-small { padding: 3px 10px; line-height: 1.3; }
+        /* صندوق معايير لوحة التحكم: أقصر ارتفاعاً وبأقل مسافات عمودية */
+        #dashFilterCard { padding: .45rem 1rem .55rem; margin-bottom: .6rem; }
+        #dashFilterCard .card-header { margin-bottom: .3rem; padding-bottom: .3rem; gap: 14px; }
+        #dashFilterCard .card-title { font-size: 15px; line-height: 1.3; }
+        #dashFilterCard .btn-small { padding: 3px 10px; line-height: 1.3; }
+        #dashFilterCard .filter-section { padding: .4rem .6rem; margin: 0; }
+        #dashFilterCard .filter-title { display: none; }
+        #dashFilterCard .filter-grid { gap: .4rem .5rem; margin-bottom: 0; }
+        #dashFilterCard .ms-control { min-height: 30px; padding: 2px 8px; }
         #page-dashboard .stats-grid-slim { gap: .6rem; margin-bottom: .6rem; }
-        #page-dashboard .stats-grid-slim .stat-card { padding: .35rem .85rem; }
-        #page-dashboard .stats-grid-slim .stat-icon { font-size: 24px; }
+        #page-dashboard .stats-grid-slim .stat-card { padding: .28rem .8rem; }
+        #page-dashboard .stats-grid-slim .stat-icon { font-size: 21px; }
         #page-dashboard .lpo-stage-stats { margin-top: 0; margin-bottom: 1rem; }
-        #page-dashboard .stg-amt { font-size: 11.5px !important; padding: 0 6px !important; margin-inline-start: 6px !important; }
+        #page-dashboard .stg-amt { font-size: 10.5px !important; padding: 0 6px !important; margin-inline-start: 6px !important; }
 
         /* ===== الملف الشخصي (Profile) ===== */
         .profile-hero { background: linear-gradient(135deg, #0093c4 0%, #00698f 100%); color: #fff; border: none; }
@@ -601,7 +643,7 @@
         @media (max-width: 760px) { .profile-form-grid { grid-template-columns: 1fr; } .profile-hero-inner { justify-content: center; text-align: center; } }
 
         /* ===== سجل العمليات (Operations Log / Timeline) ===== */
-        /* ===== المخصصات المالية (Procurement Package) ===== */
+        /* ===== المخصصات المالية (Procurement Budget) ===== */
         .bgt-bar { display: block; height: 6px; border-radius: 4px; background: #eef2f6; overflow: hidden; }
         .bgt-bar > span { display: block; height: 100%; border-radius: 4px; transition: width .4s; }
         .bgt-mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
@@ -645,7 +687,7 @@
         .dept-pies { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 14px; }
         .dept-pie { border: 1px solid #e8eef5; border-radius: 12px; padding: 10px 10px 12px; background: #fcfdfe; text-align: center; min-width: 0; }
         .dept-pie .dp-name { font-size: 13.5px; font-weight: 800; color: #2a3b47; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
-        .dept-pie .dp-canvas { position: relative; height: 150px; }
+        .dept-pie .dp-canvas { position: relative; height: 135px; }
         .dept-pie .dp-nums { display: flex; justify-content: center; gap: 10px; font-size: 11.5px; color: #6b7c89; margin-top: 6px; flex-wrap: wrap; }
         .dept-pie .dp-nums b { font-weight: 800; unicode-bidi: isolate; direction: ltr; display: inline-block; }
         .dept-pie .dp-pk { font-size: 11px; color: #93a3b0; margin-top: 2px; }
@@ -676,8 +718,8 @@
         .stat-card:hover svg.spark.sp-bars rect { fill-opacity: .24; }
         svg.spark.sp-bars rect.sp-hot { fill-opacity: .62 !important; scale: 1 1.07; filter: drop-shadow(0 0 3px currentColor); }
         .stat-card > span.sp-dot, .stat-card > span.sp-guide { position: absolute !important; pointer-events: none; opacity: 0; z-index: 0 !important; transition: opacity .15s ease, left .08s linear, top .08s linear; }
-        .stat-card > span.sp-dot { width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: var(--sp-col, #0093c4); border: 2px solid #fff; box-shadow: 0 0 0 3px color-mix(in srgb, var(--sp-col, #0093c4) 30%, transparent); }
-        .stat-card > span.sp-guide { width: 0; border-inline-start: 1px dashed color-mix(in srgb, var(--sp-col, #0093c4) 55%, transparent); transition: opacity .15s ease; }
+        .stat-card > span.sp-dot { width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: var(--sp-col, #0093c4); border: 2px solid #fff; box-shadow: 0 0 0 3px rgba(0,147,196,.28); }
+        .stat-card > span.sp-guide { width: 0; border-inline-start: 1px dashed rgba(90,110,130,.55); transition: opacity .15s ease; }
         .stat-card > span.sp-dot.on, .stat-card > span.sp-guide.on { opacity: 1; }
         @keyframes spReveal { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
         @keyframes spGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
@@ -716,7 +758,7 @@
         .pkg-section-head .ops-count { margin-inline-start: auto; background: #e6f1f7; color: #2a5a70; border-radius: 20px; padding: 1px 11px; font-size: 12px; }
         .pkg-filter { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
         .pkg-filter select { flex: 1; min-width: 180px; padding: 8px 10px; border: 1.5px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 13px; }
-        /* زر "المتبقي من Package" في شريط إجراءات المعاينة */
+        /* زر "المتبقي من Budget" في شريط إجراءات المعاينة */
         .pab-pkg { background: linear-gradient(135deg, #1b9e5a 0%, #12805f 100%) !important; color: #fff; border-radius: 20px !important; padding: 5px 6px 5px 13px !important; display: inline-flex; align-items: center; gap: 7px; font-weight: 700; margin-inline-start: auto; box-shadow: 0 2px 6px rgba(18,128,95,.28); }
         .pab-pkg .pab-chip { background: rgba(255,255,255,.95); color: #12805f; border-radius: 14px; padding: 1px 9px; font-size: 12px; font-weight: 800; unicode-bidi: isolate; }
         .pab-pkg .pab-chip.neg { color: #c0392b; }
@@ -782,7 +824,7 @@
         .ram-item:hover { background: #eef5f9; }
         .ram-item i { width: 16px; text-align: center; }
 
-        .chart-container { position: relative; height: 320px; width: 100%; max-width: 100%; min-width: 0; }
+        .chart-container { position: relative; height: 280px; width: 100%; max-width: 100%; min-width: 0; }
         .charts-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
         /* خريطة حرارية لاستخدام النظام */
         .heatmap-wrap { overflow-x: auto; padding: 6px 2px 2px; }
@@ -796,10 +838,10 @@
         /* تجاوب الرسوم: عمود واحد على الشاشات المتوسطة والصغيرة */
         @media (max-width: 992px) {
             .charts-row { grid-template-columns: 1fr; }
-            .chart-container { height: 300px; }
+            .chart-container { height: 265px; }
         }
         @media (max-width: 600px) {
-            .chart-container { height: 260px; }
+            .chart-container { height: 235px; }
         }
         /* ضمان عدم خروج الكانفس عن الإطار الحاضن */
         .chart-container canvas { max-width: 100% !important; }
@@ -842,16 +884,27 @@
         .ms-control { min-height: 40px; border: 1.5px solid #ddd; border-radius: 6px; padding: 4px 8px; display: flex; align-items: center; justify-content: space-between; gap: 6px; cursor: pointer; background: #fff; box-sizing: border-box; }
         .ms-control:hover { border-color: #0093c4; }
         .ms-wrap.open .ms-control { border-color: #0093c4; box-shadow: 0 0 0 2px rgba(0,147,196,0.12); }
-        .ms-tags { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; flex: 1; min-width: 0; }
-        .ms-ph { color: #999; }
-        .ms-tag { background: #e8f4fd; color: #0093c4; border: 1px solid #b3d9f2; border-radius: 12px; padding: 1px 8px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; max-width: 100%; }
+        .ms-tags { display: flex; flex-wrap: nowrap; overflow: hidden; gap: 4px; align-items: center; flex: 1; min-width: 0; }
+        .ms-ph { color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+        .ms-tag { background: #e8f4fd; color: #0093c4; border: 1px solid #b3d9f2; border-radius: 12px; padding: 1px 8px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; max-width: 100%; flex-shrink: 0; }
+        .ms-more { background: #0093c4; color: #fff; border-radius: 12px; padding: 1px 9px; font-size: 11.5px; font-weight: 700; white-space: nowrap; flex-shrink: 0; cursor: pointer; }
+        .ms-sel-head { position: sticky; top: 0; z-index: 1; display: flex; justify-content: space-between; align-items: center; background: #eaf6fb; color: #0a7399; font-size: 11.5px; font-weight: 700; padding: 4px 8px; border-radius: 6px; margin-bottom: 3px; }
+        .ms-sel-head a { color: #c0392b; cursor: pointer; font-weight: 600; }
+        .ms-sel-sep { height: 1px; background: #e3edf3; margin: 4px 0; }
         .ms-tag span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
         .ms-tag-x { cursor: pointer; font-size: 10px; color: #0093c4; flex-shrink: 0; }
         .ms-tag-x:hover { color: #e74c3c; }
         .ms-caret { color: #999; font-size: 12px; flex-shrink: 0; transition: transform 0.15s; }
         .ms-wrap.open .ms-caret { transform: rotate(180deg); }
         .ms-dropdown { position: absolute; top: calc(100% + 4px); inset-inline: 0; background: #fff; border: 1.5px solid #0093c4; border-radius: 8px; box-shadow: 0 8px 22px rgba(0,0,0,0.14); z-index: 60; padding: 8px; display: none; }
-        .ms-wrap.open .ms-dropdown { display: block; }
+        .ms-wrap.open .ms-dropdown { display: flex; flex-direction: column; }
+        .ms-dropdown > .ms-list { flex: 1 1 auto; min-height: 0; }
+        .ms-dropdown.ms-sized > .ms-list { max-height: none; }
+        .ms-grip { flex: none; height: 14px; margin: 4px -8px -8px; cursor: ns-resize; position: relative; touch-action: none; user-select: none; border-top: 1px solid #eef2f5; border-radius: 0 0 8px 8px; }
+        .ms-grip::after { content: ''; position: absolute; inset-inline-end: 3px; bottom: 3px; width: 9px; height: 9px;
+            background: linear-gradient(135deg, transparent 0 42%, #8fa3b0 42% 52%, transparent 52% 64%, #8fa3b0 64% 74%, transparent 74% 100%); }
+        [dir="rtl"] .ms-grip::after, html[dir="rtl"] .ms-grip::after { transform: scaleX(-1); }
+        .ms-grip:hover { background: #f0f8fc; }
         .ms-search { width: 100%; padding: 7px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; font-family: inherit; margin-bottom: 6px; box-sizing: border-box; }
         .ms-search:focus { outline: none; border-color: #0093c4; }
         .ms-list { max-height: 210px; overflow-y: auto; }
@@ -863,6 +916,11 @@
         .ms-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px; }
         .ms-bar a { color: #0093c4; cursor: pointer; text-decoration: none; }
         .ms-bar a:hover { text-decoration: underline; }
+        /* حقول التصفية: خط أصغر قليلاً (13px ← 12px) دون تغيير الارتفاعات */
+        .filter-section .filter-grid input, .filter-section .filter-grid select,
+        .filter-section .ms-control, .filter-section .ms-search, .filter-section .ms-opt span { font-size: 12px; }
+        .filter-section .ms-tag, .filter-section .ms-more, .filter-section .ms-sel-head { font-size: 11px; }
+        .filter-section .ms-bar { font-size: 10.5px; }
 
         /* Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: flex-start; overflow-y: auto; padding: 3vh 0; }
@@ -1120,8 +1178,8 @@
                     <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الحالات --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
                     <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
                 </div>
-                <div class="ms-wrap" data-ms="msDashService">
-                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل أنواع الخدمات --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                <div class="ms-wrap" data-ms="msDashDept">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل الأقسام --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
                     <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
                 </div>
                 <div class="ms-wrap" data-ms="msDashStaff">
@@ -1262,14 +1320,14 @@
 
     <!-- رسم دائري لكل قسم: المستهلك والمتبقي من المخصص (كلها في صندوق واحد) -->
     <div class="card" id="dashBudgetPiesCard" style="display:none;">
-        <div class="card-header"><div class="card-title"><i class="fas fa-chart-pie"></i> <span id="dashPiesTitle">استهلاك مخصص كل قسم (Procurement Package)</span></div></div>
+        <div class="card-header"><div class="card-title"><i class="fas fa-chart-pie"></i> <span id="dashPiesTitle">استهلاك مخصص كل قسم (Procurement Budget)</span></div></div>
         <div id="dashBudgetPies" class="dept-pies"></div>
         <div class="bgt-hint" id="dashPiesHint" style="margin-top:8px;"></div>
     </div>
 
-    <!-- المخصصات المالية للأقسام (Procurement Package) -->
+    <!-- المخصصات المالية للأقسام (Procurement Budget) -->
     <div class="card" id="dashBudgetCard" style="display:none;">
-        <div class="card-header"><div class="card-title"><i class="fas fa-wallet"></i> المخصصات المالية للأقسام (Procurement Package)</div></div>
+        <div class="card-header"><div class="card-title"><i class="fas fa-wallet"></i> المخصصات المالية للأقسام (Procurement Budget)</div></div>
         <div class="bgt-mini" id="dashBgtCards" style="grid-template-columns:repeat(4,1fr);">
             <div class="bm-card"><div class="bm-lbl"><i class="fas fa-wallet"></i> إجمالي المخصص</div><div class="bm-val" id="dashBgtAlloc">0</div><div class="bm-sub" id="dashBgtAllocSub"></div></div>
             <div class="bm-card"><div class="bm-lbl"><i class="fas fa-piggy-bank"></i> المتبقي</div><div class="bm-val" id="dashBgtRemain">0</div><div class="bm-sub" id="dashBgtRemainSub"></div></div>
@@ -1442,8 +1500,8 @@
                 <div><div style="font-size:12px; opacity:0.9;">الإجمالي الجزئي</div><div style="font-size:24px; font-weight:700; margin-top:8px;" id="totalSubtotal">0.000</div></div>
                 <div><div style="font-size:12px; opacity:0.9;">الضريبة</div><div style="font-size:24px; font-weight:700; margin-top:8px;" id="totalTax">0.000</div></div>
                 <div><div style="font-size:12px; opacity:0.9;">الإجمالي النهائي</div><div style="font-size:24px; font-weight:700; margin-top:8px;" id="totalFinal">0.000</div></div>
-                <!-- المتبقي من Package القسم بعد هذا الأمر — يتحدّث تلقائياً مع البنود -->
-                <div id="totalRemainCell" class="totals-remain-cell" style="display:none;"><div style="font-size:12px; opacity:0.9;" id="totalRemainLbl">المتبقي من Package</div><div style="font-size:24px; font-weight:700; margin-top:8px; direction:ltr; unicode-bidi:isolate;" id="totalRemain">0.000</div><div style="font-size:11px; opacity:0.85; margin-top:2px;" id="totalRemainSub"></div></div>
+                <!-- المتبقي من Budget القسم بعد هذا الأمر — يتحدّث تلقائياً مع البنود -->
+                <div id="totalRemainCell" class="totals-remain-cell" style="display:none;"><div style="font-size:12px; opacity:0.9;" id="totalRemainLbl">المتبقي من Budget</div><div style="font-size:24px; font-weight:700; margin-top:8px; direction:ltr; unicode-bidi:isolate;" id="totalRemain">0.000</div><div style="font-size:11px; opacity:0.85; margin-top:2px;" id="totalRemainSub"></div></div>
             </div>
         </div>
 
@@ -1469,7 +1527,7 @@
     <div class="tab-content" id="tab-drafts">
     <div class="card">
         <div class="card-header"><div class="card-title"><i class="fas fa-file-alt"></i> إدارة المسودات</div></div>
-        <div class="filter-section">
+        <div class="filter-section fs-tight">
             <div class="filter-title"><i class="fas fa-filter"></i> فلاتر البحث</div>
             <div class="filter-grid">
                 <div class="ms-wrap" data-ms="msDraftNum">
@@ -1568,7 +1626,7 @@
     </div>
     <div class="card">
         <div class="card-header"><div class="card-title"><i class="fas fa-list-ul"></i> أوامر الشراء</div></div>
-        <div class="filter-section filter-section-compact">
+        <div class="filter-section fs-tight filter-section-compact">
             <div class="filter-title"><i class="fas fa-filter"></i> فلاتر البحث</div>
             <div class="filter-grid filter-grid-auto">
                 <div class="ms-wrap" data-ms="msOrderNum">
@@ -1655,7 +1713,7 @@
 <!-- ============ SUPPLIERS ============ -->
 <div class="page" id="page-suppliers">
     <div class="card">
-        <div class="filter-section filter-section-compact">
+        <div class="filter-section fs-tight filter-section-compact">
             <div class="filter-title"><i class="fas fa-filter"></i> فلاتر البحث</div>
             <div class="filter-grid filter-grid-auto">
                 <div class="ms-wrap" data-ms="msSupName">
@@ -1680,6 +1738,14 @@
                 </div>
                 <div class="ms-wrap" data-ms="msSupCr">
                     <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل أرقام السجل --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msSupCrSt">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- حالة السجل التجاري --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
+                    <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
+                </div>
+                <div class="ms-wrap" data-ms="msSupVatSt">
+                    <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- حالة الضريبة --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
                     <div class="ms-dropdown"><input type="text" class="ms-search" placeholder="بحث..."><div class="ms-bar"><a class="ms-selall">تحديد المعروض</a><a class="ms-clrall">مسح</a></div><div class="ms-list"></div></div>
                 </div>
                 <div class="ms-wrap" data-ms="msSupPhone">
@@ -1777,7 +1843,7 @@
                 <button type="button" class="btn btn-small" style="background:#c0392b; color:white;" onclick="exportReportPDF()"><i class="fas fa-file-pdf"></i> طباعة التقرير PDF</button>
             </div>
         </div>
-        <div class="filter-section filter-section-compact">
+        <div class="filter-section fs-tight filter-section-compact">
             <div class="filter-title"><i class="fas fa-filter"></i> فلاتر البحث</div>
             <div class="filter-grid filter-grid-auto">
                 <div class="ms-wrap" data-ms="msRepMonth">
@@ -1942,12 +2008,12 @@
         </div>
     </div>
 
-    <!-- المخصصات المالية للأقسام (Procurement Package) -->
+    <!-- المخصصات المالية للأقسام (Procurement Budget) -->
     <div class="card" id="repBudgetCard" style="margin-top:1.5rem;">
-        <div class="card-header"><div class="card-title"><i class="fas fa-wallet"></i> المخصصات المالية للأقسام (Procurement Package)</div></div>
+        <div class="card-header"><div class="card-title"><i class="fas fa-wallet"></i> المخصصات المالية للأقسام (Procurement Budget)</div></div>
         <p style="font-size:12px; color:#8a97a3; line-height:1.7; margin-bottom:10px;">المخصص والمنصرف والمتبقي محسوبة من كل أوامر القسم (عدا المرفوضة) ولا تتأثر بالتصفية، أما العمودان الأخيران فيعكسان أوامر التقرير بعد التصفية.</p>
         <div id="repBudgetPiesWrap" style="margin-bottom:1rem;">
-            <div class="pkg-section-head" style="margin-top:4px;"><i class="fas fa-chart-pie"></i> <span id="repPiesTitle">استهلاك مخصص كل قسم (Procurement Package)</span></div>
+            <div class="pkg-section-head" style="margin-top:4px;"><i class="fas fa-chart-pie"></i> <span id="repPiesTitle">استهلاك مخصص كل قسم (Procurement Budget)</span></div>
             <div id="repBudgetPies" class="dept-pies"></div>
         </div>
         <div class="chart-container" style="margin-bottom:1rem;"><canvas id="reportBudgetChart"></canvas></div>
@@ -2025,9 +2091,9 @@
 <div class="page" id="page-control-panel">
     <div class="charts-row">
         <!-- جزء 1: الأقسام / الغرض (يمين) -->
-        <div class="card" style="margin:0;">
+        <div class="card ctrl-card">
             <div class="card-header"><div class="card-title"><i class="fas fa-sitemap"></i> الأقسام / الغرض <span class="ctrl-count" id="deptCount">0</span></div></div>
-            <!-- ملخص المخصصات المالية (Procurement Package) -->
+            <!-- ملخص المخصصات المالية (Procurement Budget) -->
             <div class="bgt-mini" id="deptBudgetCards" style="display:none;">
                 <div class="bm-card"><div class="bm-lbl"><i class="fas fa-wallet"></i> إجمالي المخصص</div><div class="bm-val" id="bgtTotalAlloc">0</div><div class="bm-sub" id="bgtAllocSub">0 قسم</div></div>
                 <div class="bm-card"><div class="bm-lbl"><i class="fas fa-piggy-bank"></i> المتبقي</div><div class="bm-val" id="bgtTotalRemain">0</div><div class="bm-sub" id="bgtRemainSub">المنصرف 0</div></div>
@@ -2038,26 +2104,32 @@
                 <button type="button" class="btn btn-success" data-perm="control:create" onclick="addDepartment()"><i class="fas fa-plus"></i> إضافة</button>
             </div>
             <div class="ctrl-search"><input type="text" id="deptSearch" placeholder="بحث في الأقسام..." oninput="loadControlPanel()"><i class="fas fa-search"></i></div>
+            <div class="ctrl-resizable" id="deptResizable">
             <div class="ctrl-list-scroll">
                 <table id="departmentsTable">
-                    <thead><tr><th style="width:40px;">#</th><th>القسم / الغرض</th><th class="bgt-col" style="width:104px;">Package</th><th class="bgt-col" style="width:104px;">المتبقي</th><th style="width:70px;"></th></tr></thead>
+                    <thead><tr><th style="width:40px;">#</th><th>القسم / الغرض</th><th class="bgt-col" style="width:104px;">Budget</th><th class="bgt-col" style="width:104px;">المتبقي</th><th style="width:70px;"></th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
+            <div class="ctrl-grip" title="اسحب لتمديد القائمة (نقر مزدوج للإعادة)"></div>
+            </div>
         </div>
         <!-- جزء 2: أنواع الخدمات -->
-        <div class="card" style="margin:0;">
+        <div class="card ctrl-card">
             <div class="card-header"><div class="card-title"><i class="fas fa-cogs"></i> أنواع الخدمات <span class="ctrl-count" id="svcCount">0</span></div></div>
             <div style="display:flex; gap:8px; margin-bottom:10px;">
                 <input type="text" id="newServiceType" placeholder="أدخل نوع خدمة جديد..." style="flex:1; padding:10px 12px; border:1.5px solid #ddd; border-radius:8px; font-size:13px; font-family:inherit;" onkeydown="if(event.key==='Enter'){event.preventDefault();addServiceType();}">
                 <button type="button" class="btn btn-success" data-perm="control:create" onclick="addServiceType()"><i class="fas fa-plus"></i> إضافة</button>
             </div>
             <div class="ctrl-search"><input type="text" id="svcSearch" placeholder="بحث في أنواع الخدمات..." oninput="loadControlPanel()"><i class="fas fa-search"></i></div>
+            <div class="ctrl-resizable ctrl-fill" id="svcResizable">
             <div class="ctrl-list-scroll">
                 <table id="serviceTypesTable">
                     <thead><tr><th style="width:44px;">#</th><th>نوع الخدمة</th><th style="width:70px;"></th></tr></thead>
                     <tbody></tbody>
                 </table>
+            </div>
+            <div class="ctrl-grip" title="اسحب لتمديد القائمة (نقر مزدوج للإعادة)"></div>
             </div>
         </div>
 
@@ -2139,7 +2211,7 @@
         <div id="activityLogWarn" style="display:none; margin:0 0 10px; padding:10px 12px; border:1px solid #f5c6cb; background:#fdecea; color:#a94442; border-radius:8px; font-size:12.5px; line-height:1.7;"></div>
         <div id="activityScopeNote" style="display:none; margin:0 0 10px; padding:8px 12px; border:1px solid #cfe7f3; background:#eef7fb; color:#0a6c91; border-radius:8px; font-size:12.5px;"></div>
         <!-- فلاتر سجل العمليات (قوائم متعددة الاختيار قابلة للبحث) -->
-        <div class="filter-section filter-section-compact" style="margin-bottom:12px;">
+        <div class="filter-section fs-tight filter-section-compact" style="margin-bottom:12px;">
             <div class="filter-grid filter-grid-auto">
                 <div class="ms-wrap" data-ms="msActDate">
                     <div class="ms-control"><div class="ms-tags"><span class="ms-ph">-- كل التواريخ --</span></div><i class="fas fa-caret-down ms-caret"></i></div>
@@ -2597,7 +2669,7 @@
         <!-- رسم بياني عمودي يعكس بيانات الكشف (البند × العدد) -->
         <div style="margin-top:1.1rem;">
             <div style="font-size:12.5px; font-weight:700; color:#0093c4; margin-bottom:8px;"><i class="fas fa-chart-column"></i> <span data-i18n="رسم بياني للنشاط">رسم بياني للنشاط</span></div>
-            <div class="chart-container" style="height:260px;"><canvas id="profileStatsChart"></canvas></div>
+            <div class="chart-container" style="height:230px;"><canvas id="profileStatsChart"></canvas></div>
         </div>
         <div style="text-align:center; margin-top:14px; padding-top:12px; border-top:1px dashed #d5dde3;">
             <a href="#" onclick="downloadProfileStatement(); return false;" class="excel-link"><i class="fas fa-file-excel"></i> تنزيل الكشف Excel</a>
@@ -2885,11 +2957,11 @@
     </div>
 </div>
 
-<!-- ============ PACKAGE SUMMARY (كشف مخصصات الأقسام — معاينة فقط) ============ -->
+<!-- ============ BUDGET SUMMARY (كشف مخصصات الأقسام — معاينة فقط) ============ -->
 <div id="pkgSummaryModal" class="modal" onclick="if(event.target===this) closePkgSummary()">
     <div class="modal-content" style="max-width:820px;">
         <div class="modal-header">
-            <h2><i class="fas fa-wallet"></i> <span id="pkgSummaryTitle">مخصصات الأقسام (Procurement Package)</span></h2>
+            <h2><i class="fas fa-wallet"></i> <span id="pkgSummaryTitle">مخصصات الأقسام (Procurement Budget)</span></h2>
             <button class="modal-close" onclick="closePkgSummary()">×</button>
         </div>
         <div class="modal-body">
@@ -2899,7 +2971,7 @@
     </div>
 </div>
 
-<!-- ============ PACKAGE LEDGER (آخر العمليات المالية — معاينة فقط) ============ -->
+<!-- ============ BUDGET LEDGER (آخر العمليات المالية — معاينة فقط) ============ -->
 <div id="pkgLedgerModal" class="modal" onclick="if(event.target===this) closePkgLedger()">
     <div class="modal-content" style="max-width:900px;">
         <div class="modal-header">
@@ -2932,7 +3004,7 @@
                 <div class="dept-name-msg" id="deptEditMsg" style="display:none;"></div>
             </div>
             <div class="bgt-edit-box" id="deptEditBudgetBox">
-                <div class="be-head"><i class="fas fa-wallet"></i> <span>المخصص المالي (Procurement Package)</span></div>
+                <div class="be-head"><i class="fas fa-wallet"></i> <span>المخصص المالي (Procurement Budget)</span></div>
                 <div class="bgt-edit-row">
                     <input type="number" id="deptEditBudget" step="0.001" min="0" lang="en" dir="ltr" placeholder="مبلغ المخصص (ر.ع)">
                     <button type="button" class="btn btn-small btn-success" onclick="saveDeptBudgetOnly()"><i class="fas fa-save"></i> <span>حفظ المخصص</span></button>
@@ -3162,7 +3234,7 @@ const PERM_MODULES = [
     { key: 'evaluation',    ar: 'تقييم الموردين',    en: 'Supplier Evaluation', acts: ['view','create','edit'] },
     { key: 'reports',       ar: 'التقارير',          en: 'Reports', acts: ['view'] },
     { key: 'control',       ar: 'الإدارة والتحكم',   en: 'Management & Control', acts: ['view','create','edit','delete'] },
-    { key: 'budget',        ar: 'المخصصات المالية (Procurement Package)', en: 'Budget Allocation (Procurement Package)', acts: ['view','edit'] },
+    { key: 'budget',        ar: 'المخصصات المالية (Procurement Budget)', en: 'Budget Allocation (Procurement Budget)', acts: ['view','edit'] },
     { key: 'notifications', ar: 'الإشعارات',         en: 'Notifications', acts: ['view'] },
     { key: 'users',         ar: 'إدارة المستخدمين',  en: 'User Management' },
     { key: 'trash',         ar: 'سلة المهملات',      en: 'Recycle Bin', acts: ['view','restore','delete'] },
@@ -3232,7 +3304,7 @@ Object.keys(DEFAULT_PERMISSIONS).forEach(r => {
     DEFAULT_PERMISSIONS[r].profile = { edit_display_name: (r === 'sysadmin') };
     // رؤية لوحة التحكم: متاحة افتراضياً لكل الأدوار (وقابلة للمنع من صفحة الصلاحيات)
     DEFAULT_PERMISSIONS[r].dashboard = { view: true };
-    // المخصصات المالية (Procurement Package): الرؤية للجميع، والتعديل لمدير النظام ومدير الشراء والمحاسب (قابلة للمنح لأي دور)
+    // المخصصات المالية (Procurement Budget): الرؤية للجميع، والتعديل لمدير النظام ومدير الشراء والمحاسب (قابلة للمنح لأي دور)
     DEFAULT_PERMISSIONS[r].budget = { view: true, edit: (r === 'sysadmin' || r === 'manager' || r === 'finance') };
     // صلاحيات المسودات: تُشتق افتراضياً من صلاحيات أوامر الشراء لنفس الدور (دون تغيير السلوك الحالي)،
     // وتبقى قابلة للضبط المستقل من صفحة الأدوار والصلاحيات (منها حذف المسودات).
@@ -3632,16 +3704,16 @@ const I18N = {
     'الموظف': 'Employee',
     'الإجراء': 'Action',
     'تاريخ التسجيل': 'Record Date',
-    'مرفوض': 'Rejected',
-    'بانتظار الاعتماد': 'Pending Approval',
-    'معتمدة': 'Approved',
-    'مرفوضة': 'Rejected',
-    'المرفوضة': 'Rejected Orders',
-    'جديدة بانتظار الموافقة': 'New – Pending Approval',
-    'تمت الموافقة عليها': 'Approved Orders',
+    'مرفوض': 'L.P.O Rejected',
+    'بانتظار الاعتماد': 'Processing',
+    'معتمدة': 'L.P.O Approved',
+    'مرفوضة': 'L.P.O Rejected',
+    'المرفوضة': 'L.P.O Rejected Orders',
+    'جديدة بانتظار الموافقة': 'New – Processing',
+    'تمت الموافقة عليها': 'L.P.O Approved Orders',
     'المدفوعة': 'Paid Orders',
     'المغلقة': 'Closed Orders',
-    'معتمد': 'Approved',
+    'معتمد': 'L.P.O Approved',
     'رفض أمر الشراء': 'Reject Purchase Order',
     'سبب الرفض': 'Rejection Reason',
     'تأكيد الرفض': 'Confirm Rejection',
@@ -3708,8 +3780,8 @@ const I18N = {
     'يناير': 'January', 'فبراير': 'February', 'مارس': 'March', 'إبريل': 'April',
     'مايو': 'May', 'يونيو': 'June', 'يوليو': 'July', 'أغسطس': 'August',
     'سبتمبر': 'September', 'أكتوبر': 'October', 'نوفمبر': 'November', 'ديسمبر': 'December',
-    'موقعة': 'Signed', 'معلقة': 'Pending',
-    'بانتظار الاعتماد': 'Pending Approval', 'معتمد': 'Approved',
+    'موقعة': 'Signed', 'معلقة': 'Processing',
+    'بانتظار الاعتماد': 'Processing', 'معتمد': 'L.P.O Approved',
     'تنزيل البيانات Excel': 'Download Data (Excel)',
     // الإدارة
     'إدارة المستخدمين': 'User Management',
@@ -3738,6 +3810,8 @@ const I18N = {
     'إضافة نوع خدمة جديد': 'Add a new service type',
     '-- كل التصنيفات --': '-- All Classifications --',
     '-- كل التقييمات --': '-- All Ratings --',
+    '-- حالة السجل التجاري --': '-- C.R Status --',
+    '-- حالة الضريبة --': '-- VAT Status --',
     '-- كل أرقام السجل --': '-- All C.R Numbers --',
     '-- كل الأرقام --': '-- All Phone Numbers --',
     'بلا تقييم': 'No rating',
@@ -3851,20 +3925,20 @@ const I18N = {
     'بيانات القسم / الغرض': 'Department / Purpose Details',
     'تعديل بيانات القسم / الغرض': 'Edit Department / Purpose',
     'اسم القسم / الغرض': 'Department / Purpose Name',
-    'المخصص المالي (Procurement Package)': 'Procurement Package (Budget Allocation)',
-    'مبلغ المخصص (ر.ع)': 'Package amount (OMR)',
-    'حفظ المخصص': 'Save package',
-    'إلغاء المخصص': 'Clear the package',
-    'إجمالي المخصص': 'Total Package',
+    'المخصص المالي (Procurement Budget)': 'Procurement Budget (Budget Allocation)',
+    'مبلغ المخصص (ر.ع)': 'Budget amount (OMR)',
+    'حفظ المخصص': 'Save budget',
+    'إلغاء المخصص': 'Clear the budget',
+    'إجمالي المخصص': 'Total Budget',
     'المتبقي': 'Remaining',
     'مسودات': 'Drafts',
-    'المخصص': 'Package',
+    'المخصص': 'Budget',
     'عدد الأقسام': 'Departments',
     'المنصرف': 'Spent',
-    'إجمالي المخصص المالي (ر.ع)': 'Total Package (OMR)',
-    'المخصصات المالية للأقسام (Procurement Package)': 'Departments Budget Allocation (Procurement Package)',
-    'المخصص والمنصرف والمتبقي محسوبة من كل أوامر القسم (عدا المرفوضة) ولا تتأثر بالتصفية، أما العمودان الأخيران فيعكسان أوامر التقرير بعد التصفية.': 'Package, spent and remaining are calculated from every order of the department (except rejected ones) and ignore the filters; the last two columns reflect the filtered report orders.',
-    'المخصص (ر.ع)': 'Package (OMR)',
+    'إجمالي المخصص المالي (ر.ع)': 'Total Budget (OMR)',
+    'المخصصات المالية للأقسام (Procurement Budget)': 'Departments Budget Allocation (Procurement Budget)',
+    'المخصص والمنصرف والمتبقي محسوبة من كل أوامر القسم (عدا المرفوضة) ولا تتأثر بالتصفية، أما العمودان الأخيران فيعكسان أوامر التقرير بعد التصفية.': 'Budget, spent and remaining are calculated from every order of the department (except rejected ones) and ignore the filters; the last two columns reflect the filtered report orders.',
+    'المخصص (ر.ع)': 'Budget (OMR)',
     'المنصرف (ر.ع)': 'Spent (OMR)',
     'المتبقي (ر.ع)': 'Remaining (OMR)',
     'الاستهلاك %': 'Used %',
@@ -3872,13 +3946,13 @@ const I18N = {
     'مبلغ أوامر التقرير (ر.ع)': 'Report Orders Amount (OMR)',
     'نسبة الاستهلاك': 'Usage %',
     'أقسام تجاوزت المخصص': 'Over-budget depts',
-    'Package': 'Package',
-    'المتبقي من المخصص (ر.ع)': 'Remaining Package (OMR)',
-    'انقر لعرض مخصصات الأقسام': 'Click to view departments packages',
+    'Budget': 'Budget',
+    'المتبقي من المخصص (ر.ع)': 'Remaining Budget (OMR)',
+    'انقر لعرض مخصصات الأقسام': 'Click to view departments budgets',
     'انقر لعرض آخر العمليات المالية': 'Click to view the latest financial transactions',
-    'مخصصات الأقسام (Procurement Package)': 'Departments Package (Procurement Package)',
+    'مخصصات الأقسام (Procurement Budget)': 'Departments Budget (Procurement Budget)',
     'آخر العمليات المالية': 'Latest Financial Transactions',
-    'المتبقي من Package': 'Remaining Package',
+    'المتبقي من Budget': 'Remaining Budget',
     'إغلاق': 'Close',
     'بيانات الطباعة': 'Print Details',
     'تعديل بيانات المورد في ملف PDF فقط': 'Change supplier details in the PDF only',
@@ -3940,7 +4014,7 @@ const I18N = {
     'تفاصيل الأوامر': 'Order Details',
     'سجل نشاط المستخدمين': 'User Activity Log',
     'المرفقات (اختيارية)': 'Attachments (optional)',
-    'معلقة': 'Pending',
+    'معلقة': 'Processing',
     'المبلغ بالكلمات:': 'Amount in words:',
     'عربي:': 'Arabic:',
     'جارٍ رفع الملفات...': 'Uploading files...',
@@ -4054,6 +4128,7 @@ const I18N = {
 // ===================== قاموس رسائل التنبيه والأخطاء =====================
 // يُستخدم عبر الدالة msg() لعرض الرسائل بلغة الواجهة المختارة
 const MSG_I18N = {
+    'تعذّر إنشاء ملف PDF. حاول مرة أخرى.': 'Could not create the PDF file. Please try again.',
     'تم حفظ مدة التنبيه بنجاح': 'Alert period saved successfully',
     'تعذّر تحديث حالة الأمر: ': 'Could not update the order status: ',
     'يرجى إدخال اسم العرض': 'Please enter the display name',
@@ -5176,7 +5251,7 @@ function updateLpoDeptBudget() {
         grid.style.gridTemplateColumns = on ? 'repeat(4,1fr)' : 'repeat(3,1fr)';
         grid.style.gap = on ? '1.2rem' : '2rem';
         if (!on) return;
-        document.getElementById('totalRemainLbl').textContent = en ? 'Remaining Package (after this order)' : 'المتبقي من Package (بعد هذا الأمر)';
+        document.getElementById('totalRemainLbl').textContent = en ? 'Remaining Budget (after this order)' : 'المتبقي من Budget (بعد هذا الأمر)';
         const v = document.getElementById('totalRemain');
         v.textContent = val; v.style.color = over ? '#ffd1cc' : '#fff';
         document.getElementById('totalRemainSub').textContent = sub;
@@ -5187,7 +5262,7 @@ function updateLpoDeptBudget() {
     if (!st.hasAlloc) {
         setTot(false);
         box.className = 'lpo-bgt';
-        box.innerHTML = `<i class="fas fa-wallet" style="color:#9fb0bc;"></i> <span>${en ? 'No procurement package set for this department' : 'لا يوجد مخصص مالي لهذا القسم'}</span>`;
+        box.innerHTML = `<i class="fas fa-wallet" style="color:#9fb0bc;"></i> <span>${en ? 'No procurement budget set for this department' : 'لا يوجد مخصص مالي لهذا القسم'}</span>`;
         return;
     }
     const spent = st.spent - _editingOrderAmountFor(name);
@@ -5197,11 +5272,11 @@ function updateLpoDeptBudget() {
     // أثر الأمر الجاري تحريره على المتبقي
     const cur2 = parseFloat(String((document.getElementById('totalFinal') || {}).textContent || '0').replace(/,/g, '')) || 0;
     const after = remaining - cur2, afterOver = after < 0;
-    setTot(true, fmt(after), (d.name || '') + ' · ' + (en ? 'Package ' : 'المخصص ') + fmtInt(st.alloc) + (afterOver ? (en ? ' · over budget' : ' · تجاوز') : ''), afterOver);
+    setTot(true, fmt(after), (d.name || '') + ' · ' + (en ? 'Budget ' : 'المخصص ') + fmtInt(st.alloc) + (afterOver ? (en ? ' · over budget' : ' · تجاوز') : ''), afterOver);
     box.className = 'lpo-bgt ' + ((over || afterOver) ? 'over' : pct >= 90 ? 'warn' : 'ok');
     box.innerHTML = `<i class="fas fa-wallet" style="color:${budgetColor(pct, over)};"></i>
-        <span>${en ? 'Remaining package' : 'المتبقي من المخصص'}: <span class="lb-strong" style="color:${budgetColor(pct, over)};">${fmt(remaining)}${cur}</span></span>
-        <span style="color:#8a97a3;">${en ? 'Package' : 'المخصص'} ${fmtInt(st.alloc)} · ${en ? 'Spent' : 'المنصرف'} ${fmtInt(spent)}</span>
+        <span>${en ? 'Remaining budget' : 'المتبقي من المخصص'}: <span class="lb-strong" style="color:${budgetColor(pct, over)};">${fmt(remaining)}${cur}</span></span>
+        <span style="color:#8a97a3;">${en ? 'Budget' : 'المخصص'} ${fmtInt(st.alloc)} · ${en ? 'Spent' : 'المنصرف'} ${fmtInt(spent)}</span>
         ${cur2 > 0 ? `<span style="color:#6b7c89;">${en ? 'After this order' : 'بعد هذا الأمر'}: <b style="color:${afterOver ? '#c0392b' : '#2e7d32'};">${fmt(after)}${cur}</b></span>` : ''}
         ${(over || afterOver) ? `<span class="bgt-chip" style="background:#fdecea; color:#c0392b;">${en ? 'Over budget' : 'تجاوز المخصص'}</span>` : ''}`;
 }
@@ -6105,8 +6180,8 @@ const TIP_MAP = {
     confirmRejectOrder: ['تأكيد رفض الأمر مع السبب المكتوب', 'Confirm rejecting the order with the given reason'],
     closeRejectModal: ['إلغاء الرفض وإغلاق النافذة', 'Cancel the rejection'],
     viewDepartment: ['عرض بيانات القسم وكشفه المالي', 'Open department details and ledger'],
-    openPkgSummary: ['ملخّص باقات الأقسام (للعرض فقط)', 'Departments package summary (view only)'],
-    openPkgLedger: ['آخر الحركات المالية على الباقات', 'Latest package transactions'],
+    openPkgSummary: ['ملخّص باقات الأقسام (للعرض فقط)', 'Departments budget summary (view only)'],
+    openPkgLedger: ['آخر الحركات المالية على الباقات', 'Latest budget transactions'],
     closePkgSummary: ['إغلاق الملخّص', 'Close the summary'],
     closePkgLedger: ['إغلاق الكشف', 'Close the ledger'],
     // الموردون
@@ -6594,9 +6669,9 @@ function drawDashBudgetChart() {
     set('dashBgtRemain', fmtInt(t.remaining), t.remaining < 0 ? '#c0392b' : '#2e7d32');
     set('dashBgtRemainSub', (en ? 'Spent ' : 'المنصرف ') + fmtInt(t.spent) + cur);
     set('dashBgtPct', pct.toFixed(1) + '%', budgetColor(pct, t.remaining < 0));
-    set('dashBgtPctSub', en ? 'of the total package' : 'من إجمالي المخصص');
+    set('dashBgtPctSub', en ? 'of the total budget' : 'من إجمالي المخصص');
     set('dashBgtOver', t.nOver, t.nOver ? '#c0392b' : '#556');
-    set('dashBgtOverSub', t.unalloc ? ((en ? 'Outside packages ' : 'خارج المخصصات ') + fmtInt(t.unalloc) + cur) : (en ? 'All within package' : 'الكل ضمن المخصص'));
+    set('dashBgtOverSub', t.unalloc ? ((en ? 'Outside budgets ' : 'خارج المخصصات ') + fmtInt(t.unalloc) + cur) : (en ? 'All within budget' : 'الكل ضمن المخصص'));
     const el = document.getElementById('dashBudgetChart'); if (!el) return;
     const rows = (departments || []).filter(d => d.budget !== null && d.budget !== undefined)
         .map(d => ({ name: d.name, st: deptBudgetStats(d) })).sort((a, b) => b.st.alloc - a.st.alloc).slice(0, 12);
@@ -6613,7 +6688,7 @@ function drawDashBudgetChart() {
         chartInstances.dashBudget = mkChart('dashBudget', el.getContext('2d'), {
         type: 'bar',
         data: { labels: rows.map(r => r.name), datasets: [
-            { label: en ? 'Package' : 'المخصص', data: rows.map(r => +r.st.alloc.toFixed(3)), backgroundColor: '#bcdff0', borderRadius: 6, maxBarThickness: 40 },
+            { label: en ? 'Budget' : 'المخصص', data: rows.map(r => +r.st.alloc.toFixed(3)), backgroundColor: '#bcdff0', borderRadius: 6, maxBarThickness: 40 },
             { label: en ? 'Spent' : 'المنصرف', data: rows.map(r => +r.st.spent.toFixed(3)), backgroundColor: rows.map(r => budgetColor(r.st.pct, r.st.remaining < 0)), borderRadius: 6, maxBarThickness: 40 }
         ] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
@@ -6643,19 +6718,19 @@ function buildBudgetPies(box, prefix) {
             const bs = tile.querySelectorAll('.dp-nums b');
             if (bs[0]) { bs[0].textContent = fmt(st.spent); bs[0].style.color = col; }
             if (bs[1]) { bs[1].textContent = fmt(st.remaining); bs[1].style.color = over ? '#c0392b' : '#2e7d32'; }
-            const pk = tile.querySelector('.dp-pk'); if (pk) pk.textContent = 'Package: ' + fmt(st.alloc) + cur;
+            const pk = tile.querySelector('.dp-pk'); if (pk) pk.textContent = 'Budget: ' + fmt(st.alloc) + cur;
         } else {
             tile = document.createElement('div'); tile.className = 'dept-pie';
             tile.innerHTML = `<div class="dp-name" title="${escapeHtml(d.name || '')}"><i class="fas fa-sitemap" style="color:#8aa2b0;"></i> ${escapeHtml(d.name || '')}</div>
             <div class="dp-canvas"><canvas></canvas></div>
             <div class="dp-nums"><span>${en ? 'Spent' : 'المستهلك'}: <b style="color:${col};">${fmt(st.spent)}</b></span><span>${en ? 'Left' : 'المتبقي'}: <b style="color:${over ? '#c0392b' : '#2e7d32'};">${fmt(st.remaining)}</b></span></div>
-            <div class="dp-pk">Package: ${fmt(st.alloc)}${cur}</div>`;
+            <div class="dp-pk">Budget: ${fmt(st.alloc)}${cur}</div>`;
             box.appendChild(tile);
         }
         const key = prefix + i; keys.push(key);
         const labels = [en ? 'Spent' : 'المستهلك', en ? 'Remaining' : 'المتبقي'], data = [used, left], colors = [col, '#dbe7ef'];
         // الجزء الثالث (التجاوز) موجود دائماً بقيمة 0 حتى يبقى عدد الأجزاء ثابتاً ويتحرك الانتقال بسلاسة
-        labels.push(en ? 'Over package' : 'تجاوز المخصص'); data.push(exc); colors.push('#7b1e14');
+        labels.push(en ? 'Over budget' : 'تجاوز المخصص'); data.push(exc); colors.push('#7b1e14');
         if (!st.alloc && !st.spent) { data[1] = 1; }   // مخصص صفر بلا إنفاق: دائرة رمادية فارغة
         chartInstances[key] = mkChart(key, tile.querySelector('canvas').getContext('2d'), {
             type: 'doughnut',
@@ -6675,8 +6750,8 @@ function drawDashBudgetPies() {
     const oldKeys = _dashPieKeys;
     if (!show) { oldKeys.forEach(k => destroyChart(k)); _dashPieKeys = []; box.innerHTML = ''; box.dataset.sig = ''; return; }
     const en = currentLanguage === 'en';
-    document.getElementById('dashPiesTitle').textContent = en ? 'Package usage per department (Procurement Package)' : 'استهلاك مخصص كل قسم (Procurement Package)';
-    document.getElementById('dashPiesHint').textContent = en ? 'Each circle shows what the department has consumed against what is left of its package. A dark red slice means the department exceeded its package.' : 'كل دائرة تعرض ما استهلكه القسم مقابل المتبقي من مخصصه. الجزء الأحمر الداكن يعني أن القسم تجاوز مخصصه.';
+    document.getElementById('dashPiesTitle').textContent = en ? 'Budget usage per department (Procurement Budget)' : 'استهلاك مخصص كل قسم (Procurement Budget)';
+    document.getElementById('dashPiesHint').textContent = en ? 'Each circle shows what the department has consumed against what is left of its budget. A dark red slice means the department exceeded its budget.' : 'كل دائرة تعرض ما استهلكه القسم مقابل المتبقي من مخصصه. الجزء الأحمر الداكن يعني أن القسم تجاوز مخصصه.';
     _dashPieKeys = buildBudgetPies(box, 'dashPie_').keys;
     oldKeys.filter(k => !_dashPieKeys.includes(k)).forEach(k => destroyChart(k));
 }
@@ -6690,7 +6765,7 @@ function drawReportBudgetPies() {
     const oldKeys = _repPieKeys;
     if (!show) { oldKeys.forEach(k => destroyChart(k)); _repPieKeys = []; box.innerHTML = ''; box.dataset.sig = ''; return; }
     const en = currentLanguage === 'en';
-    document.getElementById('repPiesTitle').textContent = en ? 'Package usage per department (Procurement Package)' : 'استهلاك مخصص كل قسم (Procurement Package)';
+    document.getElementById('repPiesTitle').textContent = en ? 'Budget usage per department (Procurement Budget)' : 'استهلاك مخصص كل قسم (Procurement Budget)';
     _repPieKeys = buildBudgetPies(box, 'repPie_').keys;
     oldKeys.filter(k => !_repPieKeys.includes(k)).forEach(k => destroyChart(k));
 }
@@ -7024,11 +7099,11 @@ function orderStage(l) {
 }
 function orderStageText(l, en) {
     const st = orderStage(l);
-    if (st === 'pending') return en ? 'Pending Approval' : 'بانتظار الاعتماد';
-    if (st === 'rejected') return en ? 'Rejected' : 'مرفوض';
+    if (st === 'pending') return en ? 'Processing' : 'بانتظار الاعتماد';
+    if (st === 'rejected') return en ? 'L.P.O Rejected' : 'مرفوض';
     if (st === 'payment') return en ? 'Payment processing' : 'قيد الدفع';
     if (st === 'closed') return en ? 'Closed' : 'مغلق';
-    return en ? 'Approved' : 'معتمد';
+    return en ? 'L.P.O Approved' : 'معتمد';
 }
 // آخر من نفّذ مرحلة (من سجل النشاط) — لتلميح الشارة
 function _stageActor(l, type) {
@@ -7085,15 +7160,15 @@ function approvalBadge(l) {
             : `<span class="badge badge-closed" title="${escapeHtml(tip)}"><i class="fas fa-circle-check"></i> ${en ? 'Closed' : 'مغلق'}</span>`;
     }
     if (l.approvalStatus === 'pending') {
-        return `<span class="badge badge-pending" title="${en ? 'Awaiting approval' : 'بانتظار اعتماد المعتمِد'}"><i class="fas fa-hourglass-half"></i> ${en ? 'Pending Approval' : 'بانتظار الاعتماد'}</span>`;
+        return `<span class="badge badge-pending" title="${en ? 'Awaiting approval' : 'بانتظار اعتماد المعتمِد'}"><i class="fas fa-hourglass-half"></i> ${en ? 'Processing' : 'بانتظار الاعتماد'}</span>`;
     }
     if (l.approvalStatus === 'rejected') {
-        const by = l.approvedBy ? ((en ? 'Rejected by: ' : 'رفضه: ') + l.approvedBy) : (en ? 'Rejected' : 'مرفوض');
+        const by = l.approvedBy ? ((en ? 'Rejected by: ' : 'رفضه: ') + l.approvedBy) : (en ? 'L.P.O Rejected' : 'مرفوض');
         const reason = l.rejectionReason ? ((en ? ' — Reason: ' : ' — السبب: ') + l.rejectionReason) : '';
-        return `<span class="badge badge-rejected" title="${escapeHtml(by + reason)}"><i class="fas fa-times-circle"></i> ${en ? 'Rejected' : 'مرفوض'}</span>`;
+        return `<span class="badge badge-rejected" title="${escapeHtml(by + reason)}"><i class="fas fa-times-circle"></i> ${en ? 'L.P.O Rejected' : 'مرفوض'}</span>`;
     }
-    const who = l.approvedBy ? ((en ? 'Approved by: ' : 'اعتمده: ') + l.approvedBy) : (en ? 'Approved' : 'معتمد');
-    return `<span class="badge badge-approved" title="${who}"><i class="fas fa-lock"></i> ${en ? 'Approved' : 'معتمد'}</span>`;
+    const who = l.approvedBy ? ((en ? 'Approved by: ' : 'اعتمده: ') + l.approvedBy) : (en ? 'L.P.O Approved' : 'معتمد');
+    return `<span class="badge badge-approved" title="${who}"><i class="fas fa-lock"></i> ${en ? 'L.P.O Approved' : 'معتمد'}</span>`;
 }
 
 // اعتماد أمر شراء — متاح لمن يملك صلاحية orders:approve (المعتمِد ومدير النظام)
@@ -7136,7 +7211,7 @@ async function unapproveOrder(id) {
         return;
     }
     const q = currentLanguage === 'en'
-        ? `Undo approval of order ${l.number}?\nIt will return to "Pending Approval".`
+        ? `Undo approval of order ${l.number}?\nIt will return to "Processing".`
         : `التراجع عن اعتماد الأمر ${l.number}؟\nستعود حالته إلى "بانتظار الاعتماد".`;
     if (!confirm(q)) return;
     const { error } = await sb.from('purchase_orders').update({
@@ -7572,9 +7647,19 @@ function msPositionDropdown(el) {
     dd.style.insetInlineEnd = 'auto';
     dd.style.zIndex = '4000';
     // قياس الارتفاع المتاح: افتح للأسفل، وإن ضاق المكان افتح للأعلى
-    dd.style.maxHeight = '';
+    msEnsureGrip(el, dd);
+    dd.style.maxHeight = ''; dd.style.height = '';
     const spaceBelow = window.innerHeight - r.bottom - 10;
     const spaceAbove = r.top - 10;
+    if (el._msH) {                       // ارتفاع اختاره المستخدم بالسحب
+        dd.classList.add('ms-sized');
+        const h = Math.min(el._msH, Math.max(spaceBelow, spaceAbove));
+        dd.style.height = h + 'px';
+        dd.style.top = (spaceBelow >= h || spaceBelow >= spaceAbove ? r.bottom + 4 : r.top - h - 4) + 'px';
+        dd.style.overflowY = 'hidden';
+        return;
+    }
+    dd.classList.remove('ms-sized');
     const desired = Math.min(dd.scrollHeight || 280, 320);
     if (spaceBelow < desired && spaceAbove > spaceBelow) {
         dd.style.maxHeight = Math.min(desired, spaceAbove) + 'px';
@@ -7583,14 +7668,64 @@ function msPositionDropdown(el) {
         dd.style.maxHeight = Math.min(desired, spaceBelow) + 'px';
         dd.style.top = (r.bottom + 4) + 'px';
     }
-    dd.style.overflowY = 'auto';
+    dd.style.overflowY = 'hidden';
+}
+// مقبض تمديد القائمة من الأسفل (زاوية سفلية) — السحب بالماوس/اللمس، والنقر المزدوج يعيد الحجم الافتراضي
+function msEnsureGrip(el, dd) {
+    if (dd.querySelector('.ms-grip')) return;
+    const g = document.createElement('div');
+    g.className = 'ms-grip';
+    g.title = currentLanguage === 'en' ? 'Drag to resize (double-click to reset)' : 'اسحب لتمديد القائمة (نقر مزدوج للإعادة)';
+    dd.appendChild(g);
+    g.addEventListener('pointerdown', function(e) {
+        e.preventDefault(); e.stopPropagation();
+        const startY = e.clientY, startH = dd.getBoundingClientRect().height, top = dd.getBoundingClientRect().top;
+        try { g.setPointerCapture(e.pointerId); } catch (x) {}
+        const move = function(ev) {
+            const h = Math.max(110, Math.min(startH + (ev.clientY - startY), window.innerHeight - top - 8));
+            el._msH = h; dd.classList.add('ms-sized'); dd.style.maxHeight = ''; dd.style.height = h + 'px'; dd.style.overflowY = 'hidden';
+        };
+        const up = function() { g.removeEventListener('pointermove', move); g.removeEventListener('pointerup', up); g.removeEventListener('pointercancel', up); };
+        g.addEventListener('pointermove', move); g.addEventListener('pointerup', up); g.addEventListener('pointercancel', up);
+    });
+    g.addEventListener('dblclick', function(e) { e.stopPropagation(); el._msH = 0; msPositionDropdown(el); });
+    g.addEventListener('click', function(e) { e.stopPropagation(); });
+}
+// مقابض تمديد قائمتي الأقسام وأنواع الخدمات في صفحة الإدارة والتحكم (سحب لتطويل القائمة، نقر مزدوج لإعادة الحجم)
+function initCtrlGrips() {
+    const row = document.querySelector('#page-control-panel .charts-row');
+    if (!row) return;
+    row.querySelectorAll('.ctrl-resizable').forEach(function(wrap) {
+        const g = wrap.querySelector('.ctrl-grip');
+        if (!g || g._bound) return; g._bound = true;
+        if (currentLanguage === 'en') g.title = 'Drag to resize (double-click to reset)';
+        const reset = function() {
+            row.classList.remove('ctrl-synced');
+            row.querySelectorAll('.ctrl-resizable').forEach(w => { w.classList.remove('ctrl-dragged'); w.style.height = ''; });
+        };
+        g.addEventListener('pointerdown', function(e) {
+            e.preventDefault();
+            const now = Date.now();
+            if (g._lastDown && now - g._lastDown < 380) { g._lastDown = 0; reset(); return; }   // نقر مزدوج = إعادة الحجم الافتراضي
+            g._lastDown = now;
+            const startY = e.clientY, startH = wrap.getBoundingClientRect().height;
+            try { g.setPointerCapture(e.pointerId); } catch (x) {}
+            row.classList.add('ctrl-synced');
+            row.querySelectorAll('.ctrl-resizable').forEach(w => { w.classList.remove('ctrl-dragged'); if (w !== wrap) w.style.height = ''; });
+            wrap.classList.add('ctrl-dragged');
+            const move = function(ev) { wrap.style.height = Math.max(150, Math.min(startH + (ev.clientY - startY), 1600)) + 'px'; };
+            const up = function() { g.removeEventListener('pointermove', move); g.removeEventListener('pointerup', up); g.removeEventListener('pointercancel', up); };
+            g.addEventListener('pointermove', move); g.addEventListener('pointerup', up); g.addEventListener('pointercancel', up);
+        });
+        g.addEventListener('dblclick', reset);
+    });
 }
 function msResetDropdownPos(el) {
     const dd = el.querySelector('.ms-dropdown');
     if (!dd) return;
     dd.style.position = ''; dd.style.width = ''; dd.style.left = ''; dd.style.top = '';
     dd.style.insetInlineStart = ''; dd.style.insetInlineEnd = ''; dd.style.zIndex = '';
-    dd.style.maxHeight = ''; dd.style.overflowY = '';
+    dd.style.maxHeight = ''; dd.style.overflowY = ''; dd.style.height = ''; dd.classList.remove('ms-sized');
 }
 // إعادة تموضع/إغلاق القوائم المفتوحة عند التمرير أو تغيير الحجم
 window.addEventListener('scroll', function() {
@@ -7628,6 +7763,11 @@ function msSetup(key, placeholder, onChange) {
         e.stopPropagation(); MS[key].selected.clear(); msRenderTags(key); msRenderList(key); if (MS[key].onChange) MS[key].onChange();
     });
     msRenderTags(key);
+    // إعادة ملاءمة الشارات عند تغيّر عرض الحقل (تغيير حجم النافذة أو ظهور الصفحة)
+    try {
+        const box = el.querySelector('.ms-tags');
+        new ResizeObserver(() => { const w = box.clientWidth; if (Math.abs(w - (MS[key]._w || 0)) > 2) msRenderTags(key); }).observe(box);
+    } catch (e) { }
 }
 
 function msSetOptions(key, options) {
@@ -7644,11 +7784,45 @@ function msPlaceholder(m) {
 function msRenderTags(key) {
     const m = MS[key]; if (!m) return;
     const box = m.el.querySelector('.ms-tags');
-    if (m.selected.size === 0) { box.innerHTML = '<span class="ms-ph">' + escapeHtml(msPlaceholder(m)) + '</span>'; return; }
-    box.innerHTML = [...m.selected].map(v => {
-        const o = m.options.find(x => x.value === v); const label = o ? o.label : v;
-        return '<span class="ms-tag"><span>' + escapeHtml(label) + '</span><i class="fas fa-times ms-tag-x" data-v="' + encodeURIComponent(v) + '"></i></span>';
-    }).join('');
+    const en = currentLanguage === 'en';
+    m._w = box.clientWidth;
+    if (m.selected.size === 0) { box.innerHTML = '<span class="ms-ph">' + escapeHtml(msPlaceholder(m)) + '</span>'; box.title = ''; return; }
+    const items = [...m.selected].map(v => { const o = m.options.find(x => x.value === v); return { v, label: o ? o.label : v }; });
+    const n = items.length, W = box.clientWidth, GAP = 4;
+    box.innerHTML = '';
+    // الشارات تُقاس بعرضها الطبيعي ثم يُبقى منها ما يتسع في سطر واحد فقط، والباقي يُختصر في شارة +N
+    const chips = items.map(it => {
+        const c = document.createElement('span'); c.className = 'ms-tag';
+        const lab = document.createElement('span'); lab.textContent = it.label;
+        if (W > 0) lab.style.maxWidth = Math.max(60, Math.round(W * 0.5)) + 'px';
+        const x = document.createElement('i'); x.className = 'fas fa-times ms-tag-x'; x.setAttribute('data-v', encodeURIComponent(it.v));
+        c.appendChild(lab); c.appendChild(x); box.appendChild(c); return c;
+    });
+    const more = document.createElement('span'); more.className = 'ms-more'; more.textContent = '+' + n; box.appendChild(more);
+    let k = n;
+    if (W > 0) {
+        const moreW = more.offsetWidth + GAP;
+        const ws = chips.map(c => c.offsetWidth + GAP);
+        let sum = 0; k = 0;
+        for (let i = 0; i < n; i++) {
+            const need = sum + ws[i] + (i < n - 1 ? moreW : 0);
+            if (need <= W) { sum += ws[i]; k = i + 1; } else break;
+        }
+        // لم تتسع أول شارة كاملة: نقلّص نصها لتتسع مع شارة +N إن بقيت مساحة معقولة
+        if (k === 0 && n > 1) {
+            const avail = W - moreW - GAP - 30;
+            if (avail >= 40) { chips[0].firstChild.style.maxWidth = avail + 'px'; k = 1; }
+        }
+    } else k = 1;
+    chips.forEach((c, i) => { if (i >= k) c.remove(); });
+    const hidden = items.slice(k);
+    if (!hidden.length) { more.remove(); box.title = ''; }
+    else {
+        // لا يتسع ولا شارة واحدة: نعرض عدد المحدد فقط
+        more.textContent = k === 0 ? (n + ' ' + (en ? 'selected' : 'محدد')) : '+' + hidden.length;
+        more.title = hidden.map(h => h.label).join(en ? ', ' : '، ');
+        box.title = items.map(h => h.label).join(en ? ', ' : '، ');
+    }
     box.querySelectorAll('.ms-tag-x').forEach(x => x.addEventListener('click', function(e) {
         e.stopPropagation(); const v = decodeURIComponent(x.getAttribute('data-v'));
         m.selected.delete(v); msRenderTags(key); if (m.el.classList.contains('open')) msRenderList(key); if (m.onChange) m.onChange();
@@ -7658,13 +7832,25 @@ function msRenderTags(key) {
 function msRenderList(key) {
     const m = MS[key]; if (!m) return;
     const list = m.el.querySelector('.ms-list');
+    const en = currentLanguage === 'en';
     const q = (m.el.querySelector('.ms-search').value || '').trim().toLowerCase();
     const filtered = m.options.filter(o => !q || (o.label || '').toLowerCase().includes(q));
-    if (!filtered.length) { list.innerHTML = '<div class="ms-empty">' + (currentLanguage === 'en' ? 'No results' : 'لا نتائج') + '</div>'; return; }
-    list.innerHTML = filtered.map(o => '<label class="ms-opt"><input type="checkbox" ' + (m.selected.has(o.value) ? 'checked' : '') + ' data-v="' + encodeURIComponent(o.value) + '"><span>' + escapeHtml(o.label) + '</span></label>').join('');
+    if (!filtered.length) { list.innerHTML = '<div class="ms-empty">' + (en ? 'No results' : 'لا نتائج') + '</div>'; return; }
+    const optHtml = o => '<label class="ms-opt"><input type="checkbox" ' + (m.selected.has(o.value) ? 'checked' : '') + ' data-v="' + encodeURIComponent(o.value) + '"><span>' + escapeHtml(o.label) + '</span></label>';
+    let html;
+    // بدون بحث: العناصر المحددة مثبّتة في الأعلى بقسم «المحدد (N)» ثم باقي الخيارات
+    if (!q && m.selected.size) {
+        const sel = filtered.filter(o => m.selected.has(o.value)), rest = filtered.filter(o => !m.selected.has(o.value));
+        html = '<div class="ms-sel-head"><span>' + (en ? 'Selected' : 'المحدد') + ' (<b class="ms-sel-n">' + sel.length + '</b>)</span><a class="ms-sel-clr">' + (en ? 'Clear' : 'مسح') + '</a></div>'
+             + sel.map(optHtml).join('') + (rest.length ? '<div class="ms-sel-sep"></div>' + rest.map(optHtml).join('') : '');
+    } else html = filtered.map(optHtml).join('');
+    list.innerHTML = html;
+    const clr = list.querySelector('.ms-sel-clr');
+    if (clr) clr.addEventListener('click', function(e) { e.stopPropagation(); m.selected.clear(); msRenderTags(key); msRenderList(key); if (m.onChange) m.onChange(); });
     list.querySelectorAll('input[type=checkbox]').forEach(cb => cb.addEventListener('change', function() {
         const v = decodeURIComponent(cb.getAttribute('data-v'));
         if (cb.checked) m.selected.add(v); else m.selected.delete(v);
+        const nEl = list.querySelector('.ms-sel-n'); if (nEl) nEl.textContent = m.selected.size;
         msRenderTags(key); if (m.onChange) m.onChange();
     }));
 }
@@ -8100,11 +8286,11 @@ function sortLPOTable(col) {
 function lpoStatusFilterOptions() {
     const en = currentLanguage === 'en';
     return [
-        { value: '__pending', label: en ? 'Pending Approval' : 'بانتظار الاعتماد' },
-        { value: '__approved', label: en ? 'Approved' : 'معتمد' },
+        { value: '__pending', label: en ? 'Processing' : 'بانتظار الاعتماد' },
+        { value: '__approved', label: en ? 'L.P.O Approved' : 'معتمد' },
         { value: '__payment', label: en ? 'Payment processing' : 'قيد الدفع' },
         { value: '__closed', label: en ? 'Closed' : 'مغلق' },
-        { value: '__rejected', label: en ? 'Rejected' : 'مرفوض' }
+        { value: '__rejected', label: en ? 'L.P.O Rejected' : 'مرفوض' }
     ];
 }
 function refreshStatusMsOptions() { try { msSetOptions('msStatus', lpoStatusFilterOptions()); } catch (e) {} }
@@ -8432,7 +8618,7 @@ async function printLPOListPDF() {
     const usrSel = msGet('msUser'); if (usrSel && usrSel.length) parts.push((en ? 'Employee: ' : 'الموظف: ') + usrSel.join('، '));
     const depSel = msGet('msDepartment'); if (depSel && depSel.length) parts.push((en ? 'Department: ' : 'القسم: ') + depSel.join('، '));
     const stSel = msGet('msStatus');
-    if (stSel && stSel.length) { const m = { '__pending': en ? 'Pending' : 'بانتظار الاعتماد', '__approved': en ? 'Approved' : 'معتمد', '__payment': en ? 'Payment processing' : 'قيد الدفع', '__closed': en ? 'Closed' : 'مغلق', '__rejected': en ? 'Rejected' : 'مرفوض' }; parts.push((en ? 'Status: ' : 'الحالة: ') + stSel.map(v => m[v] || v).join(en ? ', ' : '، ')); }
+    if (stSel && stSel.length) { const m = { '__pending': en ? 'Processing' : 'بانتظار الاعتماد', '__approved': en ? 'L.P.O Approved' : 'معتمد', '__payment': en ? 'Payment processing' : 'قيد الدفع', '__closed': en ? 'Closed' : 'مغلق', '__rejected': en ? 'L.P.O Rejected' : 'مرفوض' }; parts.push((en ? 'Status: ' : 'الحالة: ') + stSel.map(v => m[v] || v).join(en ? ', ' : '، ')); }
     const fromD = (document.getElementById('filterFromDate') || {}).value, toD = (document.getElementById('filterToDate') || {}).value;
     if (fromD || toD) parts.push((en ? 'Date: ' : 'التاريخ: ') + (en ? 'From ' : 'من ') + (fromD || '…') + (en ? ' To ' : ' إلى ') + (toD || '…'));
     const filterSummary = parts.length ? parts.join('  •  ') : (en ? 'All data (no filters applied)' : 'كل البيانات (بدون تصفية)');
@@ -8976,14 +9162,19 @@ function crDaysLeft(dateStr) {
 }
 
 // خلية عرض تاريخ انتهاء السجل التجاري مع تلوين حسب القرب/الانتهاء
-function crExpiryCell(dateStr, kind) {
+function crExpiryCell(dateStr, kind, withDays) {
     const en = currentLanguage === 'en';
     if (!dateStr) return '<span style="color:#ccc;">-</span>';
     const dl = crDaysLeft(dateStr);
     const d = new Date(dateStr);
     const dateFmt = isNaN(d.getTime()) ? escapeHtml(dateStr) : d.toLocaleDateString('en-GB');
     if (dl === null) return escapeHtml(dateStr);
-    if (dl < 0) return `<span style="color:#c0392b; font-weight:700;" title="${en ? 'Expired' : 'منتهٍ'}"><i class="fas fa-exclamation-circle"></i> ${dateFmt}</span>`;
+    if (dl < 0) {
+        const late = -dl;
+        // سطر صغير تحت التاريخ بنفس أسلوب الوقت في عمود تاريخ التسجيل: مدة التأخير بالأيام
+        const sub = withDays ? `<div style="font-size:10px; color:#c0392b; font-weight:600; white-space:nowrap;">${en ? (late + (late === 1 ? ' day overdue' : ' days overdue')) : ('متأخر ' + (late === 1 ? 'يوم واحد' : late === 2 ? 'يومان' : late + (late <= 10 ? ' أيام' : ' يوماً')))}</div>` : '';
+        return `<div style="white-space:nowrap;"><span style="color:#c0392b; font-weight:700;" title="${en ? 'Expired' : 'منتهٍ'}"><i class="fas fa-exclamation-circle"></i> ${dateFmt}</span></div>${sub}`;
+    }
     if (dl <= notifyDaysFor(kind)) return `<span style="color:#e67e22; font-weight:700;" title="${en ? ('Expires in ' + dl + ' days') : ('ينتهي خلال ' + dl + ' يوماً')}"><i class="fas fa-exclamation-triangle"></i> ${dateFmt}</span>`;
     return `<span style="color:#2e7d32;">${dateFmt}</span>`;
 }
@@ -9228,10 +9419,17 @@ function _supSortValue(s, key) {
     }
 }
 
+// حالة تاريخ الانتهاء بالنسبة للإنذار: na = غير مسجل، expired = منتهٍ أو مشمول بالإنذار (باقي ≤ أيام التنبيه)، active = ساري وغير مشمول
+function supExpiryState(dateStr, kind) {
+    const dl = crDaysLeft(dateStr);
+    if (dl === null) return 'na';
+    return dl <= notifyDaysFor(kind) ? 'expired' : 'active';
+}
 // قائمة الموردين بعد تطبيق فلاتر الصفحة والفرز (تُستخدم في العرض والطباعة والتصدير)
 function getFilteredSuppliers() {
     const nameF = msGet('msSupName'), svcF = msGet('msSupSvc'), cityF = msGet('msSupCity'),
-          classF = msGet('msSupClass'), ratingF = msGet('msSupRating'), crF = msGet('msSupCr'), phoneF = msGet('msSupPhone');
+          classF = msGet('msSupClass'), ratingF = msGet('msSupRating'), crF = msGet('msSupCr'), phoneF = msGet('msSupPhone'),
+          crStF = msGet('msSupCrSt'), vatStF = msGet('msSupVatSt');
     let list = suppliers.filter(s =>
         (!nameF.length || nameF.includes(s.id)) &&
         (!svcF.length || splitSvc(s.serviceType).some(t => svcF.includes(t))) &&
@@ -9239,6 +9437,8 @@ function getFilteredSuppliers() {
         (!classF.length || classF.includes(s.supplierType || 'Local Supplier')) &&
         (!ratingF.length || ratingF.includes(supRatingBucket(s))) &&
         (!crF.length || crF.includes(s.crNo)) &&
+        (!crStF.length || crStF.includes(supExpiryState(s.crExpiry, 'cr'))) &&
+        (!vatStF.length || vatStF.includes(supExpiryState(s.vatExpiry, 'vat'))) &&
         (!phoneF.length || phoneF.includes(s.phone))
     );
     const dir = _supSort.dir === 'asc' ? 1 : -1;
@@ -9344,7 +9544,7 @@ function renderSuppliersTable() {
             if (String(s.id) === String(_selRowId.suppliersTable)) row.classList.add('row-selected');
             row.innerHTML = `<td>${fmtRecordDate(s.createdAt)}</td>`
                 + `<td class="col-actions" style="text-align:center; white-space:nowrap;" onclick="event.stopPropagation();">${kebab}</td>`
-                + `<td>${escapeHtml(s.name||'')}</td><td>${supplierRatingLabel(s.id)}</td><td>${escapeHtml(s.serviceType||'')||'-'}</td><td>${escapeHtml(s.supplierType||'')||'-'}</td><td class="col-phone" dir="ltr">${escapeHtml(s.phone||'')||'-'}</td><td>${escapeHtml(s.vatNo||'')||'-'}</td><td>${escapeHtml(s.crNo||'')||'-'}</td><td>${crExpiryCell(s.crExpiry, 'cr')}</td><td>${crExpiryCell(s.vatExpiry, 'vat')}</td><td style="font-size:11.5px; color:#667; word-break:break-all;" dir="ltr">${escapeHtml(s.createdBy||'')||'-'}</td>`
+                + `<td>${escapeHtml(s.name||'')}</td><td>${supplierRatingLabel(s.id)}</td><td>${escapeHtml(s.serviceType||'')||'-'}</td><td>${escapeHtml(s.supplierType||'')||'-'}</td><td class="col-phone" dir="ltr">${escapeHtml(s.phone||'')||'-'}</td><td>${escapeHtml(s.vatNo||'')||'-'}</td><td>${escapeHtml(s.crNo||'')||'-'}</td><td>${crExpiryCell(s.crExpiry, 'cr', true)}</td><td>${crExpiryCell(s.vatExpiry, 'vat', true)}</td><td style="font-size:11.5px; color:#667; word-break:break-all;" dir="ltr">${escapeHtml(s.createdBy||'')||'-'}</td>`
                 + `<td>${supplierLastModCell(s)}</td>`
                 + `<td style="white-space:nowrap; text-align:center;">${(() => { const a = supplierOrdersTotal(s); return a.count ? (+a.total).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '<span style="color:#bbb;">—</span>'; })()}</td>`
                 + `<td style="font-size:16px;" onclick="event.stopPropagation();">${filesHtml}</td>`;
@@ -9411,7 +9611,7 @@ function updateSupplierSortArrows() {
 }
 
 function clearSupplierFilters() {
-    ['msSupName','msSupSvc','msSupCity','msSupClass','msSupRating','msSupCr','msSupPhone'].forEach(k => msClear(k));
+    ['msSupName','msSupSvc','msSupCity','msSupClass','msSupRating','msSupCr','msSupCrSt','msSupVatSt','msSupPhone'].forEach(k => msClear(k));
     filterSuppliers();
 }
 
@@ -10207,7 +10407,6 @@ function populateAllFilters() {
     msSetOptions('msSupSvc', svcMsOpts);
     msSetOptions('msDraftService', svcMsOpts);
     msSetOptions('msRepService', svcMsOpts);
-    msSetOptions('msDashService', svcMsOpts);
 
     // فلاتر التقارير الثابتة: الأشهر والحالة
     const monthNamesAr = ['يناير','فبراير','مارس','إبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
@@ -10215,10 +10414,11 @@ function populateAllFilters() {
     const mNames = currentLanguage === 'en' ? monthNamesEn : monthNamesAr;
     msSetOptions('msRepMonth', mNames.map((nm, i) => ({ value: String(i + 1), label: nm })));
     msSetOptions('msDashMonth', mNames.map((nm, i) => ({ value: String(i + 1), label: nm })));
-    ['msRepStatus', 'msDashStatus'].forEach(k => msSetOptions(k, [
-        { value: 'pending', label: currentLanguage === 'en' ? 'Pending Approval' : 'بانتظار الاعتماد' },
-        { value: 'approved', label: currentLanguage === 'en' ? 'Approved' : 'معتمد' },
-        { value: 'rejected', label: currentLanguage === 'en' ? 'Rejected' : 'مرفوض' }
+    msSetOptions('msDashStatus', lpoStatusFilterOptions());   // كل مراحل الأمر: بانتظار الاعتماد، معتمد، قيد الدفع، مغلق، مرفوض
+    ['msRepStatus'].forEach(k => msSetOptions(k, [
+        { value: 'pending', label: currentLanguage === 'en' ? 'Processing' : 'بانتظار الاعتماد' },
+        { value: 'approved', label: currentLanguage === 'en' ? 'L.P.O Approved' : 'معتمد' },
+        { value: 'rejected', label: currentLanguage === 'en' ? 'L.P.O Rejected' : 'مرفوض' }
     ]));
 
     // فلتر القسم / الغرض (قوائم متعددة الاختيار): أوامر الشراء + المسودات
@@ -10227,6 +10427,7 @@ function populateAllFilters() {
     msSetOptions('msDepartment', deptMsOpts);
     refreshStatusMsOptions();
     msSetOptions('msDraftDept', deptMsOpts);
+    msSetOptions('msDashDept', deptMsOpts);
 
     // فلاتر صفحة الموردين (كلها قوائم متعددة الاختيار قابلة للبحث)
     msSetOptions('msSupName', suppliers.map(s => ({ value: s.id, label: s.name })));
@@ -10239,6 +10440,14 @@ function populateAllFilters() {
         { value: '5', label: '★★★★★ (5)' }, { value: '4', label: '★★★★ (4)' }, { value: '3', label: '★★★ (3)' },
         { value: '2', label: '★★ (2)' }, { value: '1', label: '★ (1)' }, { value: '0', label: currentLanguage === 'en' ? 'No rating' : 'بلا تقييم' }
     ]);
+    // حالة السجل التجاري / الضريبة بالنسبة للإنذار: Active = سارية وغير مشمولة بالإنذار، Expired = منتهية/مشمولة بالإنذار، N/A = التاريخ غير مسجل
+    const _expOpts = [
+        { value: 'active', label: currentLanguage === 'en' ? 'Active' : 'Active (سارية)' },
+        { value: 'expired', label: currentLanguage === 'en' ? 'Expired' : 'Expired (منتهية)' },
+        { value: 'na', label: currentLanguage === 'en' ? 'N/A' : 'N/A (غير مسجل)' }
+    ];
+    msSetOptions('msSupCrSt', _expOpts);
+    msSetOptions('msSupVatSt', _expOpts);
     msSetOptions('msSupCr', [...new Set(suppliers.map(s => s.crNo).filter(Boolean))].map(c => ({ value: c, label: c })));
     msSetOptions('msSupPhone', [...new Set(suppliers.map(s => s.phone).filter(Boolean))].map(p => ({ value: p, label: p })));
 
@@ -10269,6 +10478,15 @@ function populateAllFilters() {
 function getReportFiltered() { return _msFilterOrders('msRep'); }
 // أوامر لوحة التحكم بعد تطبيق معايير التصفية (نفس منطق التقارير)
 function _dashList() { return _msFilterOrders('msDash'); }
+// مطابقة حالة أمر مع قيمة فلتر الحالة (بنفس منطق صفحة أوامر الشراء)
+function _orderMatchesStatus(l, st) {
+    return st === '__pending' ? l.approvalStatus === 'pending'
+         : st === '__approved' ? orderStage(l) === 'approved'
+         : st === '__payment' ? orderStage(l) === 'payment'
+         : st === '__closed' ? orderStage(l) === 'closed'
+         : st === '__rejected' ? l.approvalStatus === 'rejected'
+         : l.status === st;
+}
 function _msFilterOrders(px) {
     const monthF = msGet(px + 'Month');     // قيم 1..12 كنصوص
     const yearF = msGet(px + 'Year');
@@ -10276,6 +10494,7 @@ function _msFilterOrders(px) {
     const statusF = msGet(px + 'Status');    // pending | approved | rejected
     const svcF = msGet(px + 'Service');
     const staffF = msGet(px + 'Staff');
+    const deptF = msGet(px + 'Dept');
 
     return lpoDrafts.filter(l => {
         const d = new Date(l.date);
@@ -10284,8 +10503,9 @@ function _msFilterOrders(px) {
         return (!monthF.length || monthF.includes(String(d.getMonth() + 1))) &&
                (!yearF.length || yearF.includes(String(d.getFullYear()))) &&
                (!supF.length || supF.includes(l.supplierId)) &&
-               (!statusF.length || statusF.includes(st)) &&
+               (!statusF.length || (px === 'msDash' ? statusF.some(x => _orderMatchesStatus(l, x)) : statusF.includes(st))) &&
                (!svcF.length || (supObj && splitSvc(supObj.serviceType).some(t => svcF.includes(t)))) &&
+               (!deptF.length || deptF.includes(l.department)) &&
                (!staffF.length || staffF.includes(l.staff));
     });
 }
@@ -10673,7 +10893,7 @@ function renderBudgetStats(list) {
                 chartInstances.reportBudget = mkChart('reportBudget', el.getContext('2d'), {
             type: 'bar',
             data: { labels: top.map(r => r.name), datasets: [
-                { label: en ? 'Package' : 'المخصص', data: top.map(r => +r.st.alloc.toFixed(3)), backgroundColor: '#bcdff0', borderRadius: 6, maxBarThickness: 40 },
+                { label: en ? 'Budget' : 'المخصص', data: top.map(r => +r.st.alloc.toFixed(3)), backgroundColor: '#bcdff0', borderRadius: 6, maxBarThickness: 40 },
                 { label: en ? 'Spent' : 'المنصرف', data: top.map(r => +r.st.spent.toFixed(3)), backgroundColor: top.map(r => budgetColor(r.st.pct, r.st.remaining < 0)), borderRadius: 6, maxBarThickness: 40 }
             ] },
             options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
@@ -10695,7 +10915,7 @@ async function exportReportPDF() {
     // ملخّص الفلاتر المطبّقة (من القوائم متعددة الاختيار)
     const monthNames = en ? ['January','February','March','April','May','June','July','August','September','October','November','December']
                           : ['يناير','فبراير','مارس','إبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-    const statusLabel = (s) => s === 'pending' ? (en ? 'Pending' : 'بانتظار الاعتماد') : s === 'rejected' ? (en ? 'Rejected' : 'مرفوض') : (en ? 'Approved' : 'معتمد');
+    const statusLabel = (s) => s === 'pending' ? (en ? 'Processing' : 'بانتظار الاعتماد') : s === 'rejected' ? (en ? 'L.P.O Rejected' : 'مرفوض') : (en ? 'L.P.O Approved' : 'معتمد');
     const parts = [];
     const mSel = msGet('msRepMonth'); if (mSel.length) parts.push((en ? 'Month: ' : 'الشهر: ') + mSel.map(m => monthNames[+m - 1]).join('، '));
     const ySel = msGet('msRepYear'); if (ySel.length) parts.push((en ? 'Year: ' : 'السنة: ') + ySel.join('، '));
@@ -10726,6 +10946,9 @@ async function exportReportPDF() {
         </div>`;
 
     // تمييز البطاقات لمنع انقسامها بين الصفحات أثناء الطباعة
+    // عناصر التفاعل المؤقتة (النقطة والخط الإرشادي للرسوم المصغّرة) لا تدخل في الطباعة
+    el.querySelectorAll('.sp-dot, .sp-guide').forEach(x => x.remove());
+    try { if (window.hideUiTip) hideUiTip(); } catch (e) { }
     el.classList.add('pdf-exporting');
     el.insertBefore(header, el.firstChild);
 
@@ -10792,7 +11015,7 @@ async function exportReportPDF() {
             // ترقيم الصفحات أسفل كل صفحة
             const n = pdf.internal.getNumberOfPages(), pw = pdf.internal.pageSize.getWidth(), ph = pdf.internal.pageSize.getHeight();
             for (let i = 1; i <= n; i++) { pdf.setPage(i); pdf.setFontSize(8); pdf.setTextColor(120); pdf.text('Takaful Oman Insurance  |  LPO Report  |  ' + i + ' / ' + n, pw / 2, ph - 5, { align: 'center' }); }
-        }).save().then(cleanup).catch(cleanup);
+        }).save().then(cleanup).catch(err => { console.error('PDF export failed', err); cleanup(); alert(msg('تعذّر إنشاء ملف PDF. حاول مرة أخرى.')); });
     }, 450);
 
     function cleanup() {
@@ -10859,7 +11082,7 @@ function renderVPITable(filteredOrders) {
 }
 
 function clearDashFilters() {
-    ['msDashMonth','msDashYear','msDashSupplier','msDashStatus','msDashService','msDashStaff'].forEach(k => msClear(k));
+    ['msDashMonth','msDashYear','msDashSupplier','msDashStatus','msDashDept','msDashStaff'].forEach(k => msClear(k));
     loadDashboard();
 }
 function clearReportFilters() {
@@ -10978,7 +11201,7 @@ async function downloadReportsExcel() {
             { tid: 'reportDateTable', chart: 'reportChart', ar: 'الإنفاق حسب التاريخ', en: 'Spending by Date', sum: true },
             { tid: 'reportSupplierTable', chart: 'reportSupplierChart', ar: 'الإنفاق حسب المورد', en: 'Spending by Supplier', sum: true },
             { tid: 'deptStatsTable', chart: 'reportDeptChart', ar: 'إحصائيات حسب القسم', en: 'Statistics by Department', sum: true },
-            { tid: 'budgetStatsTable', chart: 'reportBudgetChart', ar: 'المخصصات المالية', en: 'Budget Allocation', sum: true, note: T('المخصص والمنصرف والمتبقي من كل أوامر القسم؛ آخر عمودين حسب التصفية', 'Package, spent and remaining use all department orders; the last two columns follow the filters') },
+            { tid: 'budgetStatsTable', chart: 'reportBudgetChart', ar: 'المخصصات المالية', en: 'Budget Allocation', sum: true, note: T('المخصص والمنصرف والمتبقي من كل أوامر القسم؛ آخر عمودين حسب التصفية', 'Budget, spent and remaining use all department orders; the last two columns follow the filters') },
             { tid: 'top5Table', ar: 'أكبر 10 أوامر شراء', en: 'Top 10 Purchase Orders' },
             { tid: 'topSuppliersTable', ar: 'أفضل 10 موردين', en: 'Top 10 Suppliers' },
             { tid: 'vpiTable', ar: 'مؤشر أداء الموردين', en: 'Vendor Performance Index', note: T('يعتمد التقييم على كل تقييمات المورد؛ عدد الأوامر والمبلغ حسب التصفية', 'Ratings use all supplier evaluations; orders and amount follow the filters') }
@@ -10993,9 +11216,9 @@ async function downloadReportsExcel() {
             { k: T('إجمالي الإنفاق (ر.ع)', 'Total Spending (OMR)'), n: '', a: r3(total) },
             { k: T('إجمالي الضرائب (ر.ع)', 'Total Tax (OMR)'), n: '', a: r3(tax) },
             { k: T('متوسط الأمر (ر.ع)', 'Average Order (OMR)'), n: '', a: r3(list.length ? total / list.length : 0) },
-            { k: T('بانتظار الاعتماد', 'Pending Approval'), n: bySt.pending[0], a: r3(bySt.pending[1]) },
-            { k: T('معتمدة', 'Approved'), n: bySt.approved[0], a: r3(bySt.approved[1]) },
-            { k: T('مرفوضة', 'Rejected'), n: bySt.rejected[0], a: r3(bySt.rejected[1]) },
+            { k: T('بانتظار الاعتماد', 'Processing'), n: bySt.pending[0], a: r3(bySt.pending[1]) },
+            { k: T('معتمدة', 'L.P.O Approved'), n: bySt.approved[0], a: r3(bySt.approved[1]) },
+            { k: T('مرفوضة', 'L.P.O Rejected'), n: bySt.rejected[0], a: r3(bySt.rejected[1]) },
             { k: T('عدد الموردين في التقرير', 'Suppliers in report'), n: new Set(list.map(l => l.supplierId || l.supplierName)).size, a: '' },
             { k: T('عدد الأقسام في التقرير', 'Departments in report'), n: new Set(list.map(l => l.department || '')).size, a: '' }
         ];
@@ -11259,20 +11482,20 @@ async function downloadAllData() {
             n: st.orders, bat: x.budgetAt ? fmtDT(x.budgetAt) : '', bby: x.budgetBy || '',
             _over: st.hasAlloc && st.remaining < 0 }; });
         const bt = budgetTotals();
-        sheets.push({ sheetName: T('الأقسام والمخصصات', 'Departments & Packages'), reportTitle: T('الأقسام / أغراض الطلب والمخصصات المالية (Procurement Package)', 'Departments / Purposes and Budget Allocation (Procurement Package)'),
+        sheets.push({ sheetName: T('الأقسام والمخصصات', 'Departments & Budgets'), reportTitle: T('الأقسام / أغراض الطلب والمخصصات المالية (Procurement Budget)', 'Departments / Purposes and Budget Allocation (Procurement Budget)'),
             columns: [
                 { header: '#', headerEn: '#', key: 'sl', width: 6, align: 'center' },
                 { header: 'القسم / الغرض', headerEn: 'Department / Purpose', key: 'name', width: 34, align: 'right' },
-                { header: 'المخصص (ر.ع)', headerEn: 'Package (OMR)', key: 'alloc', width: 16, align: 'center', numFmt: '#,##0.000' },
+                { header: 'المخصص (ر.ع)', headerEn: 'Budget (OMR)', key: 'alloc', width: 16, align: 'center', numFmt: '#,##0.000' },
                 { header: 'المنصرف (ر.ع)', headerEn: 'Spent (OMR)', key: 'spent', width: 16, align: 'center', numFmt: '#,##0.000' },
                 { header: 'المتبقي (ر.ع)', headerEn: 'Remaining (OMR)', key: 'remaining', width: 16, align: 'center', numFmt: '#,##0.000', fontColor: r => r._over ? 'FFC0392B' : null },
                 { header: 'الاستهلاك %', headerEn: 'Used %', key: 'pct', width: 12, align: 'center', numFmt: '0.0"%"' },
                 { header: 'عدد الأوامر', headerEn: 'Orders', key: 'n', width: 11, align: 'center' },
-                { header: 'آخر تعديل للمخصص', headerEn: 'Package Updated', key: 'bat', width: 18, align: 'center' },
+                { header: 'آخر تعديل للمخصص', headerEn: 'Budget Updated', key: 'bat', width: 18, align: 'center' },
                 { header: 'بواسطة', headerEn: 'By', key: 'bby', width: 16, align: 'center' }],
             rows: deptRows, count: deptRows.length,
             totalsRow: deptRows.length ? { name: T('الإجمالي', 'TOTAL'), alloc: r3(bt.alloc), spent: r3(bt.spent), remaining: r3(bt.remaining), n: deptRows.reduce((a, r) => a + r.n, 0) } : null,
-            desc: T('الأقسام مع المخصص المالي والمنصرف والمتبقي ونسبة الاستهلاك وعدد الأوامر', 'Departments with their package, spent, remaining, usage % and order count') });
+            desc: T('الأقسام مع المخصص المالي والمنصرف والمتبقي ونسبة الاستهلاك وعدد الأوامر', 'Departments with their budget, spent, remaining, usage % and order count') });
         const sl2 = listSheet('نوع الخدمة', 'Service Type', serviceTypes, { col: { header: 'عدد الموردين', headerEn: 'Suppliers', key: 'n', width: 12, align: 'center' }, val: x => suppliers.filter(sp => splitSvc(sp.serviceType).indexOf(x.name) !== -1).length });
         sheets.push({ sheetName: T('أنواع الخدمات', 'Service Types'), reportTitle: T('قائمة أنواع الخدمات', 'Service Types List'), columns: sl2.cols, rows: sl2.rows, count: sl2.rows.length, desc: T('أنواع الخدمات مع عدد الموردين لكل نوع', 'Service types with supplier count') });
         const ds = listSheet('نص البند (Description)', 'Item Description', descriptions || []);
@@ -13020,9 +13243,9 @@ function renderProfileStats(uname) {
     const tbody = document.getElementById('profStatementBody'); if (!tbody) return;
     const rows = [
         { label: en ? 'Purchase orders created' : 'أوامر الشراء المُنشأة', val: d.myOrders.length, det: (en ? 'Total value: ' : 'إجمالي القيمة: ') + fmt(d.myTotal) + ' ' + (en ? 'OMR' : 'ر.ع') },
-        { label: en ? 'Approved orders' : 'الأوامر المعتمدة', val: d.myApproved, det: en ? 'Approved / legacy orders' : 'أوامر معتمدة أو قديمة' },
-        { label: en ? 'Pending orders' : 'أوامر بانتظار الاعتماد', val: d.myPending, det: en ? 'Awaiting approval' : 'بانتظار اعتماد المعتمِد' },
-        { label: en ? 'Rejected orders' : 'الأوامر المرفوضة', val: d.myRejected, det: en ? 'Rejected orders' : 'أوامر تم رفضها' },
+        { label: en ? 'L.P.O Approved orders' : 'الأوامر المعتمدة', val: d.myApproved, det: en ? 'L.P.O Approved / legacy orders' : 'أوامر معتمدة أو قديمة' },
+        { label: en ? 'Processing orders' : 'أوامر بانتظار الاعتماد', val: d.myPending, det: en ? 'Awaiting approval' : 'بانتظار اعتماد المعتمِد' },
+        { label: en ? 'L.P.O Rejected orders' : 'الأوامر المرفوضة', val: d.myRejected, det: en ? 'L.P.O Rejected orders' : 'أوامر تم رفضها' },
         { label: en ? 'Drafts created' : 'المسودات المُنشأة', val: d.myDrafts.length, det: en ? 'Saved drafts' : 'مسودات محفوظة' },
         { label: en ? 'Suppliers registered' : 'الموردون المُسجّلون', val: d.mySuppliers.length, det: en ? 'Registered suppliers' : 'موردون مُسجّلون' }
     ];
@@ -13154,9 +13377,9 @@ async function downloadProfileStatement() {
             { [en ? 'Field' : 'البند']: en ? 'Job title' : 'المسمى الوظيفي', [en ? 'Value' : 'القيمة']: t.jobTitle || '' },
             { [en ? 'Field' : 'البند']: en ? 'Role' : 'الدور', [en ? 'Value' : 'القيمة']: roleLabel(t.role) },
             { [en ? 'Field' : 'البند']: en ? 'Orders created' : 'أوامر أنشأتها', [en ? 'Value' : 'القيمة']: d.myOrders.length },
-            { [en ? 'Field' : 'البند']: en ? 'Approved orders' : 'أوامر معتمدة', [en ? 'Value' : 'القيمة']: d.myApproved },
-            { [en ? 'Field' : 'البند']: en ? 'Pending orders' : 'أوامر معلّقة', [en ? 'Value' : 'القيمة']: d.myPending },
-            { [en ? 'Field' : 'البند']: en ? 'Rejected orders' : 'أوامر مرفوضة', [en ? 'Value' : 'القيمة']: d.myRejected },
+            { [en ? 'Field' : 'البند']: en ? 'L.P.O Approved orders' : 'أوامر معتمدة', [en ? 'Value' : 'القيمة']: d.myApproved },
+            { [en ? 'Field' : 'البند']: en ? 'Processing orders' : 'أوامر معلّقة', [en ? 'Value' : 'القيمة']: d.myPending },
+            { [en ? 'Field' : 'البند']: en ? 'L.P.O Rejected orders' : 'أوامر مرفوضة', [en ? 'Value' : 'القيمة']: d.myRejected },
             { [en ? 'Field' : 'البند']: en ? 'Drafts created' : 'مسودات أنشأتها', [en ? 'Value' : 'القيمة']: d.myDrafts.length },
             { [en ? 'Field' : 'البند']: en ? 'Suppliers registered' : 'موردون سجّلتهم', [en ? 'Value' : 'القيمة']: d.mySuppliers.length },
             { [en ? 'Field' : 'البند']: en ? 'Total value (OMR)' : 'إجمالي القيمة (ر.ع)', [en ? 'Value' : 'القيمة']: +d.myTotal.toFixed(3) }
@@ -13402,7 +13625,7 @@ async function editServiceTypePrompt(id) {
     populateAllFilters();
 }
 
-// ===================== جدول الأقسام + المخصصات المالية (Procurement Package) =====================
+// ===================== جدول الأقسام + المخصصات المالية (Procurement Budget) =====================
 function renderDeptCtrlList() {
     const tbody = document.querySelector('#departmentsTable tbody');
     if (!tbody) return;
@@ -13443,7 +13666,7 @@ function renderDeptCtrlList() {
         set('bgtTotalRemain', `<span style="color:${t.remaining < 0 ? '#c0392b' : '#2e7d32'};">${fmtInt(t.remaining)}</span>`);
         set('bgtRemainSub', (en ? 'Spent ' : 'المنصرف ') + fmtInt(t.spent) + cur);
         set('bgtDeptCount', t.nDepts);
-        set('bgtDeptSub', (en ? 'with package ' : 'بمخصص ') + t.nAlloc + (t.nOver ? (en ? ` · ${t.nOver} over` : ` · ${t.nOver} تجاوز`) : ''));
+        set('bgtDeptSub', (en ? 'with budget ' : 'بمخصص ') + t.nAlloc + (t.nOver ? (en ? ` · ${t.nOver} over` : ` · ${t.nOver} تجاوز`) : ''));
     }
 }
 
@@ -13457,7 +13680,7 @@ function describeDeptChanges(old, upd) {
     if ('budget' in upd) {
         const a = (old.budget === null || old.budget === undefined) ? null : +old.budget;
         const b = (upd.budget === null || upd.budget === undefined) ? null : +upd.budget;
-        if (a !== b) parts.push((en ? 'Package: ' : 'المخصص: ') + (a === null ? '—' : fmt(a)) + ' ← ' + (b === null ? '—' : fmt(b)) + (en ? ' OMR' : ' ر.ع'));
+        if (a !== b) parts.push((en ? 'Budget: ' : 'المخصص: ') + (a === null ? '—' : fmt(a)) + ' ← ' + (b === null ? '—' : fmt(b)) + (en ? ' OMR' : ' ر.ع'));
     }
     let txt = parts.length ? (' — ' + parts.join(en ? ', ' : '، ')) : (en ? ' — no changes' : ' — بدون تغييرات');
     if ('name' in upd && old.name && String(old.name).trim() !== String(upd.name).trim()) txt += (en ? ' (previous name: ' : ' (الاسم السابق: ') + String(old.name).trim() + ')';
@@ -13509,7 +13732,7 @@ function viewDepartment(id, hlNumber) {
     const item = (l, v) => `<div class="dv-item"><div class="dv-l">${l}</div><div class="dv-v">${v}</div></div>`;
     const showB = canSeeBudget();
     const budgetBox = !showB ? '' : `<div class="bgt-box">
-        <div class="bb-head"><i class="fas fa-wallet"></i> ${en ? 'Procurement Package (Budget Allocation)' : 'المخصص المالي (Procurement Package)'}
+        <div class="bb-head"><i class="fas fa-wallet"></i> ${en ? 'Procurement Budget (Budget Allocation)' : 'المخصص المالي (Procurement Budget)'}
             ${st.hasAlloc ? '' : `<span class="bgt-chip" style="background:#eef2f6; color:#8a97a3;">${en ? 'Not allocated' : 'بدون مخصص'}</span>`}
             ${over ? `<span class="bgt-chip" style="background:#fdecea; color:#c0392b;">${en ? 'Over budget' : 'تجاوز المخصص'}</span>` : ''}</div>
         <div class="bb-row">
@@ -13517,8 +13740,8 @@ function viewDepartment(id, hlNumber) {
             <div class="bb-cell"><div class="bb-l">${en ? 'Spent' : 'المنصرف'}</div><div class="bb-v" style="color:#8e44ad;">${fmt(st.spent)}</div></div>
             <div class="bb-cell"><div class="bb-l">${en ? 'Remaining' : 'المتبقي'}</div><div class="bb-v" style="color:${budgetColor(st.pct, over)};">${st.hasAlloc ? fmt(st.remaining) : '—'}</div></div>
         </div>
-        ${st.hasAlloc ? budgetBarHtml(st) + `<div class="bb-pct">${st.pct.toFixed(1)}% ${en ? 'of the package used' : 'من المخصص مستهلك'}</div>` : ''}
-        ${(d.budgetAt || d.budgetBy) ? `<div class="bgt-hint"><i class="far fa-clock"></i> ${en ? 'Last package update: ' : 'آخر تعديل للمخصص: '}${fmtDT(d.budgetAt)}${d.budgetBy ? ' — ' + escapeHtml(d.budgetBy) : ''}</div>` : ''}
+        ${st.hasAlloc ? budgetBarHtml(st) + `<div class="bb-pct">${st.pct.toFixed(1)}% ${en ? 'of the budget used' : 'من المخصص مستهلك'}</div>` : ''}
+        ${(d.budgetAt || d.budgetBy) ? `<div class="bgt-hint"><i class="far fa-clock"></i> ${en ? 'Last budget update: ' : 'آخر تعديل للمخصص: '}${fmtDT(d.budgetAt)}${d.budgetBy ? ' — ' + escapeHtml(d.budgetBy) : ''}</div>` : ''}
     </div>`;
     document.getElementById('deptViewBody').innerHTML =
         `<div style="font-size:18px; font-weight:800; color:#0093c4; margin-bottom:12px;"><i class="fas fa-sitemap"></i> ${escapeHtml(d.name || '')}</div>
@@ -13601,7 +13824,7 @@ function renderDeptEditHint(d) {
     const el = document.getElementById('deptEditBudgetHint'); if (!el) return;
     const en = currentLanguage === 'en', cur = en ? ' OMR' : ' ر.ع';
     const st = deptBudgetStats(d);
-    el.innerHTML = `<i class="fas fa-info-circle"></i> ${en ? 'Spent' : 'المنصرف'}: <b>${fmt(st.spent)}${cur}</b> · ${en ? 'Remaining' : 'المتبقي'}: <b style="color:${budgetColor(st.pct, st.hasAlloc && st.remaining < 0)};">${st.hasAlloc ? fmt(st.remaining) + cur : '—'}</b><br>${en ? 'Spending counts every order of this department except the rejected ones. Leave the field empty to remove the package.' : 'يُحتسب المنصرف من كل أوامر هذا القسم عدا المرفوضة. اترك الحقل فارغاً لإلغاء المخصص.'}`;
+    el.innerHTML = `<i class="fas fa-info-circle"></i> ${en ? 'Spent' : 'المنصرف'}: <b>${fmt(st.spent)}${cur}</b> · ${en ? 'Remaining' : 'المتبقي'}: <b style="color:${budgetColor(st.pct, st.hasAlloc && st.remaining < 0)};">${st.hasAlloc ? fmt(st.remaining) + cur : '—'}</b><br>${en ? 'Spending counts every order of this department except the rejected ones. Leave the field empty to remove the budget.' : 'يُحتسب المنصرف من كل أوامر هذا القسم عدا المرفوضة. اترك الحقل فارغاً لإلغاء المخصص.'}`;
 }
 function closeDeptEditModal() { document.getElementById('deptEditModal').classList.remove('active'); _deptEditId = null; }
 function clearDeptBudget() { const b = document.getElementById('deptEditBudget'); if (b) { b.value = ''; b.focus(); } }
@@ -13630,7 +13853,7 @@ async function _saveDept(opts) {
     }
     if (canB && !opts.nameOnly) {
         const b = _deptBudgetInput();
-        if (b === undefined) { alert(en ? 'Please enter a valid package amount.' : 'يرجى إدخال مبلغ مخصص صحيح.'); return; }
+        if (b === undefined) { alert(en ? 'Please enter a valid budget amount.' : 'يرجى إدخال مبلغ مخصص صحيح.'); return; }
         const cur = (d.budget === null || d.budget === undefined) ? null : +d.budget;
         if (b !== cur) { upd.budget = b; upd.budget_updated_at = new Date().toISOString(); upd.budget_updated_by = (currentUser && currentUser.username) || ''; }
     }
@@ -13643,7 +13866,7 @@ async function _saveDept(opts) {
     }
     if (res.error) {
         if (/budget/i.test(res.error.message || '')) {
-            alert(en ? 'The package could not be saved because its column does not exist in the database yet.\nRun the SQL file "تحديث_قاعدة_البيانات_22_مخصصات_الأقسام.sql" in Supabase (SQL Editor), then reload the page.'
+            alert(en ? 'The budget could not be saved because its column does not exist in the database yet.\nRun the SQL file "تحديث_قاعدة_البيانات_22_مخصصات_الأقسام.sql" in Supabase (SQL Editor), then reload the page.'
                      : 'تعذّر حفظ المخصص لأن عموده غير موجود بعد في قاعدة البيانات.\nشغّل ملف SQL: "تحديث_قاعدة_البيانات_22_مخصصات_الأقسام.sql" في Supabase (SQL Editor) ثم أعد تحميل الصفحة.');
         } else alert(msg('تعذّر التعديل: ') + res.error.message);
         return;
@@ -13783,7 +14006,7 @@ async function deleteDepartment(id) {
         populateAllFilters();
     }
 }
-// ===================== المخصصات المالية للأقسام (Procurement Package) =====================
+// ===================== المخصصات المالية للأقسام (Procurement Budget) =====================
 // لكل قسم مبلغ مخصّص (budget)؛ المنصرف = مجموع أوامر الشراء غير المرفوضة لذلك القسم.
 function deptByName(name) {
     const n = String(name || '').trim().toLowerCase();
@@ -13847,7 +14070,7 @@ function confirmBudgetOverrun() {
         if (after >= 0) return true;
         const en = currentLanguage === 'en', c = en ? ' OMR' : ' ر.ع';
         return confirm(en
-            ? `This order exceeds the procurement package of "${d.name}" by ${fmt(Math.abs(after))}${c}.\nPackage: ${fmt(st.alloc)}${c} · Already spent: ${fmt(spent)}${c} · This order: ${fmt(cur)}${c}\n\nSave it anyway?`
+            ? `This order exceeds the procurement budget of "${d.name}" by ${fmt(Math.abs(after))}${c}.\nBudget: ${fmt(st.alloc)}${c} · Already spent: ${fmt(spent)}${c} · This order: ${fmt(cur)}${c}\n\nSave it anyway?`
             : `هذا الأمر يتجاوز المخصص المالي للقسم «${d.name}» بمقدار ${fmt(Math.abs(after))}${c}.\nالمخصص: ${fmt(st.alloc)}${c} · المنصرف: ${fmt(spent)}${c} · هذا الأمر: ${fmt(cur)}${c}\n\nهل تريد الحفظ على أي حال؟`);
     } catch (e) { return true; }
 }
@@ -13888,7 +14111,7 @@ function ledgerTableHtml(rows, opt) {
     const rc = (r) => r === null ? '<span style="color:#bbb;">—</span>' : `<span class="num ${r < 0 ? 'neg' : ''}" style="${r < 0 ? '' : 'color:#2e7d32; font-weight:800;'}">${fmt(r)}</span>`;
     return `<div class="pkg-tbl-wrap"><table class="pkg-tbl"><thead><tr>
         <th>${en ? 'Date' : 'التاريخ'}</th><th>${en ? 'Order No.' : 'رقم الأمر'}</th>${opt.showDept ? `<th>${en ? 'Department' : 'القسم'}</th>` : ''}
-        <th>${en ? 'Amount (OMR)' : 'المبلغ (ر.ع)'}</th><th>${en ? 'Remaining Package after' : 'المتبقي من Package بعدها'}</th></tr></thead><tbody>`
+        <th>${en ? 'Amount (OMR)' : 'المبلغ (ر.ع)'}</th><th>${en ? 'Remaining Budget after' : 'المتبقي من Budget بعدها'}</th></tr></thead><tbody>`
         + rows.map(r => {
             // opt.click: الأعمدة (القسم / المبلغ / المتبقي) تفتح بيانات القسم، ورقم الأمر يفتح معاينته
             const dd = opt.click ? deptByName(r.dept) : null;
@@ -13902,7 +14125,7 @@ function ledgerTableHtml(rows, opt) {
 function deptLedgerSectionHtml(d, hl) {
     const en = currentLanguage === 'en';
     const rows = deptLedger(d.name).reverse();
-    return `<div class="pkg-section-head"><i class="fas fa-receipt"></i> ${en ? 'Financial Statement (orders & remaining package)' : 'الكشف المالي (أوامر الشراء والمتبقي من Package)'} <span class="ops-count">${rows.length}</span></div>${ledgerTableHtml(rows, { hl })}`;
+    return `<div class="pkg-section-head"><i class="fas fa-receipt"></i> ${en ? 'Financial Statement (orders & remaining budget)' : 'الكشف المالي (أوامر الشراء والمتبقي من Budget)'} <span class="ops-count">${rows.length}</span></div>${ledgerTableHtml(rows, { hl })}`;
 }
 
 // ===== بطاقة إجمالي المخصص: كشف الأقسام والمخصصات (معاينة فقط) =====
@@ -13910,7 +14133,7 @@ function openPkgSummary() {
     if (!canSeeBudget()) return;
     const en = currentLanguage === 'en', cur = en ? ' OMR' : ' ر.ع';
     const t = budgetTotals();
-    document.getElementById('pkgSummaryTitle').textContent = en ? 'Departments Package Summary (Procurement Package)' : 'كشف مخصصات الأقسام (Procurement Package)';
+    document.getElementById('pkgSummaryTitle').textContent = en ? 'Departments Budget Summary (Procurement Budget)' : 'كشف مخصصات الأقسام (Procurement Budget)';
     const sorted = (departments || []).slice().sort((a, b) => ((b.budget === null || b.budget === undefined) ? -1 : +b.budget) - ((a.budget === null || a.budget === undefined) ? -1 : +a.budget));
     const rows = sorted.map((d, i) => {
         const st = deptBudgetStats(d), over = st.hasAlloc && st.remaining < 0;
@@ -13923,11 +14146,11 @@ function openPkgSummary() {
     const usedPct = t.alloc ? Math.min(999, (t.spent / t.alloc) * 100) : 0;
     document.getElementById('pkgSummaryBody').innerHTML = `
         <div class="bgt-mini">
-            <div class="bm-card"><div class="bm-lbl"><i class="fas fa-wallet"></i> ${en ? 'Total Package' : 'إجمالي المخصص'}</div><div class="bm-val">${fmt(t.alloc)}</div><div class="bm-sub">${en ? 'for ' + t.nAlloc + ' dept.' : 'على ' + t.nAlloc + ' قسم'}</div></div>
+            <div class="bm-card"><div class="bm-lbl"><i class="fas fa-wallet"></i> ${en ? 'Total Budget' : 'إجمالي المخصص'}</div><div class="bm-val">${fmt(t.alloc)}</div><div class="bm-sub">${en ? 'for ' + t.nAlloc + ' dept.' : 'على ' + t.nAlloc + ' قسم'}</div></div>
             <div class="bm-card"><div class="bm-lbl"><i class="fas fa-piggy-bank"></i> ${en ? 'Remaining' : 'المتبقي'}</div><div class="bm-val" style="color:${t.remaining < 0 ? '#c0392b' : '#2e7d32'};">${fmt(t.remaining)}</div><div class="bm-sub">${en ? 'Spent ' : 'المنصرف '}${fmt(t.spent)}${cur} · ${usedPct.toFixed(0)}%</div></div>
-            <div class="bm-card"><div class="bm-lbl"><i class="fas fa-sitemap"></i> ${en ? 'Departments' : 'عدد الأقسام'}</div><div class="bm-val">${t.nDepts}</div><div class="bm-sub">${en ? 'with package ' : 'بمخصص '}${t.nAlloc}${t.nOver ? (en ? ` · ${t.nOver} over` : ` · ${t.nOver} تجاوز`) : ''}</div></div>
+            <div class="bm-card"><div class="bm-lbl"><i class="fas fa-sitemap"></i> ${en ? 'Departments' : 'عدد الأقسام'}</div><div class="bm-val">${t.nDepts}</div><div class="bm-sub">${en ? 'with budget ' : 'بمخصص '}${t.nAlloc}${t.nOver ? (en ? ` · ${t.nOver} over` : ` · ${t.nOver} تجاوز`) : ''}</div></div>
         </div>
-        ${rows ? `<div class="pkg-tbl-wrap"><table class="pkg-tbl"><thead><tr><th style="width:40px;">#</th><th>${en ? 'Department / Purpose' : 'القسم / الغرض'}</th><th>Package</th><th>${en ? 'Spent' : 'المنصرف'}</th><th>${en ? 'Remaining' : 'المتبقي'}</th><th>${en ? 'Usage' : 'الاستهلاك'}</th></tr></thead><tbody>${rows}</tbody>
+        ${rows ? `<div class="pkg-tbl-wrap"><table class="pkg-tbl"><thead><tr><th style="width:40px;">#</th><th>${en ? 'Department / Purpose' : 'القسم / الغرض'}</th><th>Budget</th><th>${en ? 'Spent' : 'المنصرف'}</th><th>${en ? 'Remaining' : 'المتبقي'}</th><th>${en ? 'Usage' : 'الاستهلاك'}</th></tr></thead><tbody>${rows}</tbody>
         <tfoot><tr><td></td><td class="l">${en ? 'Total' : 'الإجمالي'}</td><td class="num" style="color:#0093c4;">${fmt(t.alloc)}</td><td class="num">${fmt(t.spent)}</td><td class="num ${t.remaining < 0 ? 'neg' : ''}" style="${t.remaining < 0 ? '' : 'color:#2e7d32;'}">${fmt(t.remaining)}</td><td class="num">${usedPct.toFixed(0)}%</td></tr></tfoot></table></div>`
             : `<div style="text-align:center; color:#999; padding:18px;">${en ? 'No departments yet' : 'لا توجد أقسام بعد'}</div>`}
         ${t.unalloc > 0 ? `<div class="bgt-hint" style="margin-top:8px;"><i class="fas fa-info-circle"></i> ${en ? 'Orders on departments not in the list (not counted above): ' : 'أوامر على أقسام غير مسجّلة في القائمة (غير محسوبة أعلاه): '}<b>${fmt(t.unalloc)}${cur}</b></div>` : ''}`;
@@ -13956,7 +14179,7 @@ function renderPkgLedger() {
             <select onchange="setPkgLedgerDept(this.value)"><option value="">${en ? '-- All departments --' : '-- كل الأقسام --'}</option>${names.map(n => `<option value="${escapeHtml(n)}" ${n.toLowerCase() === _pkgLedgerDept.toLowerCase() && _pkgLedgerDept ? 'selected' : ''}>${escapeHtml(n)}</option>`).join('')}</select>
             <span class="bgt-chip" style="background:#e9f6ee; color:#1f7a37; font-size:12px; padding:4px 11px;">${en ? 'Total remaining' : 'إجمالي المتبقي'}: <b style="color:${t.remaining < 0 ? '#c0392b' : '#1f7a37'}; unicode-bidi:isolate;">${fmt(t.remaining)}${cur}</b></span></div>
         ${ledgerTableHtml(rows, { showDept: true, click: true })}
-        <div class="bgt-hint">${en ? `Showing the latest ${rows.length} of ${all.length} transactions (newest first). "Remaining" is the department's package balance right after each order; rejected orders are not deducted.` : `يعرض آخر ${rows.length} من ${all.length} عملية (الأحدث أولاً). «المتبقي» هو رصيد مخصص القسم بعد كل أمر مباشرةً، والأوامر المرفوضة لا تُخصم.`}</div>`;
+        <div class="bgt-hint">${en ? `Showing the latest ${rows.length} of ${all.length} transactions (newest first). "Remaining" is the department's budget balance right after each order; rejected orders are not deducted.` : `يعرض آخر ${rows.length} من ${all.length} عملية (الأحدث أولاً). «المتبقي» هو رصيد مخصص القسم بعد كل أمر مباشرةً، والأوامر المرفوضة لا تُخصم.`}</div>`;
 }
 function closePkgLedger() { document.getElementById('pkgLedgerModal').classList.remove('active'); }
 
@@ -14079,7 +14302,7 @@ function buildLPOHtml(data, isDraft) {
             <div style="flex:1.05; font-size:12px; text-align:right; padding-top:4px;">
                 <div style="margin-bottom:3px;"><span style="color:#666; font-weight:400;">L.P.O Date:</span> <span style="color:#111; font-weight:400;">${(()=>{const d=new Date(data.date);const m=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];return String(d.getDate()).padStart(2,'0')+'/'+m[d.getMonth()]+'/'+d.getFullYear();})()}</span></div>
                 <div style="margin-bottom:3px;"><span style="color:#666; font-weight:400;">L.P.O Ref:</span> <span style="color:#111; font-weight:400;">${lpoRef}</span></div>
-                <div style="margin-bottom:6px;"><span style="color:#666;">L.P.O No:</span> ${data.approvalStatus === 'approved' ? `<strong style="color:#111;">${data.number}</strong>` : data.approvalStatus === 'rejected' ? `<span style="color:#c0392b; font-style:italic; font-weight:600;">Rejected</span>` : `<span style="color:#b9b9b9; font-style:italic; font-weight:500;">Awaiting approval</span>`}</div>
+                <div style="margin-bottom:6px;"><span style="color:#666;">L.P.O No:</span> ${data.approvalStatus === 'approved' ? `<strong style="color:#111;">${data.number}</strong>` : data.approvalStatus === 'rejected' ? `<span style="color:#c0392b; font-style:italic; font-weight:600;">L.P.O Rejected</span>` : `<span style="color:#b9b9b9; font-style:italic; font-weight:500;">Processing</span>`}</div>
             </div>
         </div>
 
@@ -14175,7 +14398,7 @@ function buildLPOHtml(data, isDraft) {
         </div>
 
         <!-- لافتة سبب الرفض (تظهر فقط للأوامر المرفوضة — مرئية لكل من يطّلع على الأمر) -->
-        ${data.approvalStatus === 'rejected' ? `<div style="margin-top:8px; border:1.5px solid #e74c3c; background:#fdecea; border-radius:6px; padding:8px 12px; font-size:11px; color:#c0392b; direction:${currentLanguage === 'en' ? 'ltr' : 'rtl'};"><strong><i class="fas fa-times-circle"></i> ${currentLanguage === 'en' ? 'REJECTED' : 'مرفوض'}${data.approvedBy ? (' — ' + (currentLanguage === 'en' ? 'by ' : 'بواسطة ') + escapeHtml(data.approvedBy)) : ''}${data.approvedAt ? (' — ' + new Date(data.approvedAt).toLocaleDateString('en-GB')) : ''}</strong><br><span style="color:#7a2f27;">${currentLanguage === 'en' ? 'Reason: ' : 'السبب: '}</span>${escapeHtml(data.rejectionReason || '')}</div>` : ''}
+        ${data.approvalStatus === 'rejected' ? `<div style="margin-top:8px; border:1.5px solid #e74c3c; background:#fdecea; border-radius:6px; padding:8px 12px; font-size:11px; color:#c0392b; direction:${currentLanguage === 'en' ? 'ltr' : 'rtl'};"><strong><i class="fas fa-times-circle"></i> ${currentLanguage === 'en' ? 'L.P.O REJECTED' : 'مرفوض'}${data.approvedBy ? (' — ' + (currentLanguage === 'en' ? 'by ' : 'بواسطة ') + escapeHtml(data.approvedBy)) : ''}${data.approvedAt ? (' — ' + new Date(data.approvedAt).toLocaleDateString('en-GB')) : ''}</strong><br><span style="color:#7a2f27;">${currentLanguage === 'en' ? 'Reason: ' : 'السبب: '}</span>${escapeHtml(data.rejectionReason || '')}</div>` : ''}
 
         <!-- المجموعة السفلية: ختم الاعتماد + التواقيع + التواصل + التذييل (تثبت أسفل الصفحة) -->
         <div style="margin-top:auto; padding-top:14px;">
@@ -14189,13 +14412,13 @@ function buildLPOHtml(data, isDraft) {
                     ${data.approvalStatus === 'approved' ? `<img src="${STAMP_DATA}" alt="ختم الشركة" style="position:absolute; top:76px; left:67%; transform:translateX(-50%); height:138px; width:auto; opacity:1; z-index:5; pointer-events:none;">` : ''}
                     ${data.approvalStatus === 'approved' ? `<div style="position:absolute; top:138px; left:6%; z-index:6; text-align:left;">
                         <div style="display:inline-block; font-family:'Tajawal','Segoe UI',Arial,sans-serif; border:2px solid #2e7d32; color:#2e7d32; border-radius:6px; padding:3px 8px; font-weight:800; font-size:11px; direction:${currentLanguage === 'en' ? 'ltr' : 'rtl'};">
-                            <i class="fas fa-check-circle"></i> ${currentLanguage === 'en' ? 'APPROVED' : 'معتمد'}
+                            <i class="fas fa-check-circle"></i> ${currentLanguage === 'en' ? 'L.P.O APPROVED' : 'معتمد'}
                             <div style="font-size:7.5px; font-weight:500; color:#8aa894; margin-top:1px; white-space:nowrap;">${currentLanguage === 'en' ? 'Date: ' : 'تاريخ الاعتماد: '}${data.approvedAt ? new Date(data.approvedAt).toLocaleDateString('en-GB') : '—'}</div>
                         </div>
                     </div>` : ''}
                     ${data.approvalStatus === 'rejected' ? `<div style="position:absolute; top:96px; left:50%; transform:translateX(-50%) rotate(-10deg); z-index:6; text-align:center;">
                         <div style="display:inline-block; border:3px solid #c0392b; color:#c0392b; border-radius:10px; padding:5px 18px; font-weight:800; font-size:18px; letter-spacing:1px; opacity:0.88; direction:${currentLanguage === 'en' ? 'ltr' : 'rtl'};">
-                            <i class="fas fa-times-circle"></i> ${currentLanguage === 'en' ? 'REJECTED' : 'مرفوض'}
+                            <i class="fas fa-times-circle"></i> ${currentLanguage === 'en' ? 'L.P.O REJECTED' : 'مرفوض'}
                         </div>
                         <div style="font-size:8.5px; font-weight:600; color:#c0392b; margin-top:4px; white-space:nowrap;">${data.approvedBy ? escapeHtml(data.approvedBy) : ''}${data.approvedAt ? ' · ' + new Date(data.approvedAt).toLocaleDateString('en-GB') : ''}</div>
                     </div>` : ''}
@@ -14522,7 +14745,7 @@ function buildPreviewActionBar(l, isDraft) {
     const html = items.map(it => `<button class="btn btn-small" style="background:${bg[it.icon] || it.color}; color:#fff;" onclick="${keepOpen(it) ? '' : 'closePreview(); '}${it.fn}" title="${it.label}"><i class="fas ${it.icon}"></i> ${it.label}</button>`).join('');
     const lbl = bar.querySelector('span');
     if (lbl) lbl.innerHTML = '<i class="fas fa-tools"></i> ' + (isDraft ? (en ? 'Draft actions:' : 'إجراءات المسودة:') : (en ? 'Order actions:' : 'إجراءات الأمر:'));
-    // زر "المتبقي من Package": يفتح نافذة بيانات القسم (الكشف المالي) مع تمييز هذا الأمر
+    // زر "المتبقي من Budget": يفتح نافذة بيانات القسم (الكشف المالي) مع تمييز هذا الأمر
     let pkgBtn = '';
     try {
         const dd = canSeeBudget() ? deptByName(l.department) : null;
@@ -14530,7 +14753,7 @@ function buildPreviewActionBar(l, isDraft) {
             const st = deptBudgetStats(dd);
             if (st.hasAlloc) {
                 const num = String(isDraft ? '' : (l.number || '')).replace(/[^\w\-\/ ]/g, '');
-                pkgBtn = `<button class="btn btn-small pab-pkg" onclick="viewDepartment('${dd.id}', '${num}')" title="${en ? 'Open department details & financial statement' : 'عرض بيانات القسم والكشف المالي'}"><i class="fas fa-wallet"></i> ${en ? 'Remaining Package' : 'المتبقي من Package'} <span class="pab-chip ${st.remaining < 0 ? 'neg' : ''}">${fmt(st.remaining)}</span></button>`;
+                pkgBtn = `<button class="btn btn-small pab-pkg" onclick="viewDepartment('${dd.id}', '${num}')" title="${en ? 'Open department details & financial statement' : 'عرض بيانات القسم والكشف المالي'}"><i class="fas fa-wallet"></i> ${en ? 'Remaining Budget' : 'المتبقي من Budget'} <span class="pab-chip ${st.remaining < 0 ? 'neg' : ''}">${fmt(st.remaining)}</span></button>`;
             }
         }
     } catch (e) {}
@@ -15485,6 +15708,9 @@ window.addEventListener('load', async function() {
     msSetup('msSupClass', '-- كل التصنيفات --', filterSuppliers);
     msSetup('msSupRating', '-- كل التقييمات --', filterSuppliers);
     msSetup('msSupCr', '-- كل أرقام السجل --', filterSuppliers);
+    msSetup('msSupCrSt', '-- حالة السجل التجاري --', filterSuppliers);
+    try { initCtrlGrips(); } catch (e) { console.error(e); }
+    msSetup('msSupVatSt', '-- حالة الضريبة --', filterSuppliers);
     msSetup('msSupPhone', '-- كل الأرقام --', filterSuppliers);
     msSetup('msDraftNum', '-- كل أرقام المسودات --', loadDrafts);
     msSetup('msDraftSupplier', '-- كل الموردين --', loadDrafts);
@@ -15500,7 +15726,7 @@ window.addEventListener('load', async function() {
     msSetup('msDashYear', '-- كل السنوات --', loadDashboard);
     msSetup('msDashSupplier', '-- كل الموردين --', loadDashboard);
     msSetup('msDashStatus', '-- كل الحالات --', loadDashboard);
-    msSetup('msDashService', '-- كل أنواع الخدمات --', loadDashboard);
+    msSetup('msDashDept', '-- كل الأقسام --', loadDashboard);
     msSetup('msDashStaff', '-- كل الموظفين --', loadDashboard);
     // فرض اللغة الإنجليزية على كل حقول إدخال التاريخ (منتقي التاريخ والتنسيق) حتى في الواجهة العربية
     forceEnglishDateInputs();
