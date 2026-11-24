@@ -141,6 +141,14 @@
         .sidebar-footer { padding: 1rem; border-top: 1px solid rgba(255,255,255,0.1); }
         .sidebar-lang-btn { flex: 1; padding: 7px; background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; font-family: inherit; transition: all 0.2s; }
         .sidebar-lang-btn:hover { background: rgba(255,255,255,0.18); }
+        .sidebar-pw-row { display: flex; gap: 6px; margin-bottom: 8px; }
+        .sidebar-pw-row .logout-btn { margin-bottom: 0 !important; flex: 1.35; min-width: 0; padding: 9px 6px; font-size: 11.5px; }
+        .sidebar-guide-btn { flex: 1; min-width: 0; padding: 9px 6px; background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.92); border: 1px solid rgba(255,255,255,0.35); border-radius: 6px; cursor: pointer; font-size: 11.5px; font-weight: 600; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 5px; text-decoration: none; white-space: nowrap; }
+        .sidebar-guide-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
+        .login-docs { margin-top: 1.1rem; padding-top: 0.8rem; border-top: 1px solid #eef1f4; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11.5px; }
+        .login-docs a { color: #7a8a99; text-decoration: none; }
+        .login-docs a:hover { color: #0093c4; text-decoration: underline; }
+        .login-docs .demo-link { font-size: 10.5px; color: #9aa7b2; }
         .sidebar-lang-btn.active { background: #0093c4; color: white; border-color: #0093c4; }
 
         /* ============ صندوق المحادثة: 3 أوضاع ============ */
@@ -1086,6 +1094,11 @@
             <button class="lang-btn" onclick="changeLanguage('ar', event)">العربية</button>
             <button class="lang-btn active" onclick="changeLanguage('en', event)">English</button>
         </div>
+
+        <div class="login-docs">
+            <a href="docs/LPO_System_Guide.html" target="_blank" rel="noopener" id="loginGuideLink" onclick="return openDoc('guide', event)">دليل المستخدم · User Guide</a>
+            <a class="demo-link" href="docs/LPO_Executive_Demo_EN.pdf" target="_blank" rel="noopener" id="loginDemoLink" title="Executive DEMO PDF" onclick="return openDoc('demo', event)">Demo</a>
+        </div>
     </div>
 </div>
 
@@ -1116,7 +1129,10 @@
                 <button id="sidebarLangAr" class="sidebar-lang-btn" onclick="changeLanguage('ar', event)">العربية</button>
                 <button id="sidebarLangEn" class="sidebar-lang-btn active" onclick="changeLanguage('en', event)">English</button>
             </div>
-            <button class="logout-btn hidden-for-guest" style="background:rgba(124,179,66,0.9); margin-bottom:8px;" onclick="openPasswordModal()"><i class="fas fa-key"></i> تغيير كلمة السر</button>
+            <div class="sidebar-pw-row">
+                <button class="logout-btn hidden-for-guest" style="background:rgba(124,179,66,0.9);" onclick="openPasswordModal()"><i class="fas fa-key"></i> تغيير كلمة السر</button>
+                <a class="sidebar-guide-btn" href="docs/LPO_System_Guide.html" target="_blank" rel="noopener" onclick="return openDoc('guide', event)" title="دليل المستخدم"><i class="fas fa-book-open"></i> دليل المستخدم</a>
+            </div>
             <button class="logout-btn" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</button>
         </div>
     </div>
@@ -2468,6 +2484,11 @@
         </div>
     </div>
 
+    <!-- ملفات الدليل والعرض (User Guide / Demo): يحدّثها مدير النظام فتظهر روابطها في شاشة الدخول والشريط الجانبي -->
+    <div class="card" id="docsAdminCard">
+        <div id="docsAdminBody"></div>
+    </div>
+
     <!-- تعديل مباشر لقواعد البيانات (Direct Database Editor) — في آخر الصفحة -->
     <div class="card">
         <div class="card-header"><div class="card-title"><i class="fas fa-database"></i> التعديل المباشر لقواعد البيانات</div>
@@ -3669,6 +3690,7 @@ const I18N = {
     'حول البرنامج': 'About',
     'تسجيل خروج': 'Logout',
     'تغيير كلمة السر': 'Change Password',
+    'دليل المستخدم': 'User Guide',
     'كلمة السر الجديدة *': 'New Password *',
     'تأكيد كلمة السر *': 'Confirm Password *',
     'حفظ كلمة السر': 'Save Password',
@@ -4253,6 +4275,126 @@ const I18N_REV = {};
 Object.keys(I18N).forEach(ar => { I18N_REV[I18N[ar]] = ar; });
 
 let langApplied = false;
+
+// روابط دليل المستخدم والعرض التنفيذي (ملفات داخل مجلد docs بجانب الصفحة)، وتتبع لغة الواجهة الحالية
+function docUrl(kind) {
+    const en = currentLanguage === 'en';
+    if (kind === 'demo') return 'docs/LPO_Executive_Demo_' + (en ? 'EN' : 'AR') + '.pdf';
+    return 'docs/LPO_System_Guide.html#' + (en ? 'en' : 'ar');
+}
+
+// ===== ملفات الدليل والعرض (يحدّثها مدير النظام من صفحة «مدير النظام») =====
+// تُحفظ في مساحة التخزين العامة supplier-files داخل المجلد docs/، وإن لم تُرفع يُستخدم الملف الافتراضي المرفق مع النظام.
+const DOC_SLOTS = {
+    guide:   { path: 'docs/user_guide.html', accept: '.html,.htm', fallback: 'docs/LPO_System_Guide.html' },
+    demo_ar: { path: 'docs/demo_ar.pdf',     accept: '.pdf',       fallback: 'docs/LPO_Executive_Demo_AR.pdf' },
+    demo_en: { path: 'docs/demo_en.pdf',     accept: '.pdf',       fallback: 'docs/LPO_Executive_Demo_EN.pdf' }
+};
+let _docCustom = {}; // { key: { url, modified } } للملفات المرفوعة فعلاً
+
+async function probeDocs() {
+    if (!sb) return;
+    const out = {};
+    await Promise.all(Object.keys(DOC_SLOTS).map(async k => {
+        try {
+            const { data } = sb.storage.from('supplier-files').getPublicUrl(DOC_SLOTS[k].path);
+            const r = await fetch(data.publicUrl, { method: 'HEAD', cache: 'no-store' });
+            if (r.ok) {
+                const lm = r.headers.get('last-modified') || '';
+                const v = lm ? Date.parse(lm) : Date.now();
+                out[k] = { url: data.publicUrl + '?v=' + v, modified: lm ? new Date(lm) : null, size: +(r.headers.get('content-length') || 0) };
+            }
+        } catch (e) {}
+    }));
+    _docCustom = out;
+    try { renderDocsAdmin(); } catch (e) {}
+}
+
+function openDoc(kind, ev) {
+    if (ev) ev.preventDefault();
+    const en = currentLanguage === 'en';
+    const key = kind === 'guide' ? 'guide' : (en ? 'demo_en' : 'demo_ar');
+    const custom = _docCustom[key];
+    const hash = '#' + (en ? 'en' : 'ar');
+    if (!custom) { window.open(DOC_SLOTS[key].fallback + (kind === 'guide' ? hash : ''), '_blank', 'noopener'); return false; }
+    if (kind !== 'guide') { window.open(custom.url, '_blank', 'noopener'); return false; }
+    // الدليل (HTML): تخدمه مساحة التخزين كنص عادي، لذا نجلبه ونفتحه كصفحة محلية في تبويب جديد
+    const w = window.open('about:blank', '_blank');
+    fetch(custom.url, { cache: 'no-store' }).then(r => r.text()).then(t => {
+        const u = URL.createObjectURL(new Blob([t], { type: 'text/html;charset=utf-8' }));
+        if (w) w.location.href = u + hash; else window.open(u + hash, '_blank');
+    }).catch(() => { if (w) w.location.href = DOC_SLOTS.guide.fallback + hash; });
+    return false;
+}
+
+function renderDocsAdmin() {
+    const box = document.getElementById('docsAdminBody');
+    if (!box) return;
+    const en = currentLanguage === 'en';
+    const T = (a, e) => en ? e : a;
+    const row = (key, title, hint) => {
+        const c = _docCustom[key];
+        const status = c
+            ? `<span style="color:#2e7d32; font-weight:700;"><i class="fas fa-check-circle"></i> ${T('ملف مخصص', 'Custom file')}</span> <span style="color:#778;">· ${c.modified ? c.modified.toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : ''}${c.size ? ' · ' + (c.size / 1048576).toFixed(1) + ' MB' : ''}</span>`
+            : `<span style="color:#778;"><i class="fas fa-circle-info"></i> ${T('الملف الافتراضي المرفق مع النظام', 'Default file bundled with the system')}</span>`;
+        return `<div style="border:1px solid #e3eaef; border-radius:10px; padding:12px 14px; background:#fbfdfe;">
+            <div style="display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:6px;"><strong style="font-size:13.5px;">${title}</strong><span style="font-size:12px;">${status}</span></div>
+            <div style="font-size:12px; color:#667; margin-bottom:8px;">${hint}</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                <input type="file" id="docFile_${key}" accept="${DOC_SLOTS[key].accept}" style="font-size:12px; max-width:100%;">
+                <button type="button" class="btn btn-success btn-small" onclick="uploadDocFile('${key}')"><i class="fas fa-upload"></i> ${T('رفع وتحديث', 'Upload & replace')}</button>
+                ${c ? `<button type="button" class="btn btn-small" style="background:#e67e22; color:white;" onclick="removeDocFile('${key}')"><i class="fas fa-undo"></i> ${T('العودة للملف الافتراضي', 'Back to default')}</button>` : ''}
+                <span id="docMsg_${key}" style="font-size:12.5px;"></span>
+            </div></div>`;
+    };
+    box.innerHTML = `
+        <div class="card-header"><div class="card-title"><i class="fas fa-book-open"></i> ${T('ملفات الدليل والعرض (User Guide · Demo)', 'Guide & Demo files (User Guide · Demo)')}</div></div>
+        <p style="font-size:12.5px; color:#667; line-height:1.7; margin-bottom:12px;">${T(
+            'الملفات المرفوعة هنا هي التي تظهر للمستخدمين عند النقر على «دليل المستخدم» و«Demo» في شاشة الدخول وزر «دليل المستخدم» في الشريط الجانبي. يفتح الدليل العرض بلغة الواجهة الحالية.',
+            'The files uploaded here are what users open from the “User Guide” and “Demo” links on the login screen and the “User guide” button in the sidebar. The Demo opens in the current interface language.')}</p>
+        <div style="display:grid; gap:10px;">
+            ${row('guide', T('دليل المستخدم · User Guide', 'User Guide · دليل المستخدم'), T('ملف HTML (الدليل التفاعلي، ويفضّل ملف واحد كامل بالعربية والإنجليزية).', 'An HTML file (the interactive guide, ideally one self-contained file in Arabic and English).'))}
+            ${row('demo_ar', T('Demo · العرض التنفيذي (العربية)', 'Demo · Executive PDF (Arabic)'), T('ملف PDF. يفتح عندما تكون لغة الواجهة عربية.', 'A PDF file. Opens when the interface language is Arabic.'))}
+            ${row('demo_en', T('Demo · العرض التنفيذي (English)', 'Demo · Executive PDF (English)'), T('ملف PDF. يفتح عندما تكون لغة الواجهة إنجليزية.', 'A PDF file. Opens when the interface language is English.'))}
+        </div>`;
+}
+
+async function uploadDocFile(key) {
+    const en = currentLanguage === 'en';
+    const msgEl = document.getElementById('docMsg_' + key);
+    const say = (t, ok) => { if (msgEl) { msgEl.style.color = ok ? '#2e7d32' : '#c0392b'; msgEl.textContent = t; } };
+    const input = document.getElementById('docFile_' + key);
+    const f = input && input.files && input.files[0];
+    if (!f) { say(en ? 'Choose a file first.' : 'اختر ملفاً أولاً.'); return; }
+    const isPdf = key !== 'guide';
+    const okType = isPdf ? /\.pdf$/i.test(f.name) : /\.html?$/i.test(f.name);
+    if (!okType) { say(isPdf ? (en ? 'The file must be a PDF.' : 'يجب أن يكون الملف بصيغة PDF.') : (en ? 'The file must be HTML.' : 'يجب أن يكون الملف بصيغة HTML.')); return; }
+    if (f.size > 45 * 1048576) { say(en ? 'The file is larger than 45 MB.' : 'حجم الملف أكبر من 45 ميغابايت.'); return; }
+    if (!sb) return;
+    say(en ? 'Uploading…' : 'جارٍ الرفع…', true);
+    try {
+        const { error } = await sb.storage.from('supplier-files').upload(DOC_SLOTS[key].path, f, { upsert: true, contentType: isPdf ? 'application/pdf' : 'text/html' });
+        if (error) throw error;
+        await probeDocs();
+        say(en ? 'Updated successfully ✅' : 'تم التحديث بنجاح ✅', true);
+        try { recordAction((en ? 'Updated file: ' : 'تحديث ملف: ') + DOC_SLOTS[key].path); } catch (e) {}
+    } catch (e) {
+        say((en ? 'Upload failed: ' : 'تعذّر الرفع: ') + (e && e.message ? e.message : '') + (en ? ' (run SQL update 23 first)' : ' (نفّذ تحديث قاعدة البيانات 23 أولاً)'));
+    }
+}
+
+async function removeDocFile(key) {
+    const en = currentLanguage === 'en';
+    if (!confirm(en ? 'Remove the custom file and go back to the default one?' : 'حذف الملف المخصص والعودة إلى الملف الافتراضي؟')) return;
+    try {
+        const { error } = await sb.storage.from('supplier-files').remove([DOC_SLOTS[key].path]);
+        if (error) throw error;
+        await probeDocs();
+        try { recordAction((en ? 'Removed file: ' : 'حذف ملف: ') + DOC_SLOTS[key].path); } catch (e) {}
+    } catch (e) {
+        alert((en ? 'Could not remove: ' : 'تعذّر الحذف: ') + (e && e.message ? e.message : ''));
+    }
+}
 
 function changeLanguage(lang, ev) {
     currentLanguage = lang;
@@ -6939,8 +7081,8 @@ function drawMonthlyChart() {
         chartInstances.monthly = mkChart('monthly', ctx, {
         type: 'line',
         data: {
-            labels: monthNames,
-            datasets: [{ label: 'الإنفاق (ر.ع)', data: monthly.map(v => +v.toFixed(3)), borderColor: '#0093c4', backgroundColor: 'rgba(0,147,196,0.1)', tension: 0.4, fill: true, pointBackgroundColor: '#0093c4', pointRadius: 4 }]
+            labels: currentLanguage === 'en' ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] : monthNames,
+            datasets: [{ label: currentLanguage === 'en' ? 'Spending (OMR)' : 'الإنفاق (ر.ع)', data: monthly.map(v => +v.toFixed(3)), borderColor: '#0093c4', backgroundColor: 'rgba(0,147,196,0.1)', tension: 0.4, fill: true, pointBackgroundColor: '#0093c4', pointRadius: 4 }]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { tooltip: chartMoneyTooltip }, scales: { y: { beginAtZero: true, ticks: { callback: chartMoneyTick } } } }
     });
@@ -12304,6 +12446,7 @@ async function showBlockedAndSignOut() {
 }
 
 function loadAdminPanel() {
+    try { renderDocsAdmin(); } catch (e) {}
     const tbody = document.querySelector('#usersTable tbody');
     tbody.innerHTML = '';
     if (registeredUsers.length === 0) {
@@ -16286,6 +16429,8 @@ window.addEventListener('load', async function() {
         }
         return;
     }
+    // اكتشاف ملفات الدليل/العرض المخصصة (إن رفعها مدير النظام) لاستخدامها في الروابط
+    try { probeDocs(); } catch (e) {}
     // إن وُجدت جلسة سابقة، ادخل تلقائياً
     try {
         const { data } = await sb.auth.getSession();
